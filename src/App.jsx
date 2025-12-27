@@ -7,10 +7,12 @@ import * as THREE from 'three'
 import CinematicVolume from './CinematicVolume'
 import CinematicPlayButton from './CinematicPlayButton'
 import CircularAudioVisualizer from './CircularAudioVisualizer'
+import MusicToggleButton from './MusicToggleButton'
+import VolumeControl from './VolumeControl'
 
-const isTesting = false;
+const isTesting = true;
 
-// --- 1. HÀM TẠO ÂM THANH CLICK (GIỮ NGUYÊN) ---
+// --- 1. HÀM TẠO ÂM THANH CLICK ---
 const playCustomClick = () => {
   const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   const playPulse = (time, freq, dur) => {
@@ -31,12 +33,11 @@ const playCustomClick = () => {
   playPulse(now + 0.05, 900, 0.06);
 };
 
-// --- 2. NÂNG CẤP PHÁO HOA (THÊM ĐUÔI BAY LÊN + TRỌNG LỰC & SHAKE) ---
-// Component đuôi pháo hoa bay lên
+// --- 2. PHÁO HOA VỚI ĐUÔI BAY LÊN ---
 function FireworkTrail({ startPos, endPos, color }) {
   const trailRef = useRef()
   const progressRef = useRef(0)
-  const trailLength = 20 // Số điểm tạo đuôi
+  const trailLength = 20
   
   const trailPoints = useMemo(() => {
     const points = []
@@ -49,28 +50,25 @@ function FireworkTrail({ startPos, endPos, color }) {
   useFrame((state, delta) => {
     if (!trailRef.current) return
     
-    progressRef.current += delta * 1.5 // Tốc độ bay lên
+    progressRef.current += delta * 1.5
     
     if (progressRef.current >= 1) {
       trailRef.current.material.opacity = Math.max(0, trailRef.current.material.opacity - delta * 2)
       return
     }
 
-    // Vị trí hiện tại của đầu pháo hoa
     const currentPos = new THREE.Vector3().lerpVectors(
       new THREE.Vector3(...startPos),
       new THREE.Vector3(...endPos),
       progressRef.current
     )
 
-    // Cập nhật đuôi (shift positions)
     for (let i = trailLength - 1; i > 0; i--) {
       trailPoints[i].pos.copy(trailPoints[i - 1].pos)
       trailPoints[i].alpha = (i / trailLength) * 0.8
     }
     trailPoints[0].pos.copy(currentPos)
 
-    // Cập nhật geometry
     const posArr = new Float32Array(trailLength * 3)
     trailPoints.forEach((p, i) => {
       posArr.set([p.pos.x, p.pos.y, p.pos.z], i * 3)
@@ -96,9 +94,9 @@ function FireworkTrail({ startPos, endPos, color }) {
 
 function Firework({ color, position, triggerShake }) {
   const meshRef = useRef()
-  const count = 500 // Tăng mật độ hạt
+  const count = 500
   const burstRef = useRef(false)
-  const launchTimeRef = useRef(1.5) // Thời gian bay lên trước khi nổ
+  const launchTimeRef = useRef(1.5)
   
   const startPosition = useMemo(() => [position[0], -20, position[2]], [position])
   
@@ -107,7 +105,7 @@ function Firework({ color, position, triggerShake }) {
     for (let i = 0; i < count; i++) {
       const theta = Math.random() * Math.PI * 2
       const phi = Math.acos(2 * Math.random() - 1)
-      const speed = 0.3 + Math.random() * 0.5 // Nổ mạnh hơn
+      const speed = 0.3 + Math.random() * 0.5
       p.push({
         vel: new THREE.Vector3(Math.sin(phi) * Math.cos(theta) * speed, Math.sin(phi) * Math.sin(theta) * speed, Math.cos(phi) * speed),
         pos: new THREE.Vector3(0, 0, 0),
@@ -120,13 +118,11 @@ function Firework({ color, position, triggerShake }) {
   useFrame((state, delta) => {
     if (!meshRef.current) return
     
-    // Giai đoạn bay lên
     if (launchTimeRef.current > 0) {
       launchTimeRef.current -= delta
       return
     }
     
-    // Kích hoạt rung camera khi bắt đầu nổ
     if (!burstRef.current) {
       triggerShake(0.5) 
       burstRef.current = true
@@ -135,8 +131,8 @@ function Firework({ color, position, triggerShake }) {
     const posArr = new Float32Array(count * 3)
     particles.forEach((p, i) => {
       p.pos.add(p.vel);
-      p.vel.y -= 0.006; // Thêm trọng lực kéo hạt rơi xuống
-      p.vel.multiplyScalar(0.97); // Ma sát không khí làm hạt chậm lại
+      p.vel.y -= 0.006;
+      p.vel.multiplyScalar(0.97);
       p.life -= delta * 0.45;
       posArr.set([p.pos.x, p.pos.y, p.pos.z], i * 3)
     })
@@ -171,7 +167,7 @@ function FireworkManager({ triggerShake }) {
   return <>{list.map(f => <Firework key={f.id} position={f.pos} color={f.color} triggerShake={triggerShake} />)}</>
 }
 
-// --- 3. BỤI KHÔNG GIAN (GIỮ NGUYÊN) ---
+// --- 3. BỤI KHÔNG GIAN ---
 function InteractiveDust({ count = 6000 }) {
   const mesh = useRef(); const { raycaster, camera } = useThree(); const shockwaveRef = useRef(0)
   const starTexture = useMemo(() => {
@@ -208,18 +204,17 @@ function InteractiveDust({ count = 6000 }) {
   return (<points ref={mesh}><bufferGeometry><bufferAttribute attach="attributes-position" count={pos.length/3} array={pos} itemSize={3} /><bufferAttribute attach="attributes-color" count={col.length/3} array={col} itemSize={3} /></bufferGeometry><pointsMaterial size={0.8} vertexColors transparent map={starTexture} blending={THREE.AdditiveBlending} depthWrite={false} /></points>)
 }
 
-// --- COMPONENT CHỮ VÒNG CUNG ---
-// ĐIỀU CHỈNH THAM SỐ Ở ĐÂY:
+// --- CHỮ VÒNG CUNG ---
 function ArcText({ 
   text, 
-  radius = 15,                    // 🔧 Bán kính vòng cung (10-20 phù hợp)
-  startAngle = Math.PI * 0.7,     // 🔧 Góc bắt đầu (0.6-0.8 đẹp)
-  endAngle = Math.PI * 0.3,       // 🔧 Góc kết thúc (0.2-0.4 đẹp)
-  fontSize = 0.8,                 // 🔧 Kích thước chữ (0.5-1.5)
-  textHeight = 0.3,               // 🔧 Độ dày 3D (0.2-0.8)
-  verticalOffset = 0              // 🔧 Độ cao so với trung tâm (-5 đến 5)
+  radius = 15,
+  startAngle = Math.PI * 0.7,
+  endAngle = Math.PI * 0.3,
+  fontSize = 0.8,
+  textHeight = 0.3,
+  verticalOffset = 0
 }) {
-  const fontUrl = load('fonts/Orbitron_Regular.json')
+  const fontUrl = '/happy-new-year-2026/fonts/Orbitron_Regular.json'
   const characters = text.split('')
   const totalAngle = startAngle - endAngle
   const angleStep = totalAngle / (characters.length - 1)
@@ -246,260 +241,7 @@ function ArcText({
   )
 }
 
-// --- BUTTON NHẠC 2D STYLE FIGMA/MOTION ---
-function MusicToggleButton({ soundRef, isPlaying, setIsPlaying, volume }) {
-  const [hovered, setHover] = useState(false)
-
-  const handleClick = () => {
-    if (soundRef.current) {
-      if (isPlaying) {
-        soundRef.current.pause()
-      } else {
-        soundRef.current.play()
-      }
-      setIsPlaying(!isPlaying)
-      playCustomClick()
-    }
-  }
-
-  return (
-    <div
-      onClick={handleClick}
-      onMouseEnter={() => setHover(true)}
-      onMouseLeave={() => setHover(false)}
-      style={{
-        position: 'fixed',
-        bottom: '30px',
-        right: '30px',
-        width: '64px',
-        height: '64px',
-        borderRadius: '16px',
-        background: isPlaying 
-          ? 'linear-gradient(135deg, #18181b 0%, #27272a 100%)'
-          : 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
-        border: 'none',
-        boxShadow: hovered 
-          ? (isPlaying 
-              ? '0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1)'
-              : '0 8px 32px rgba(59, 130, 246, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.2)')
-          : (isPlaying 
-              ? '0 4px 16px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.05)'
-              : '0 4px 16px rgba(59, 130, 246, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1)'),
-        cursor: 'pointer',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-        zIndex: 1000,
-        transform: hovered ? 'scale(1.05) translateY(-2px)' : 'scale(1)',
-        backdropFilter: 'blur(10px)'
-      }}
-    >
-      {isPlaying ? (
-        // Icon PAUSE - Modern Figma Style
-        <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
-          <div style={{ 
-            width: '4px', 
-            height: '20px', 
-            background: '#a1a1aa',
-            borderRadius: '2px',
-            transition: 'all 0.2s ease'
-          }}></div>
-          <div style={{ 
-            width: '4px', 
-            height: '20px', 
-            background: '#a1a1aa',
-            borderRadius: '2px',
-            transition: 'all 0.2s ease'
-          }}></div>
-        </div>
-      ) : (
-        // Icon PLAY - Modern Figma Style
-        <div style={{ 
-          width: 0, 
-          height: 0, 
-          borderLeft: '16px solid white',
-          borderTop: '10px solid transparent',
-          borderBottom: '10px solid transparent',
-          marginLeft: '3px',
-          filter: 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1))'
-        }}></div>
-      )}
-    </div>
-  )
-}
-
-// --- BUTTON ĐIỀU CHỈNH ÂM LƯỢNG STYLE FIGMA/MOTION ---
-function VolumeControl({ soundRef, volume, setVolume }) {
-  const [hovered, setHover] = useState(false)
-
-  const handleVolumeChange = (e) => {
-    const newVolume = parseFloat(e.target.value)
-    setVolume(newVolume)
-    if (soundRef.current) {
-      soundRef.current.setVolume(newVolume)
-    }
-  }
-
-  const increaseVolume = () => {
-    const newVolume = Math.min(2, volume + 0.1) // Max 200%
-    setVolume(newVolume)
-    if (soundRef.current) {
-      soundRef.current.setVolume(newVolume)
-    }
-    playCustomClick()
-  }
-
-  const decreaseVolume = () => {
-    const newVolume = Math.max(0, volume - 0.1)
-    setVolume(newVolume)
-    if (soundRef.current) {
-      soundRef.current.setVolume(newVolume)
-    }
-    playCustomClick()
-  }
-
-  return (
-    <div
-      onMouseEnter={() => setHover(true)}
-      onMouseLeave={() => setHover(false)}
-      style={{
-        position: 'fixed',
-        bottom: '30px',
-        right: '110px',
-        display: 'flex',
-        alignItems: 'center',
-        gap: '12px',
-        padding: '12px 16px',
-        background: 'linear-gradient(135deg, #18181b 0%, #27272a 100%)',
-        border: 'none',
-        borderRadius: '16px',
-        boxShadow: hovered 
-          ? '0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1)'
-          : '0 4px 16px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.05)',
-        zIndex: 1000,
-        transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-        transform: hovered ? 'translateY(-2px)' : 'translateY(0)',
-        backdropFilter: 'blur(10px)'
-      }}
-    >
-      {/* Button giảm âm lượng */}
-      <button
-        onClick={decreaseVolume}
-        style={{
-          width: '32px',
-          height: '32px',
-          borderRadius: '8px',
-          background: 'linear-gradient(135deg, #52525b 0%, #3f3f46 100%)',
-          border: 'none',
-          color: 'white',
-          fontSize: '18px',
-          fontWeight: '600',
-          cursor: 'pointer',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1)'
-        }}
-        onMouseEnter={(e) => {
-          e.target.style.transform = 'scale(1.05)'
-          e.target.style.background = 'linear-gradient(135deg, #71717a 0%, #52525b 100%)'
-        }}
-        onMouseLeave={(e) => {
-          e.target.style.transform = 'scale(1)'
-          e.target.style.background = 'linear-gradient(135deg, #52525b 0%, #3f3f46 100%)'
-        }}
-      >
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-          <path d="M3 8H13" stroke="white" strokeWidth="2" strokeLinecap="round"/>
-        </svg>
-      </button>
-
-      {/* Thanh slider custom */}
-      <div style={{ position: 'relative', width: '120px', height: '4px' }}>
-        <div style={{
-          position: 'absolute',
-          width: '100%',
-          height: '4px',
-          background: '#3f3f46',
-          borderRadius: '2px'
-        }}></div>
-        <div style={{
-          position: 'absolute',
-          width: `${(volume / 2) * 100}%`, // Chia 2 vì max là 2 (200%)
-          height: '4px',
-          background: 'linear-gradient(90deg, #3b82f6 0%, #2563eb 100%)',
-          borderRadius: '2px',
-          transition: 'width 0.1s ease'
-        }}></div>
-        <input
-          type="range"
-          min="0"
-          max="2"
-          step="0.01"
-          value={volume}
-          onChange={handleVolumeChange}
-          style={{
-            position: 'absolute',
-            width: '100%',
-            height: '4px',
-            cursor: 'pointer',
-            opacity: 0,
-            zIndex: 2
-          }}
-        />
-      </div>
-
-      {/* Hiển thị % âm lượng */}
-      <span style={{ 
-        color: '#a1a1aa', 
-        fontSize: '13px', 
-        fontWeight: '600',
-        minWidth: '42px',
-        textAlign: 'right',
-        fontFamily: 'system-ui, -apple-system, sans-serif'
-      }}>
-        {Math.round((volume / 2) * 100)}%
-      </span>
-
-      {/* Button tăng âm lượng */}
-      <button
-        onClick={increaseVolume}
-        style={{
-          width: '32px',
-          height: '32px',
-          borderRadius: '8px',
-          background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
-          border: 'none',
-          color: 'white',
-          fontSize: '18px',
-          fontWeight: '600',
-          cursor: 'pointer',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-          boxShadow: '0 2px 8px rgba(59, 130, 246, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2)'
-        }}
-        onMouseEnter={(e) => {
-          e.target.style.transform = 'scale(1.05)'
-          e.target.style.boxShadow = '0 4px 16px rgba(59, 130, 246, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.2)'
-        }}
-        onMouseLeave={(e) => {
-          e.target.style.transform = 'scale(1)'
-          e.target.style.boxShadow = '0 2px 8px rgba(59, 130, 246, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2)'
-        }}
-      >
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-          <path d="M8 3V13M3 8H13" stroke="white" strokeWidth="2" strokeLinecap="round"/>
-        </svg>
-      </button>
-    </div>
-  )
-}
-
-// --- 4. NÂNG CẤP CAMERA SHAKE & GOLD TEXT ---
+// --- SCENE CONTENT ---
 function SceneContent({ scene, handleLaunch, soundRef, isPlaying, setIsPlaying }) {
   const { camera } = useThree()
   const shakeIntensity = useRef(0)
@@ -513,7 +255,6 @@ function SceneContent({ scene, handleLaunch, soundRef, isPlaying, setIsPlaying }
     }
   })
 
-  // TỰ ĐỘNG PHÁT NHẠC KHI VÀO SCENE FIREWORKS
   useEffect(() => {
     if (scene === 'fireworks' && !hasAutoPlayed.current && soundRef.current) {
       setTimeout(() => {
@@ -535,28 +276,25 @@ function SceneContent({ scene, handleLaunch, soundRef, isPlaying, setIsPlaying }
           <ambientLight intensity={0.5} />
           <CountdownDisplay onFinishTransition={handleLaunch} />
           <CircularAudioVisualizer soundRef={soundRef} radius={18} count={200} />
-          <PositionalAudio ref={soundRef} url="/sounds/lofi.mp3" distance={30} loop />
+          <PositionalAudio ref={soundRef} url="/happy-new-year-2026/sounds/lofi.mp3" distance={30} loop />
         </Suspense>
       ) : (
         <Suspense fallback={null}>
           <Stars radius={150} count={1200} factor={2} fade speed={0.4} />
           <FireworkManager triggerShake={triggerShake} />
           
-          {/* ÂM THANH FIREWORKS */}
-          <PositionalAudio ref={soundRef} url="/sounds/celebration.mp3" distance={50} loop />
+          <PositionalAudio ref={soundRef} url="/happy-new-year-2026/sounds/celebration.mp3" distance={50} loop />
           
           <Float speed={3} rotationIntensity={0.6} floatIntensity={1.5}>
-            {/* Chữ HAPPY NEW YEAR */}
             <Center position={[0, 2, 0]}>
-              <Text3D font="/fonts/Orbitron_Regular.json" size={2.5} height={0.6} bevelEnabled>
+              <Text3D font="/happy-new-year-2026/fonts/Orbitron_Regular.json" size={2.5} height={0.6} bevelEnabled>
                 HAPPY NEW YEAR
                 <meshStandardMaterial color="#FFD700" metalness={1} roughness={0.02} emissive="#FFB300" emissiveIntensity={0.2} />
               </Text3D>
             </Center>
 
-            {/* Chữ 2026 */}
             <Center position={[0, -3.8, 0]}>
-              <Text3D font="/fonts/Orbitron_Regular.json" size={5} height={1.2} bevelEnabled>
+              <Text3D font="/happy-new-year-2026/fonts/Orbitron_Regular.json" size={5} height={1.2} bevelEnabled>
                 2026
                 <meshStandardMaterial color="#FFD700" metalness={1} roughness={0.01} emissive="#FFD700" emissiveIntensity={0.5} />
               </Text3D>
@@ -570,15 +308,14 @@ function SceneContent({ scene, handleLaunch, soundRef, isPlaying, setIsPlaying }
   )
 }
 
-// --- 5. APP CHÍNH ---
+// --- APP CHÍNH ---
 export default function App() {
   const soundRef = useRef()
   const [scene, setScene] = useState('countdown')
   const [flash, setFlash] = useState(0)
   const [isUiVisible, setUiVisible] = useState(true)
-  const [isPlaying, setIsPlaying] = useState(false) // Nhạc chưa phát
-  const [volume, setVolume] = useState(1.0) // Âm lượng mặc định 100% (max 200%)
-  const [showVolumeControl, setShowVolumeControl] = useState(false) // Điều khiển hiển thị volume
+  const [isPlaying, setIsPlaying] = useState(false)
+  const [volume, setVolume] = useState(2.0)
 
   const handleLaunch = () => {
     setUiVisible(false)
@@ -604,23 +341,17 @@ export default function App() {
         </>
       )}
 
-      {/* BUTTON ĐIỀU KHIỂN NHẠC 2D - CHỈ HIỆN Ở SCENE FIREWORKS */}
       {scene === 'fireworks' && (
         <>
           <MusicToggleButton 
             soundRef={soundRef} 
             isPlaying={isPlaying} 
             setIsPlaying={setIsPlaying}
-            volume={volume}
-            showVolumeControl={showVolumeControl}
-            setShowVolumeControl={setShowVolumeControl}
           />
           <VolumeControl 
             soundRef={soundRef} 
             volume={volume}
             setVolume={setVolume}
-            showVolumeControl={showVolumeControl}
-            setShowVolumeControl={setShowVolumeControl}
           />
         </>
       )}
@@ -646,10 +377,10 @@ export default function App() {
   )
 }
 
-// --- CÁC COMPONENT PHỤ ---
+// --- COUNTDOWN DISPLAY ---
 function CountdownDisplay({ onFinishTransition }) {
     const [timeLeft, setTimeLeft] = useState({ d: 0, h: 0, m: 0, s: 0, total: 999 })
-    const fontUrl = '/fonts/Orbitron_Regular.json'
+    const fontUrl = '/happy-new-year-2026/fonts/Orbitron_Regular.json'
     useEffect(() => {
       const targetTime = isTesting ? new Date().getTime() + 15000 : new Date("Jan 1, 2026 00:00:00").getTime();
       const timer = setInterval(() => {
@@ -666,16 +397,14 @@ function CountdownDisplay({ onFinishTransition }) {
         ) : (
           <Float speed={2} rotationIntensity={0.1} floatIntensity={0.4}>
               <group>
-                  {/* CHỮ "COUNTDOWN 2026" HÌNH VÒNG CUNG */}
-                  {/* 🎨 ĐIỀU CHỈNH THAM SỐ Ở ĐÂY: */}
                   <ArcText 
                     text="COUNTDOWN 2026" 
-                    radius={15}           // Bán kính vòng cung (10-20)
-                    startAngle={Math.PI * 0.7}   // Góc bắt đầu bên trái
-                    endAngle={Math.PI * 0.3}     // Góc kết thúc bên phải
-                    fontSize={0.8}        // Kích thước chữ (0.5-1.5)
-                    textHeight={0.3}      // Độ dày 3D (0.2-0.8)
-                    verticalOffset={-3}   // Dịch lên/xuống (-5 đến 5)
+                    radius={15}
+                    startAngle={Math.PI * 0.7}
+                    endAngle={Math.PI * 0.3}
+                    fontSize={0.8}
+                    textHeight={0.3}
+                    verticalOffset={-3}
                   />
 
                   <Center top position={[-0.5, 2, 0]}><Text3D font={fontUrl} size={5} height={1.5} bevelEnabled>{timeLeft.d}<RainbowMaterial /></Text3D></Center>
@@ -710,7 +439,7 @@ function MechanicalButton({ onActivate }) {
           <meshStandardMaterial color={hovered ? "#ff0033" : "#220000"} metalness={1} emissive="#ff0000" emissiveIntensity={hovered ? 1.2 : 0.1}/>
         </Cylinder>
       </group>
-      <Center position={[0, -4.8, 0]}><Text3D font="/fonts/Orbitron_Regular.json" size={0.5} height={0.1}>LAUNCH 2026<meshStandardMaterial color="white" /></Text3D></Center>
+      <Center position={[0, -4.8, 0]}><Text3D font="/happy-new-year-2026/fonts/Orbitron_Regular.json" size={0.5} height={0.1}>LAUNCH 2026<meshStandardMaterial color="white" /></Text3D></Center>
     </group>
   )
 }

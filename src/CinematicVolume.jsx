@@ -74,26 +74,29 @@ export default function CinematicVolume({ soundRef }) {
         {getIcon()}
       </motion.div>
 
-      {/* 2. THE ENERGY BEAM (THANH SLIDER) */}
+      {/* 2. THE ENERGY BEAM (THANH SLIDER DỌC) */}
       <AnimatePresence>
         {isHovered && (
           <motion.div
-            initial={{ width: 0, opacity: 0, x: -20 }}
-            animate={{ width: 280, opacity: 1, x: -10 }} // Đẩy nhẹ vào trong nút tròn (-10)
-            exit={{ width: 0, opacity: 0, x: -20 }}
+            initial={{ height: 0, opacity: 0, y: 20 }}
+            animate={{ height: 280, opacity: 1, y: 0 }}
+            exit={{ height: 0, opacity: 0, y: 20 }}
             transition={{ type: "spring", stiffness: 200, damping: 20 }}
             style={{
-              height: '40px',
+              width: '40px',
               backgroundColor: 'rgba(0, 15, 25, 0.8)',
               border: '1px solid rgba(0, 243, 255, 0.3)',
-              borderLeft: 'none', // Nối liền với nút tròn
-              borderTopRightRadius: '20px',
-              borderBottomRightRadius: '4px', // Góc vát kiểu sci-fi
+              borderBottom: 'none', // Nối liền với nút tròn
+              borderTopLeftRadius: '20px',
+              borderTopRightRadius: '4px', // Góc vát kiểu sci-fi
               display: 'flex',
+              flexDirection: 'column',
               alignItems: 'center',
-              paddingLeft: '25px', // Tránh đè lên nút tròn
-              paddingRight: '15px',
-              position: 'relative',
+              paddingBottom: '25px', // Tránh đè lên nút tròn
+              paddingTop: '15px',
+              position: 'absolute',
+              bottom: '60px', // Đặt phía trên nút tròn
+              left: '0',
               overflow: 'hidden',
               backdropFilter: 'blur(5px)',
             }}
