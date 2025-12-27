@@ -8,7 +8,7 @@ import CinematicVolume from './CinematicVolume'
 import CinematicPlayButton from './CinematicPlayButton'
 import CircularAudioVisualizer from './CircularAudioVisualizer'
 
-const isTesting = false;
+const isTesting = true;
 
 // --- 1. HÀM TẠO ÂM THANH CLICK (GIỮ NGUYÊN) ---
 const playCustomClick = () => {
