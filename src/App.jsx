@@ -4,79 +4,13 @@ import { OrbitControls, Text3D, Center, Float, Stars, Environment, PositionalAud
 import { EffectComposer, Bloom } from '@react-three/postprocessing'
 import * as THREE from 'three'
 
-// Import các component khác (giả sử bạn đã có)
-// import CinematicVolume from './CinematicVolume'
-// import CinematicPlayButton from './CinematicPlayButton'
-// import CircularAudioVisualizer from './CircularAudioVisualizer'
-// import MusicToggleButton from './MusicToggleButton'
-// import VolumeControl from './VolumeControl'
+import CinematicVolume from './CinematicVolume'
+import CinematicPlayButton from './CinematicPlayButton'
+import CircularAudioVisualizer from './CircularAudioVisualizer'
+import MusicToggleButton from './MusicToggleButton'
+import VolumeControl from './VolumeControl'
 
 const isTesting = true;
-
-// --- PLACEHOLDER COMPONENTS (thay thế nếu bạn chưa có) ---
-const CinematicVolume = ({ soundRef }) => null
-const CinematicPlayButton = ({ soundRef }) => null
-const CircularAudioVisualizer = ({ soundRef, radius, count }) => null
-const MusicToggleButton = ({ soundRef, isPlaying, setIsPlaying }) => (
-  <button 
-    onClick={() => {
-      if (soundRef.current) {
-        if (isPlaying) {
-          soundRef.current.pause()
-        } else {
-          soundRef.current.play()
-        }
-        setIsPlaying(!isPlaying)
-      }
-    }}
-    style={{
-      position: 'absolute',
-      bottom: 20,
-      right: 20,
-      padding: '12px 24px',
-      background: 'rgba(255,255,255,0.2)',
-      border: '2px solid white',
-      color: 'white',
-      borderRadius: 8,
-      cursor: 'pointer',
-      fontSize: 16,
-      fontWeight: 'bold',
-      backdropFilter: 'blur(10px)',
-      zIndex: 100
-    }}
-  >
-    {isPlaying ? '⏸️ Pause' : '▶️ Play'}
-  </button>
-)
-const VolumeControl = ({ soundRef, volume, setVolume }) => (
-  <div style={{
-    position: 'absolute',
-    bottom: 80,
-    right: 20,
-    padding: 12,
-    background: 'rgba(255,255,255,0.2)',
-    border: '2px solid white',
-    borderRadius: 8,
-    backdropFilter: 'blur(10px)',
-    zIndex: 100
-  }}>
-    <input 
-      type="range" 
-      min="0" 
-      max="5" 
-      step="0.1" 
-      value={volume}
-      onChange={(e) => {
-        const val = parseFloat(e.target.value)
-        setVolume(val)
-        if (soundRef.current) {
-          soundRef.current.setVolume(val)
-        }
-      }}
-      style={{ width: 100 }}
-    />
-  </div>
-)
 
 // --- 1. HÀM TẠO ÂM THANH CLICK ---
 const playCustomClick = () => {
