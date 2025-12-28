@@ -9,7 +9,6 @@ import CinematicPlayButton from './CinematicPlayButton'
 import CircularAudioVisualizer from './CircularAudioVisualizer'
 import MusicToggleButton from './MusicToggleButton'
 import VolumeControl from './VolumeControl'
-import RectangularAudioVisualizer from './RectangularAudioVisualizer'
 
 const isTesting = true;
 
@@ -296,15 +295,6 @@ function SceneContent({ scene, handleLaunch, soundRef, isPlaying, setIsPlaying }
           />
           
           <Float speed={3} rotationIntensity={0.6} floatIntensity={1.5}>
-            {/* Rectangular Audio Visualizer bao quanh chữ */}
-            <RectangularAudioVisualizer 
-              soundRef={soundRef}
-              width={22}        // Chiều rộng khung
-              height={4}        // Chiều cao khung
-              barCount={80}     // Số thanh (nhiều = mịn hơn)
-              position={[0, 2, 0]} // Vị trí trùng với chữ HAPPY NEW YEAR
-            />
-            
             <Center position={[0, 2, 0]}>
               <Text3D font="/happy-new-year-2026/fonts/Orbitron_Regular.json" size={2.5} height={0.6} bevelEnabled>
                 HAPPY NEW YEAR
