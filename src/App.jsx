@@ -241,7 +241,7 @@ function ArcText({
   )
 }
 
-// --- LAVENDER CANDLE SCENE ---
+// --- LAVENDER CANDLE SCENE (làm nền dưới 360 độ) ---
 function LavenderScene() {
   const { scene: gltfScene } = useGLTF('/happy-new-year-2026/models/lavender.glb')
   const clonedScene = useMemo(() => gltfScene.clone(), [gltfScene])
@@ -249,9 +249,9 @@ function LavenderScene() {
   return (
     <primitive 
       object={clonedScene} 
-      scale={3} 
-      position={[0, -15, 0]} 
-      rotation={[0, Math.PI / 4, 0]}
+      scale={[15, 1, 15]}  // Scale rộng ra như thảm
+      position={[0, -8, 0]}  // Đặt ở dưới
+      rotation={[0, 0, 0]}
     />
   )
 }
@@ -303,17 +303,17 @@ function SceneContent({ scene, handleLaunch, soundRef, isPlaying, setIsPlaying }
           
           <PositionalAudio ref={soundRef} url="/happy-new-year-2026/sounds/celebration.mp3" distance={50} loop />
           
-          {/* Chữ được đặt trên nến */}
+          {/* Chữ được đặt ở giữa không gian, không trên nến */}
           <Float speed={2} rotationIntensity={0.3} floatIntensity={0.8}>
-            <Center position={[0, 8, 0]}>
-              <Text3D font="/happy-new-year-2026/fonts/Orbitron_Regular.json" size={2} height={0.5} bevelEnabled>
+            <Center position={[0, 2, 0]}>
+              <Text3D font="/happy-new-year-2026/fonts/Orbitron_Regular.json" size={2.5} height={0.6} bevelEnabled>
                 HAPPY NEW YEAR
                 <meshStandardMaterial color="#FFD700" metalness={1} roughness={0.02} emissive="#FFB300" emissiveIntensity={0.3} />
               </Text3D>
             </Center>
 
-            <Center position={[0, 4, 0]}>
-              <Text3D font="/happy-new-year-2026/fonts/Orbitron_Regular.json" size={4} height={1} bevelEnabled>
+            <Center position={[0, -3.8, 0]}>
+              <Text3D font="/happy-new-year-2026/fonts/Orbitron_Regular.json" size={5} height={1.2} bevelEnabled>
                 2026
                 <meshStandardMaterial color="#FFD700" metalness={1} roughness={0.01} emissive="#FFD700" emissiveIntensity={0.6} />
               </Text3D>
@@ -381,7 +381,7 @@ export default function App() {
 
       <div style={{ position: 'absolute', inset: 0, backgroundColor: 'white', opacity: flash, zIndex: 10, pointerEvents: 'none' }} />
 
-      <Canvas camera={{ position: [0, 5, 35], fov: 50 }}>
+      <Canvas camera={{ position: [0, 8, 35], fov: 50 }}>
         <color attach="background" args={['#0a0a0a']} />
         <Environment preset="city" />
         <SceneContent 
@@ -394,7 +394,13 @@ export default function App() {
         <EffectComposer disableNormalPass>
             <Bloom luminanceThreshold={0.1} intensity={2.8} mipmapBlur />
         </EffectComposer>
-        <OrbitControls enablePan={false} minDistance={20} maxDistance={100} />
+        <OrbitControls 
+          enablePan={false} 
+          minDistance={20} 
+          maxDistance={100}
+          maxPolarAngle={Math.PI / 2}  // Giới hạn không xoay xuống dưới
+          minPolarAngle={0}  // Chỉ xoay từ trên xuống ngang
+        />
       </Canvas>
     </div>
   )
