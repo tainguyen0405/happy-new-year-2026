@@ -4,7 +4,7 @@ import { Volume2, Volume1, VolumeX, Zap } from 'lucide-react';
 
 export default function CinematicVolume({ soundRef }) {
   const [isHovered, setIsHovered] = useState(false);
-  const [volume, setVolume] = useState(200); // Max 200%
+  const [volume, setVolume] = useState(200); // Max 500%
 
   // Xử lý thay đổi volume
   const handleVolumeChange = (e) => {
@@ -33,7 +33,7 @@ export default function CinematicVolume({ soundRef }) {
         display: 'flex',
         alignItems: 'center',
         zIndex: 1000,
-        fontFamily: "'Orbitron', sans-serif", // Font công nghệ (nếu có)
+        fontFamily: "'Orbitron', sans-serif",
       }}
     >
       {/* 1. THE CORE (NÚT TRÒN) */}
@@ -86,62 +86,78 @@ export default function CinematicVolume({ soundRef }) {
               width: '40px',
               backgroundColor: 'rgba(0, 15, 25, 0.8)',
               border: '1px solid rgba(0, 243, 255, 0.3)',
-              borderBottom: 'none', // Nối liền với nút tròn
+              borderBottom: 'none',
               borderTopLeftRadius: '20px',
-              borderTopRightRadius: '4px', // Góc vát kiểu sci-fi
+              borderTopRightRadius: '4px',
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
-              paddingBottom: '25px', // Tránh đè lên nút tròn
+              paddingBottom: '25px',
               paddingTop: '15px',
               position: 'absolute',
-              bottom: '60px', // Đặt phía trên nút tròn
+              bottom: '60px',
               left: '0',
               overflow: 'hidden',
               backdropFilter: 'blur(5px)',
             }}
           >
-            {/* Lưới trang trí (Grid) */}
+            {/* Lưới trang trí (Grid dọc) */}
             <div style={{
               position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
-              backgroundImage: 'linear-gradient(90deg, rgba(0,243,255,0.1) 1px, transparent 1px)',
-              backgroundSize: '20px 100%',
+              backgroundImage: 'linear-gradient(0deg, rgba(0,243,255,0.1) 1px, transparent 1px)',
+              backgroundSize: '100% 20px',
               pointerEvents: 'none'
             }} />
 
-            {/* Input Slider */}
-            <div style={{ position: 'relative', flexGrow: 1, height: '6px', display: 'flex', alignItems: 'center' }}>
+            {/* Chỉ số % (HUD Text) - Đặt lên trên */}
+            <div style={{ 
+              marginBottom: '10px', 
+              color: '#00f3ff', 
+              fontSize: '14px', 
+              fontWeight: 'bold', 
+              fontFamily: 'monospace',
+              textShadow: '0 0 5px rgba(0,243,255,0.8)',
+              textAlign: 'center'
+            }}>
+              {Math.round(volume)}%
+            </div>
+
+            {/* Input Slider DỌC */}
+            <div style={{ position: 'relative', flexGrow: 1, width: '6px', display: 'flex', justifyContent: 'center' }}>
               
               {/* Thanh nền (Track) */}
-              <div style={{ position: 'absolute', width: '100%', height: '2px', background: '#333' }} />
+              <div style={{ position: 'absolute', height: '100%', width: '2px', background: '#333' }} />
               
-              {/* Thanh năng lượng (Progress) */}
+              {/* Thanh năng lượng (Progress từ dưới lên) */}
               <motion.div 
                 style={{ 
                   position: 'absolute', 
-                  left: 0, 
-                  height: '100%', 
-                  width: `${(volume / 500) * 100}%`,
-                  background: 'linear-gradient(90deg, #00f3ff, #fff)', // Hiệu ứng tia laser
+                  bottom: 0, 
+                  width: '100%', 
+                  height: `${(volume / 500) * 100}%`,
+                  background: 'linear-gradient(180deg, #fff, #00f3ff)',
                   boxShadow: '0 0 10px #00f3ff',
                   zIndex: 0
                 }} 
               />
 
-              {/* Input thật (Invisible) */}
+              {/* Input thật (Invisible) - Xoay dọc */}
               <input
                 type="range"
                 min="0"
                 max="500"
                 value={volume}
                 onChange={handleVolumeChange}
+                orient="vertical"
                 style={{
-                  width: '100%',
-                  height: '20px', // Vùng bấm rộng hơn
-                  opacity: 0, // Ẩn đi để dùng UI custom
+                  width: '20px',
+                  height: '100%',
+                  opacity: 0,
                   cursor: 'pointer',
-                  position: 'relative',
-                  zIndex: 10
+                  position: 'absolute',
+                  zIndex: 10,
+                  writingMode: 'bt-lr',
+                  WebkitAppearance: 'slider-vertical',
                 }}
               />
               
@@ -149,31 +165,17 @@ export default function CinematicVolume({ soundRef }) {
               <motion.div
                 style={{
                   position: 'absolute',
-                  left: `${(volume / 500) * 100}%`,
+                  bottom: `${(volume / 500) * 100}%`,
                   width: '12px',
                   height: '12px',
                   background: '#000',
                   border: '2px solid #00f3ff',
                   boxShadow: '0 0 15px #00f3ff',
-                  transform: 'translate(-50%, 0) rotate(45deg)', // Hình thoi
+                  transform: 'translate(0, 50%) rotate(45deg)',
                   pointerEvents: 'none',
                   zIndex: 5
                 }}
               />
-            </div>
-
-            {/* Chỉ số % (HUD Text) */}
-            <div style={{ 
-              marginLeft: '15px', 
-              color: '#00f3ff', 
-              fontSize: '14px', 
-              fontWeight: 'bold', 
-              fontFamily: 'monospace',
-              textShadow: '0 0 5px rgba(0,243,255,0.8)',
-              minWidth: '50px',
-              textAlign: 'right'
-            }}>
-              {Math.round(volume)}%
             </div>
 
             {/* Decor: Icon tia sét max volume */}
@@ -181,7 +183,7 @@ export default function CinematicVolume({ soundRef }) {
               <motion.div
                 initial={{ opacity: 0, scale: 0 }}
                 animate={{ opacity: 1, scale: 1 }}
-                style={{ position: 'absolute', right: '5px', top: '5px' }}
+                style={{ position: 'absolute', top: '5px', left: '50%', transform: 'translateX(-50%)' }}
               >
                 <Zap size={10} color="#ff0055" fill="#ff0055" />
               </motion.div>
