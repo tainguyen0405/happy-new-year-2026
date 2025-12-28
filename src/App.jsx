@@ -285,15 +285,6 @@ function SceneContent({ scene, handleLaunch, soundRef, isPlaying, setIsPlaying }
           
           <PositionalAudio ref={soundRef} url="/happy-new-year-2026/sounds/celebration.mp3" distance={50} loop />
           
-          {/* Rectangular Audio Visualizer - Khung bao quanh */}
-          <RectangularAudioVisualizer 
-            soundRef={soundRef}
-            width={28}        // Chiều rộng khung (bao cả chữ)
-            height={13}       // Chiều cao khung (bao HAPPY + 2026)
-            barCount={120}    // Số thanh (nhiều = mịn hơn)
-            position={[0, -1, 0]} // Vị trí trung tâm
-          />
-          
           <Float speed={3} rotationIntensity={0.6} floatIntensity={1.5}>
             <Center position={[0, 2, 0]}>
               <Text3D font="/happy-new-year-2026/fonts/Orbitron_Regular.json" size={2.5} height={0.6} bevelEnabled>
