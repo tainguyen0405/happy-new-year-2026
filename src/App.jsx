@@ -241,18 +241,36 @@ function ArcText({
   )
 }
 
-// --- LAVENDER CANDLE SCENE (làm nền dưới 360 độ) ---
+// --- LAVENDER FIELD GROUND (Thảm cỏ oải hương 360°) ---
 function LavenderScene() {
   const { scene: gltfScene } = useGLTF('/happy-new-year-2026/models/lavender.glb')
-  const clonedScene = useMemo(() => gltfScene.clone(), [gltfScene])
   
+  // Tạo nhiều bản sao để phủ kín sàn 360°
   return (
-    <primitive 
-      object={clonedScene} 
-      scale={[15, 1, 15]}  // Scale rộng ra như thảm
-      position={[0, -8, 0]}  // Đặt ở dưới
-      rotation={[0, 0, 0]}
-    />
+    <group position={[0, -8, 0]}>
+      {/* Trung tâm */}
+      <primitive object={gltfScene.clone()} scale={4} position={[0, 0, 0]} />
+      
+      {/* Vòng tròn xung quanh - 8 hướng */}
+      <primitive object={gltfScene.clone()} scale={4} position={[15, 0, 0]} />
+      <primitive object={gltfScene.clone()} scale={4} position={[-15, 0, 0]} />
+      <primitive object={gltfScene.clone()} scale={4} position={[0, 0, 15]} />
+      <primitive object={gltfScene.clone()} scale={4} position={[0, 0, -15]} />
+      <primitive object={gltfScene.clone()} scale={4} position={[11, 0, 11]} />
+      <primitive object={gltfScene.clone()} scale={4} position={[-11, 0, 11]} />
+      <primitive object={gltfScene.clone()} scale={4} position={[11, 0, -11]} />
+      <primitive object={gltfScene.clone()} scale={4} position={[-11, 0, -11]} />
+      
+      {/* Vòng ngoài - 16 hướng */}
+      <primitive object={gltfScene.clone()} scale={4} position={[25, 0, 0]} />
+      <primitive object={gltfScene.clone()} scale={4} position={[-25, 0, 0]} />
+      <primitive object={gltfScene.clone()} scale={4} position={[0, 0, 25]} />
+      <primitive object={gltfScene.clone()} scale={4} position={[0, 0, -25]} />
+      <primitive object={gltfScene.clone()} scale={4} position={[18, 0, 18]} />
+      <primitive object={gltfScene.clone()} scale={4} position={[-18, 0, 18]} />
+      <primitive object={gltfScene.clone()} scale={4} position={[18, 0, -18]} />
+      <primitive object={gltfScene.clone()} scale={4} position={[-18, 0, -18]} />
+    </group>
   )
 }
 
