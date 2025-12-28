@@ -1,16 +1,82 @@
 import { useState, useEffect, useRef, useMemo, Suspense } from 'react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
-import { OrbitControls, Text3D, Center, Float, Stars, Environment, PositionalAudio, Cylinder } from '@react-three/drei'
+import { OrbitControls, Text3D, Center, Float, Stars, Environment, PositionalAudio, Cylinder, useGLTF } from '@react-three/drei'
 import { EffectComposer, Bloom } from '@react-three/postprocessing'
 import * as THREE from 'three'
 
-import CinematicVolume from './CinematicVolume'
-import CinematicPlayButton from './CinematicPlayButton'
-import CircularAudioVisualizer from './CircularAudioVisualizer'
-import MusicToggleButton from './MusicToggleButton'
-import VolumeControl from './VolumeControl'
+// Import các component khác (giả sử bạn đã có)
+// import CinematicVolume from './CinematicVolume'
+// import CinematicPlayButton from './CinematicPlayButton'
+// import CircularAudioVisualizer from './CircularAudioVisualizer'
+// import MusicToggleButton from './MusicToggleButton'
+// import VolumeControl from './VolumeControl'
 
 const isTesting = true;
+
+// --- PLACEHOLDER COMPONENTS (thay thế nếu bạn chưa có) ---
+const CinematicVolume = ({ soundRef }) => null
+const CinematicPlayButton = ({ soundRef }) => null
+const CircularAudioVisualizer = ({ soundRef, radius, count }) => null
+const MusicToggleButton = ({ soundRef, isPlaying, setIsPlaying }) => (
+  <button 
+    onClick={() => {
+      if (soundRef.current) {
+        if (isPlaying) {
+          soundRef.current.pause()
+        } else {
+          soundRef.current.play()
+        }
+        setIsPlaying(!isPlaying)
+      }
+    }}
+    style={{
+      position: 'absolute',
+      bottom: 20,
+      right: 20,
+      padding: '12px 24px',
+      background: 'rgba(255,255,255,0.2)',
+      border: '2px solid white',
+      color: 'white',
+      borderRadius: 8,
+      cursor: 'pointer',
+      fontSize: 16,
+      fontWeight: 'bold',
+      backdropFilter: 'blur(10px)',
+      zIndex: 100
+    }}
+  >
+    {isPlaying ? '⏸️ Pause' : '▶️ Play'}
+  </button>
+)
+const VolumeControl = ({ soundRef, volume, setVolume }) => (
+  <div style={{
+    position: 'absolute',
+    bottom: 80,
+    right: 20,
+    padding: 12,
+    background: 'rgba(255,255,255,0.2)',
+    border: '2px solid white',
+    borderRadius: 8,
+    backdropFilter: 'blur(10px)',
+    zIndex: 100
+  }}>
+    <input 
+      type="range" 
+      min="0" 
+      max="5" 
+      step="0.1" 
+      value={volume}
+      onChange={(e) => {
+        const val = parseFloat(e.target.value)
+        setVolume(val)
+        if (soundRef.current) {
+          soundRef.current.setVolume(val)
+        }
+      }}
+      style={{ width: 100 }}
+    />
+  </div>
+)
 
 // --- 1. HÀM TẠO ÂM THANH CLICK ---
 const playCustomClick = () => {
@@ -214,7 +280,7 @@ function ArcText({
   textHeight = 0.3,
   verticalOffset = 0
 }) {
-  const fontUrl = '/happy-new-year-2026/fonts/Orbitron_Regular.json'
+  const fontUrl = '/fonts/Orbitron_Regular.json'
   const characters = text.split('')
   const totalAngle = startAngle - endAngle
   const angleStep = totalAngle / (characters.length - 1)
@@ -238,6 +304,21 @@ function ArcText({
         )
       })}
     </group>
+  )
+}
+
+// --- LAVENDER CANDLE SCENE ---
+function LavenderScene() {
+  const { scene: gltfScene } = useGLTF('/models/lavender.glb')
+  const clonedScene = useMemo(() => gltfScene.clone(), [gltfScene])
+  
+  return (
+    <primitive 
+      object={clonedScene} 
+      scale={3} 
+      position={[0, -15, 0]} 
+      rotation={[0, Math.PI / 4, 0]}
+    />
   )
 }
 
@@ -276,32 +357,42 @@ function SceneContent({ scene, handleLaunch, soundRef, isPlaying, setIsPlaying }
           <ambientLight intensity={0.5} />
           <CountdownDisplay onFinishTransition={handleLaunch} />
           <CircularAudioVisualizer soundRef={soundRef} radius={18} count={200} />
-          <PositionalAudio ref={soundRef} url="/happy-new-year-2026/sounds/lofi.mp3" distance={30} loop />
+          <PositionalAudio ref={soundRef} url="/sounds/lofi.mp3" distance={30} loop />
         </Suspense>
       ) : (
         <Suspense fallback={null}>
           <Stars radius={150} count={1200} factor={2} fade speed={0.4} />
           <FireworkManager triggerShake={triggerShake} />
           
-          <PositionalAudio ref={soundRef} url="/happy-new-year-2026/sounds/celebration.mp3" distance={50} loop />
+          {/* Nến lavender làm nền */}
+          <LavenderScene />
           
-          <Float speed={3} rotationIntensity={0.6} floatIntensity={1.5}>
-            <Center position={[0, 2, 0]}>
-              <Text3D font="/happy-new-year-2026/fonts/Orbitron_Regular.json" size={2.5} height={0.6} bevelEnabled>
+          <PositionalAudio ref={soundRef} url="/sounds/celebration.mp3" distance={50} loop />
+          
+          {/* Chữ được đặt trên nến */}
+          <Float speed={2} rotationIntensity={0.3} floatIntensity={0.8}>
+            <Center position={[0, 8, 0]}>
+              <Text3D font="/fonts/Orbitron_Regular.json" size={2} height={0.5} bevelEnabled>
                 HAPPY NEW YEAR
-                <meshStandardMaterial color="#FFD700" metalness={1} roughness={0.02} emissive="#FFB300" emissiveIntensity={0.2} />
+                <meshStandardMaterial color="#FFD700" metalness={1} roughness={0.02} emissive="#FFB300" emissiveIntensity={0.3} />
               </Text3D>
             </Center>
 
-            <Center position={[0, -3.8, 0]}>
-              <Text3D font="/happy-new-year-2026/fonts/Orbitron_Regular.json" size={5} height={1.2} bevelEnabled>
+            <Center position={[0, 4, 0]}>
+              <Text3D font="/fonts/Orbitron_Regular.json" size={4} height={1} bevelEnabled>
                 2026
-                <meshStandardMaterial color="#FFD700" metalness={1} roughness={0.01} emissive="#FFD700" emissiveIntensity={0.5} />
+                <meshStandardMaterial color="#FFD700" metalness={1} roughness={0.01} emissive="#FFD700" emissiveIntensity={0.6} />
               </Text3D>
             </Center>
           </Float>
 
-          <pointLight position={[0, 10, 20]} intensity={8} color="#FFD700" />
+          {/* Ánh sáng từ trên xuống và từ nến */}
+          <pointLight position={[0, 15, 10]} intensity={10} color="#FFD700" />
+          <pointLight position={[0, 0, 0]} intensity={5} color="#FF8C00" distance={30} />
+          <spotLight position={[0, 20, 15]} angle={0.5} penumbra={0.5} intensity={8} color="#FFA500" target-position={[0, 0, 0]} />
+          
+          {/* Ánh sáng môi trường ấm */}
+          <ambientLight intensity={0.3} color="#FFE4B5" />
         </Suspense>
       )}
     </>
@@ -358,8 +449,8 @@ export default function App() {
 
       <div style={{ position: 'absolute', inset: 0, backgroundColor: 'white', opacity: flash, zIndex: 10, pointerEvents: 'none' }} />
 
-      <Canvas camera={{ position: [0, 0, 45], fov: 45 }}>
-        <color attach="background" args={['#000000']} />
+      <Canvas camera={{ position: [0, 5, 35], fov: 50 }}>
+        <color attach="background" args={['#0a0a0a']} />
         <Environment preset="city" />
         <SceneContent 
           scene={scene} 
@@ -380,7 +471,7 @@ export default function App() {
 // --- COUNTDOWN DISPLAY ---
 function CountdownDisplay({ onFinishTransition }) {
     const [timeLeft, setTimeLeft] = useState({ d: 0, h: 0, m: 0, s: 0, total: 999 })
-    const fontUrl = '/happy-new-year-2026/fonts/Orbitron_Regular.json'
+    const fontUrl = '/fonts/Orbitron_Regular.json'
     useEffect(() => {
       const targetTime = isTesting ? new Date().getTime() + 15000 : new Date("Jan 1, 2026 00:00:00").getTime();
       const timer = setInterval(() => {
@@ -439,7 +530,7 @@ function MechanicalButton({ onActivate }) {
           <meshStandardMaterial color={hovered ? "#ff0033" : "#220000"} metalness={1} emissive="#ff0000" emissiveIntensity={hovered ? 1.2 : 0.1}/>
         </Cylinder>
       </group>
-      <Center position={[0, -4.8, 0]}><Text3D font="/happy-new-year-2026/fonts/Orbitron_Regular.json" size={0.5} height={0.1}>LAUNCH 2026<meshStandardMaterial color="white" /></Text3D></Center>
+      <Center position={[0, -4.8, 0]}><Text3D font="/fonts/Orbitron_Regular.json" size={0.5} height={0.1}>LAUNCH 2026<meshStandardMaterial color="white" /></Text3D></Center>
     </group>
   )
 }
