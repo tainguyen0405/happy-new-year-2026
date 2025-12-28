@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useMemo, Suspense } from 'react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
-import { OrbitControls, Text3D, Center, Float, Stars, Environment, PositionalAudio, Cylinder } from '@react-three/drei'
+import { OrbitControls, Text3D, Center, Float, Stars, Environment, PositionalAudio, Cylinder, useGLTF } from '@react-three/drei'
 import { EffectComposer, Bloom } from '@react-three/postprocessing'
 import * as THREE from 'three'
 
@@ -241,6 +241,21 @@ function ArcText({
   )
 }
 
+// --- LAVENDER CANDLE SCENE ---
+function LavenderScene() {
+  const { scene: gltfScene } = useGLTF('/happy-new-year-2026/models/lavender.glb')
+  const clonedScene = useMemo(() => gltfScene.clone(), [gltfScene])
+  
+  return (
+    <primitive 
+      object={clonedScene} 
+      scale={3} 
+      position={[0, -15, 0]} 
+      rotation={[0, Math.PI / 4, 0]}
+    />
+  )
+}
+
 // --- SCENE CONTENT ---
 function SceneContent({ scene, handleLaunch, soundRef, isPlaying, setIsPlaying }) {
   const { camera } = useThree()
@@ -283,25 +298,33 @@ function SceneContent({ scene, handleLaunch, soundRef, isPlaying, setIsPlaying }
           <Stars radius={150} count={1200} factor={2} fade speed={0.4} />
           <FireworkManager triggerShake={triggerShake} />
           
+          {/* Nến lavender làm nền */}
+          <LavenderScene />
+          
           <PositionalAudio ref={soundRef} url="/happy-new-year-2026/sounds/celebration.mp3" distance={50} loop />
           
-          <Float speed={3} rotationIntensity={0.6} floatIntensity={1.5}>
-            <Center position={[0, 2, 0]}>
-              <Text3D font="/happy-new-year-2026/fonts/Orbitron_Regular.json" size={2.5} height={0.6} bevelEnabled>
+          {/* Chữ được đặt trên nến */}
+          <Float speed={2} rotationIntensity={0.3} floatIntensity={0.8}>
+            <Center position={[0, 8, 0]}>
+              <Text3D font="/happy-new-year-2026/fonts/Orbitron_Regular.json" size={2} height={0.5} bevelEnabled>
                 HAPPY NEW YEAR
-                <meshStandardMaterial color="#FFD700" metalness={1} roughness={0.02} emissive="#FFB300" emissiveIntensity={0.2} />
+                <meshStandardMaterial color="#FFD700" metalness={1} roughness={0.02} emissive="#FFB300" emissiveIntensity={0.3} />
               </Text3D>
             </Center>
 
-            <Center position={[0, -3.8, 0]}>
-              <Text3D font="/happy-new-year-2026/fonts/Orbitron_Regular.json" size={5} height={1.2} bevelEnabled>
+            <Center position={[0, 4, 0]}>
+              <Text3D font="/happy-new-year-2026/fonts/Orbitron_Regular.json" size={4} height={1} bevelEnabled>
                 2026
-                <meshStandardMaterial color="#FFD700" metalness={1} roughness={0.01} emissive="#FFD700" emissiveIntensity={0.5} />
+                <meshStandardMaterial color="#FFD700" metalness={1} roughness={0.01} emissive="#FFD700" emissiveIntensity={0.6} />
               </Text3D>
             </Center>
           </Float>
 
-          <pointLight position={[0, 10, 20]} intensity={8} color="#FFD700" />
+          {/* Ánh sáng chiếu từ trên xuống và từ nến */}
+          <pointLight position={[0, 15, 10]} intensity={10} color="#FFD700" />
+          <pointLight position={[0, 0, 0]} intensity={5} color="#FF8C00" distance={30} />
+          <spotLight position={[0, 20, 15]} angle={0.5} penumbra={0.5} intensity={8} color="#FFA500" target-position={[0, 0, 0]} />
+          <ambientLight intensity={0.3} color="#FFE4B5" />
         </Suspense>
       )}
     </>
@@ -358,8 +381,8 @@ export default function App() {
 
       <div style={{ position: 'absolute', inset: 0, backgroundColor: 'white', opacity: flash, zIndex: 10, pointerEvents: 'none' }} />
 
-      <Canvas camera={{ position: [0, 0, 45], fov: 45 }}>
-        <color attach="background" args={['#000000']} />
+      <Canvas camera={{ position: [0, 5, 35], fov: 50 }}>
+        <color attach="background" args={['#0a0a0a']} />
         <Environment preset="city" />
         <SceneContent 
           scene={scene} 
