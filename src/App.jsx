@@ -452,13 +452,14 @@ function FloatingParticles({ count = 50 }) {
   )
 }
 
-// --- 2D HAPPY NEW YEAR SCENE ---
+// --- 2D CINEMATIC SCENE (Title Sequence Style) ---
 function HappyNewYear2026Scene() {
-  const [showCards, setShowCards] = useState(false)
+  const [active, setActive] = useState(false)
 
   useEffect(() => {
-    const timer = setTimeout(() => setShowCards(true), 300)
-    return () => clearTimeout(timer)
+    // Kích hoạt animation sau khi mount
+    const t = setTimeout(() => setActive(true), 100)
+    return () => clearTimeout(t)
   }, [])
 
   return (
@@ -466,357 +467,167 @@ function HappyNewYear2026Scene() {
       position: 'relative',
       width: '100%',
       height: '100%',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      overflow: 'hidden'
+      background: '#000',
+      overflow: 'hidden',
+      fontFamily: '"Orbitron", sans-serif', // Đảm bảo bạn đã load font này hoặc font tương tự
+      color: '#fff'
     }}>
-      <AnimatedGradientBackground />
-      <FloatingParticles count={60} />
+      
+      {/* 1. BACKGROUND: AURORA MESH GRADIENT */}
+      <div style={{
+        position: 'absolute',
+        inset: -100, // Làm rộng hơn màn hình để khi xoay không bị lẹm
+        background: `
+          radial-gradient(circle at 50% 50%, rgba(0,0,0,0) 0%, rgba(0,0,0,0.8) 100%),
+          conic-gradient(from 0deg at 50% 50%, #0f0c29, #302b63, #24243e, #0f0c29)
+        `,
+        opacity: 0.8,
+        filter: 'blur(80px)',
+        animation: 'auroraSpin 20s linear infinite',
+        zIndex: 1
+      }} />
+      
+      {/* Thêm các đốm sáng trôi nổi (Orbs) */}
+      <div className="orb" style={{ 
+        top: '20%', left: '20%', background: '#ff0055', animationDelay: '0s' 
+      }} />
+      <div className="orb" style={{ 
+        bottom: '20%', right: '20%', background: '#00ccff', animationDelay: '-5s' 
+      }} />
 
-      {/* DECORATIVE CARDS - Top Left */}
-      {showCards && (
-        <GlassCard
-          delay={200}
-          fromDirection="left"
-          style={{
-            position: 'absolute',
-            top: '8%',
-            left: '5%',
-            width: '280px',
-            height: '200px',
-            zIndex: 2
-          }}
-        >
-          <div style={{
-            fontSize: '48px',
-            fontWeight: 'bold',
-            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            marginBottom: '12px'
-          }}>
-            2025
-          </div>
-          <div style={{
-            color: 'rgba(255, 255, 255, 0.6)',
-            fontSize: '16px',
-            fontWeight: '500'
-          }}>
-            Goodbye & Thank You
-          </div>
-        </GlassCard>
-      )}
+      {/* 2. FILM GRAIN & VIGNETTE (Tạo cảm giác máy quay phim) */}
+      <div style={{
+        position: 'absolute',
+        inset: 0,
+        zIndex: 2,
+        pointerEvents: 'none',
+        backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.65%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22 opacity=%221%22/%3E%3C/svg%3E")',
+        opacity: 0.07, // Độ nhiễu hạt
+        backgroundSize: '200px',
+      }} />
+      
+      <div style={{
+        position: 'absolute',
+        inset: 0,
+        zIndex: 3,
+        pointerEvents: 'none',
+        background: 'radial-gradient(circle at center, transparent 0%, #000 120%)' // Vignette tối 4 góc
+      }} />
 
-      {/* DECORATIVE CARDS - Top Right */}
-      {showCards && (
-        <GlassCard
-          delay={400}
-          fromDirection="right"
-          style={{
-            position: 'absolute',
-            top: '8%',
-            right: '5%',
-            width: '280px',
-            height: '200px',
-            zIndex: 2
-          }}
-        >
-          <div style={{
-            fontSize: '48px',
-            fontWeight: 'bold',
-            background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            marginBottom: '12px'
-          }}>
-            2026
-          </div>
-          <div style={{
-            color: 'rgba(255, 255, 255, 0.6)',
-            fontSize: '16px',
-            fontWeight: '500'
-          }}>
-            New Adventures Await
-          </div>
-        </GlassCard>
-      )}
-
-      {/* MAIN CENTER CARD */}
-      <GlassCard
-        delay={600}
-        fromDirection="bottom"
-        style={{
-          position: 'relative',
-          zIndex: 3,
-          width: '90%',
-          maxWidth: '800px',
-          minHeight: '400px',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: '60px 40px'
-        }}
-      >
+      {/* 3. MAIN CONTENT */}
+      <div style={{
+        position: 'relative',
+        zIndex: 10,
+        width: '100%',
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        textAlign: 'center'
+      }}>
+        
+        {/* Dòng chữ nhỏ trên cùng */}
         <div style={{
-          fontSize: 'clamp(48px, 8vw, 96px)',
-          fontWeight: '900',
-          textAlign: 'center',
-          lineHeight: '1.2',
-          marginBottom: '24px',
-          background: 'linear-gradient(135deg, #ffd89b 0%, #19547b 100%)',
-          WebkitBackgroundClip: 'text',
-          WebkitTextFillColor: 'transparent',
-          animation: 'gradientShift 3s ease infinite',
-          letterSpacing: '2px'
+          fontSize: 'clamp(14px, 1.5vw, 18px)',
+          letterSpacing: '0.8em',
+          textTransform: 'uppercase',
+          fontWeight: 300,
+          opacity: active ? 0.7 : 0,
+          transform: active ? 'translateY(0)' : 'translateY(20px)',
+          transition: 'all 1.5s cubic-bezier(0.2, 0.8, 0.2, 1) 0.5s',
+          marginBottom: '2vh'
         }}>
-          HAPPY NEW YEAR
+          Goodbye 2025
         </div>
 
-        <div style={{
-          fontSize: 'clamp(72px, 12vw, 144px)',
-          fontWeight: '900',
-          textAlign: 'center',
-          background: 'linear-gradient(135deg, #FFD700 0%, #FF8C00 50%, #FF6347 100%)',
+        {/* Chữ HAPPY NEW YEAR - Hiệu ứng Gradient Text + Mask */}
+        <h1 style={{
+          fontSize: 'clamp(40px, 6vw, 80px)',
+          fontWeight: 800,
+          margin: 0,
+          lineHeight: 1.1,
+          letterSpacing: '-0.02em',
+          background: 'linear-gradient(to bottom, #ffffff 30%, #a5a5a5 100%)', // Giả kim loại bạc
           WebkitBackgroundClip: 'text',
           WebkitTextFillColor: 'transparent',
-          animation: 'float 3s ease-in-out infinite',
-          textShadow: '0 0 40px rgba(255, 215, 0, 0.5)',
-          letterSpacing: '4px'
+          opacity: active ? 1 : 0,
+          transform: active ? 'scale(1)' : 'scale(1.1) blur(10px)', // Blur in effect
+          filter: active ? 'blur(0px)' : 'blur(20px)',
+          transition: 'all 2s cubic-bezier(0.16, 1, 0.3, 1) 0.8s'
+        }}>
+          HAPPY NEW YEAR
+        </h1>
+
+        {/* SỐ 2026 KHỔNG LỒ */}
+        <div style={{
+          fontSize: 'clamp(100px, 25vw, 350px)',
+          fontWeight: 900,
+          lineHeight: 0.9,
+          letterSpacing: '-0.05em',
+          position: 'relative',
+          opacity: active ? 1 : 0,
+          transform: active ? 'translateY(0) scale(1)' : 'translateY(50px) scale(0.9)',
+          transition: 'all 2.5s cubic-bezier(0.16, 1, 0.3, 1) 1s',
+          // Hiệu ứng chữ mạ vàng (Gold text)
+          backgroundImage: 'linear-gradient(135deg, #BF953F, #FCF6BA, #B38728, #FBF5B7, #AA771C)',
+          backgroundSize: '200% auto',
+          backgroundClip: 'text',
+          WebkitBackgroundClip: 'text',
+          color: 'transparent',
+          animation: 'shine 5s linear infinite'
         }}>
           2026
         </div>
 
+        {/* Dòng quote bên dưới */}
         <div style={{
-          marginTop: '32px',
-          fontSize: 'clamp(16px, 2vw, 24px)',
-          color: 'rgba(255, 255, 255, 0.7)',
-          textAlign: 'center',
-          fontWeight: '500',
-          animation: 'fadeInUp 1s ease 1.2s both'
+          maxWidth: '600px',
+          padding: '0 20px',
+          marginTop: '4vh',
+          fontSize: 'clamp(16px, 1.5vw, 20px)',
+          fontWeight: 300,
+          lineHeight: 1.6,
+          color: 'rgba(255,255,255,0.8)',
+          opacity: active ? 1 : 0,
+          filter: active ? 'blur(0px)' : 'blur(5px)',
+          transition: 'all 2s ease 2s'
         }}>
-          May this year bring you joy, success & endless possibilities ✨
+          "A new chapter unfolds. May your journey be filled with light, courage, and infinite possibilities."
         </div>
-      </GlassCard>
 
-      {/* DECORATIVE CARDS - Bottom Left */}
-      {showCards && (
-        <GlassCard
-          delay={800}
-          fromDirection="left"
-          style={{
-            position: 'absolute',
-            bottom: '8%',
-            left: '5%',
-            width: '220px',
-            height: '160px',
-            zIndex: 2,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center'
-          }}
-        >
-          <div style={{
-            fontSize: '64px',
-            animation: 'pulse 2s ease-in-out infinite'
-          }}>
-            🎉
-          </div>
-        </GlassCard>
-      )}
+      </div>
 
-      {/* DECORATIVE CARDS - Bottom Right */}
-      {showCards && (
-        <GlassCard
-          delay={1000}
-          fromDirection="right"
-          style={{
-            position: 'absolute',
-            bottom: '8%',
-            right: '5%',
-            width: '220px',
-            height: '160px',
-            zIndex: 2,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center'
-          }}
-        >
-          <div style={{
-            fontSize: '64px',
-            animation: 'pulse 2s ease-in-out infinite 0.5s'
-          }}>
-            🎊
-          </div>
-        </GlassCard>
-      )}
-
+      {/* STYLE CSS INLINE CHO ANIMATION */}
       <style>{`
-        @keyframes gradientShift {
-          0%, 100% { filter: hue-rotate(0deg); }
-          50% { filter: hue-rotate(45deg); }
+        @keyframes auroraSpin {
+          0% { transform: rotate(0deg) scale(1.5); }
+          50% { transform: rotate(180deg) scale(2); }
+          100% { transform: rotate(360deg) scale(1.5); }
+        }
+        
+        @keyframes shine {
+          0% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+          100% { background-position: 0% 50%; }
         }
 
-        @keyframes float {
-          0%, 100% { transform: translateY(0px); }
-          50% { transform: translateY(-20px); }
+        .orb {
+          position: absolute;
+          width: 40vw;
+          height: 40vw;
+          border-radius: 50%;
+          filter: blur(100px);
+          opacity: 0.4;
+          animation: orbFloat 10s ease-in-out infinite alternate;
+          z-index: 1;
         }
 
-        @keyframes fadeInUp {
-          from {
-            opacity: 0;
-            transform: translateY(30px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-
-        @keyframes pulse {
-          0%, 100% { transform: scale(1); }
-          50% { transform: scale(1.1); }
+        @keyframes orbFloat {
+          0% { transform: translate(0, 0); }
+          100% { transform: translate(30px, -50px); }
         }
       `}</style>
-    </div>
-  )
-}
-
-// --- SCENE CONTENT ---
-function SceneContent({ scene, handleLaunch, soundRef, isPlaying, setIsPlaying }) {
-  const hasAutoPlayed = useRef(false)
-
-  useEffect(() => {
-    if (scene === 'celebration' && !hasAutoPlayed.current && soundRef.current) {
-      setTimeout(() => {
-        soundRef.current.play()
-        setIsPlaying(true)
-        hasAutoPlayed.current = true
-      }, 200)
-    }
-  }, [scene, soundRef, setIsPlaying])
-
-  return (
-    <>
-      {scene === 'countdown' ? (
-        <Suspense fallback={null}>
-          <InteractiveDust count={6000} />
-          <Stars radius={250} count={3000} factor={4} fade speed={1} />
-          <ambientLight intensity={0.5} />
-          <CountdownDisplay onFinishTransition={handleLaunch} />
-          <CircularAudioVisualizer soundRef={soundRef} radius={18} count={200} />
-          <PositionalAudio ref={soundRef} url="/happy-new-year-2026/sounds/lofi.mp3" distance={30} loop />
-        </Suspense>
-      ) : null}
-    </>
-  )
-}
-
-// --- APP CHÍNH ---
-export default function App() {
-  const soundRef = useRef()
-  const [scene, setScene] = useState('countdown')
-  const [flash, setFlash] = useState(0)
-  const [isUiVisible, setUiVisible] = useState(true)
-  const [isPlaying, setIsPlaying] = useState(false)
-  const [volume, setVolume] = useState(2.0)
-
-  const handleLaunch = () => {
-    setUiVisible(false)
-    setFlash(1)
-    
-    setTimeout(() => {
-      setScene('celebration')
-      const fade = setInterval(() => {
-        setFlash(prev => {
-          if (prev <= 0) { clearInterval(fade); return 0; }
-          return prev - 0.05 
-        })
-      }, 30)
-    }, 600)
-  }
-
-  return (
-    <div style={{ 
-      width: '100vw', 
-      height: '100vh', 
-      position: 'relative', 
-      background: '#000', 
-      overflow: 'hidden',
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-    }}>
-      {/* UI Controls cho countdown */}
-      {isUiVisible && scene === 'countdown' && (
-        <>
-          <CinematicVolume soundRef={soundRef} />
-          <CinematicPlayButton soundRef={soundRef} />
-        </>
-      )}
-
-      {/* Music controls cho celebration */}
-      {scene === 'celebration' && (
-        <>
-          <MusicToggleButton 
-            soundRef={soundRef} 
-            isPlaying={isPlaying} 
-            setIsPlaying={setIsPlaying}
-          />
-          <VolumeControl 
-            soundRef={soundRef} 
-            volume={volume}
-            setVolume={setVolume}
-          />
-        </>
-      )}
-
-      {/* Flash transition */}
-      <div style={{ 
-        position: 'absolute', 
-        inset: 0, 
-        backgroundColor: 'white', 
-        opacity: flash, 
-        zIndex: 10, 
-        pointerEvents: 'none' 
-      }} />
-
-      {/* 3D Canvas cho countdown */}
-      {scene === 'countdown' && (
-        <Canvas camera={{ position: [0, 8, 35], fov: 50 }}>
-          <color attach="background" args={['#0a0a1a']} />
-          <Environment preset="city" />
-          <SceneContent 
-            scene={scene} 
-            handleLaunch={handleLaunch} 
-            soundRef={soundRef} 
-            isPlaying={isPlaying}
-            setIsPlaying={setIsPlaying}
-          />
-          <EffectComposer disableNormalPass>
-            <Bloom luminanceThreshold={0.1} intensity={2.8} mipmapBlur />
-          </EffectComposer>
-          <OrbitControls 
-            enablePan={false} 
-            minDistance={20} 
-            maxDistance={100}
-            maxPolarAngle={Math.PI / 2}
-            minPolarAngle={0}
-            enabled={true}
-          />
-        </Canvas>
-      )}
-
-      {/* 2D Scene cho celebration */}
-      {scene === 'celebration' && (
-        <>
-          <HappyNewYear2026Scene />
-          <audio 
-            ref={soundRef} 
-            src="/happy-new-year-2026/sounds/celebration.mp3" 
-            loop 
-          />
-        </>
-      )}
     </div>
   )
 }
