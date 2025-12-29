@@ -204,6 +204,235 @@ function InteractiveDust({ count = 6000 }) {
   return (<points ref={mesh}><bufferGeometry><bufferAttribute attach="attributes-position" count={pos.length/3} array={pos} itemSize={3} /><bufferAttribute attach="attributes-color" count={col.length/3} array={col} itemSize={3} /></bufferGeometry><pointsMaterial size={0.8} vertexColors transparent map={starTexture} blending={THREE.AdditiveBlending} depthWrite={false} /></points>)
 }
 
+// --- CINEMATIC TEXT WITH PARTICLES & GLOW ---
+function CinematicText() {
+  const groupRef = useRef()
+  const particlesRef = useRef()
+  const [scale, setScale] = useState(0)
+  
+  // Tạo particles quanh chữ
+  const particleData = useMemo(() => {
+    const count = 500
+    const positions = new Float32Array(count * 3)
+    const colors = new Float32Array(count * 3)
+    const sizes = new Float32Array(count)
+    
+    for (let i = 0; i < count; i++) {
+      const angle = Math.random() * Math.PI * 2
+      const radius = 8 + Math.random() * 12
+      const height = (Math.random() - 0.5) * 8
+      
+      positions[i * 3] = Math.cos(angle) * radius
+      positions[i * 3 + 1] = height
+      positions[i * 3 + 2] = Math.sin(angle) * radius
+      
+      const color = new THREE.Color().setHSL(0.15, 1, 0.6 + Math.random() * 0.3)
+      colors[i * 3] = color.r
+      colors[i * 3 + 1] = color.g
+      colors[i * 3 + 2] = color.b
+      
+      sizes[i] = 0.3 + Math.random() * 0.5
+    }
+    
+    return { positions, colors, sizes, count }
+  }, [])
+  
+  // Animation xuất hiện
+  useEffect(() => {
+    let progress = 0
+    const interval = setInterval(() => {
+      progress += 0.02
+      if (progress >= 1) {
+        setScale(1)
+        clearInterval(interval)
+      } else {
+        setScale(progress)
+      }
+    }, 16)
+    return () => clearInterval(interval)
+  }, [])
+  
+  // Animation chữ và particles
+  useFrame((state) => {
+    const time = state.clock.getElapsedTime()
+    
+    if (groupRef.current) {
+      groupRef.current.rotation.y = Math.sin(time * 0.2) * 0.1
+      groupRef.current.position.y = 2 + Math.sin(time * 0.5) * 0.3
+    }
+    
+    if (particlesRef.current) {
+      const positions = particlesRef.current.geometry.attributes.position.array
+      for (let i = 0; i < particleData.count; i++) {
+        const i3 = i * 3
+        const angle = time * 0.3 + i * 0.1
+        const radius = 8 + Math.sin(time + i) * 4
+        
+        positions[i3] = Math.cos(angle) * radius
+        positions[i3 + 2] = Math.sin(angle) * radius
+        positions[i3 + 1] = (Math.sin(time * 0.5 + i) - 0.5) * 8
+      }
+      particlesRef.current.geometry.attributes.position.needsUpdate = true
+      
+      // Xoay particles
+      particlesRef.current.rotation.y = time * 0.1
+    }
+  })
+  
+  return (
+    <group ref={groupRef} scale={[scale, scale, scale]}>
+      {/* Particles quanh chữ */}
+      <points ref={particlesRef}>
+        <bufferGeometry>
+          <bufferAttribute
+            attach="attributes-position"
+            count={particleData.count}
+            array={particleData.positions}
+            itemSize={3}
+          />
+          <bufferAttribute
+            attach="attributes-color"
+            count={particleData.count}
+            array={particleData.colors}
+            itemSize={3}
+          />
+          <bufferAttribute
+            attach="attributes-size"
+            count={particleData.count}
+            array={particleData.sizes}
+            itemSize={1}
+          />
+        </bufferGeometry>
+        <pointsMaterial
+          size={0.8}
+          vertexColors
+          transparent
+          opacity={0.8}
+          blending={THREE.AdditiveBlending}
+          depthWrite={false}
+        />
+      </points>
+      
+      {/* Ring glow effect */}
+      <mesh rotation={[Math.PI / 2, 0, 0]} position={[0, 0, 0]}>
+        <ringGeometry args={[12, 14, 64]} />
+        <meshBasicMaterial 
+          color="#FFD700" 
+          transparent 
+          opacity={0.3}
+          blending={THREE.AdditiveBlending}
+          side={THREE.DoubleSide}
+        />
+      </mesh>
+      
+      {/* HAPPY NEW YEAR với nhiều layers */}
+      <Float speed={2} rotationIntensity={0.3} floatIntensity={0.8}>
+        <group>
+          {/* Layer 1: Shadow/Depth */}
+          <Center position={[0.3, 1.7, -0.5]}>
+            <Text3D font="/happy-new-year-2026/fonts/Orbitron_Regular.json" size={2.5} height={0.6} bevelEnabled>
+              HAPPY NEW YEAR
+              <meshStandardMaterial color="#000000" opacity={0.5} transparent />
+            </Text3D>
+          </Center>
+          
+          {/* Layer 2: Main text với gradient effect */}
+          <Center position={[0, 2, 0]}>
+            <Text3D font="/happy-new-year-2026/fonts/Orbitron_Regular.json" size={2.5} height={0.6} bevelEnabled>
+              HAPPY NEW YEAR
+              <GradientMaterial />
+            </Text3D>
+          </Center>
+          
+          {/* Layer 3: Glow outline */}
+          <Center position={[0, 2, 0.1]}>
+            <Text3D font="/happy-new-year-2026/fonts/Orbitron_Regular.json" size={2.6} height={0.1} bevelEnabled>
+              HAPPY NEW YEAR
+              <meshBasicMaterial 
+                color="#FFD700" 
+                transparent 
+                opacity={0.4}
+                blending={THREE.AdditiveBlending}
+              />
+            </Text3D>
+          </Center>
+
+          {/* 2026 với hiệu ứng tương tự */}
+          <Center position={[0.3, -4.1, -0.5]}>
+            <Text3D font="/happy-new-year-2026/fonts/Orbitron_Regular.json" size={5} height={1.2} bevelEnabled>
+              2026
+              <meshStandardMaterial color="#000000" opacity={0.5} transparent />
+            </Text3D>
+          </Center>
+          
+          <Center position={[0, -3.8, 0]}>
+            <Text3D font="/happy-new-year-2026/fonts/Orbitron_Regular.json" size={5} height={1.2} bevelEnabled>
+              2026
+              <GradientMaterial scale={2} />
+            </Text3D>
+          </Center>
+          
+          <Center position={[0, -3.8, 0.1]}>
+            <Text3D font="/happy-new-year-2026/fonts/Orbitron_Regular.json" size={5.2} height={0.1} bevelEnabled>
+              2026
+              <meshBasicMaterial 
+                color="#FFD700" 
+                transparent 
+                opacity={0.5}
+                blending={THREE.AdditiveBlending}
+              />
+            </Text3D>
+          </Center>
+        </group>
+      </Float>
+      
+      {/* Spotlight effects */}
+      <spotLight
+        position={[10, 10, 10]}
+        angle={0.3}
+        penumbra={1}
+        intensity={20}
+        color="#FFD700"
+        target-position={[0, 2, 0]}
+      />
+      <spotLight
+        position={[-10, 10, -10]}
+        angle={0.3}
+        penumbra={1}
+        intensity={20}
+        color="#FFA500"
+        target-position={[0, -3.8, 0]}
+      />
+    </group>
+  )
+}
+
+// Material với gradient effect
+function GradientMaterial({ scale = 1 }) {
+  const matRef = useRef()
+  
+  useFrame((state) => {
+    if (matRef.current) {
+      const time = state.clock.getElapsedTime()
+      const hue = (Math.sin(time * 0.5) * 0.1 + 0.15) // Dao động quanh vàng cam
+      matRef.current.color.setHSL(hue, 1, 0.6)
+      matRef.current.emissive.setHSL(hue, 1, 0.4)
+      matRef.current.emissiveIntensity = 0.8 + Math.sin(time * 2) * 0.2
+    }
+  })
+  
+  return (
+    <meshPhysicalMaterial
+      ref={matRef}
+      metalness={1}
+      roughness={0.05}
+      clearcoat={1}
+      clearcoatRoughness={0.1}
+      reflectivity={1}
+    />
+  )
+}
+
 // --- CHỮ VÒNG CUNG ---
 function ArcText({ 
   text, 
@@ -249,7 +478,7 @@ function GrassField({ count = 8000 }) {
   // Tạo vị trí và kích thước ngẫu nhiên cho mỗi cọng cỏ
   const grassData = useMemo(() => {
     const data = []
-    const radius = 100 // Bán kính vùng cỏ
+    const radius = 60 // Bán kính vùng cỏ
     
     for (let i = 0; i < count; i++) {
       // Phân bố ngẫu nhiên trong vòng tròn
@@ -365,32 +594,21 @@ function SceneContent({ scene, handleLaunch, soundRef, isPlaying, setIsPlaying }
           <FireworkManager triggerShake={triggerShake} />
           
           {/* Thảm cỏ 360° */}
-          <GrassField count={12000} />
+          <GrassField count={8000} />
           
           <PositionalAudio ref={soundRef} url="/happy-new-year-2026/sounds/celebration.mp3" distance={50} loop />
           
-          {/* Chữ được đặt ở giữa không gian */}
-          <Float speed={2} rotationIntensity={0.3} floatIntensity={0.8}>
-            <Center position={[0, 2, 0]}>
-              <Text3D font="/happy-new-year-2026/fonts/Orbitron_Regular.json" size={2.5} height={0.6} bevelEnabled>
-                HAPPY NEW YEAR
-                <meshStandardMaterial color="#FFD700" metalness={1} roughness={0.02} emissive="#FFB300" emissiveIntensity={0.3} />
-              </Text3D>
-            </Center>
+          {/* Chữ được đặt ở giữa không gian với hiệu ứng cinematic */}
+          <CinematicText />
 
-            <Center position={[0, -3.8, 0]}>
-              <Text3D font="/happy-new-year-2026/fonts/Orbitron_Regular.json" size={5} height={1.2} bevelEnabled>
-                2026
-                <meshStandardMaterial color="#FFD700" metalness={1} roughness={0.01} emissive="#FFD700" emissiveIntensity={0.6} />
-              </Text3D>
-            </Center>
-          </Float>
-
-          {/* Ánh sáng */}
-          <pointLight position={[0, 15, 10]} intensity={10} color="#FFD700" />
-          <pointLight position={[0, 0, 0]} intensity={5} color="#FF8C00" distance={30} />
-          <spotLight position={[0, 20, 15]} angle={0.5} penumbra={0.5} intensity={8} color="#FFA500" target-position={[0, 0, 0]} />
-          <ambientLight intensity={0.3} color="#FFE4B5" />
+          {/* Ánh sáng cinematic */}
+          <pointLight position={[0, 25, 0]} intensity={15} color="#FFD700" decay={2} />
+          <pointLight position={[20, 5, 20]} intensity={8} color="#FF8C00" />
+          <pointLight position={[-20, 5, -20]} intensity={8} color="#FFA500" />
+          <ambientLight intensity={0.2} color="#FFE4B5" />
+          
+          {/* Fog để tạo chiều sâu */}
+          <fog attach="fog" args={['#0a0a0a', 30, 100]} />
         </Suspense>
       )}
     </>
