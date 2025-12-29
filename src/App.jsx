@@ -204,38 +204,10 @@ function InteractiveDust({ count = 6000 }) {
   return (<points ref={mesh}><bufferGeometry><bufferAttribute attach="attributes-position" count={pos.length/3} array={pos} itemSize={3} /><bufferAttribute attach="attributes-color" count={col.length/3} array={col} itemSize={3} /></bufferGeometry><pointsMaterial size={0.8} vertexColors transparent map={starTexture} blending={THREE.AdditiveBlending} depthWrite={false} /></points>)
 }
 
-// --- CINEMATIC TEXT WITH PARTICLES & GLOW ---
+// --- CINEMATIC TEXT WITH MULTI-LAYER ---
 function CinematicText() {
   const groupRef = useRef()
-  const particlesRef = useRef()
   const [scale, setScale] = useState(0)
-  
-  // Tạo particles quanh chữ
-  const particleData = useMemo(() => {
-    const count = 500
-    const positions = new Float32Array(count * 3)
-    const colors = new Float32Array(count * 3)
-    const sizes = new Float32Array(count)
-    
-    for (let i = 0; i < count; i++) {
-      const angle = Math.random() * Math.PI * 2
-      const radius = 8 + Math.random() * 12
-      const height = (Math.random() - 0.5) * 8
-      
-      positions[i * 3] = Math.cos(angle) * radius
-      positions[i * 3 + 1] = height
-      positions[i * 3 + 2] = Math.sin(angle) * radius
-      
-      const color = new THREE.Color().setHSL(0.15, 1, 0.6 + Math.random() * 0.3)
-      colors[i * 3] = color.r
-      colors[i * 3 + 1] = color.g
-      colors[i * 3 + 2] = color.b
-      
-      sizes[i] = 0.3 + Math.random() * 0.5
-    }
-    
-    return { positions, colors, sizes, count }
-  }, [])
   
   // Animation xuất hiện
   useEffect(() => {
@@ -252,7 +224,7 @@ function CinematicText() {
     return () => clearInterval(interval)
   }, [])
   
-  // Animation chữ và particles
+  // Animation chữ
   useFrame((state) => {
     const time = state.clock.getElapsedTime()
     
@@ -260,71 +232,10 @@ function CinematicText() {
       groupRef.current.rotation.y = Math.sin(time * 0.2) * 0.1
       groupRef.current.position.y = 2 + Math.sin(time * 0.5) * 0.3
     }
-    
-    if (particlesRef.current) {
-      const positions = particlesRef.current.geometry.attributes.position.array
-      for (let i = 0; i < particleData.count; i++) {
-        const i3 = i * 3
-        const angle = time * 0.3 + i * 0.1
-        const radius = 8 + Math.sin(time + i) * 4
-        
-        positions[i3] = Math.cos(angle) * radius
-        positions[i3 + 2] = Math.sin(angle) * radius
-        positions[i3 + 1] = (Math.sin(time * 0.5 + i) - 0.5) * 8
-      }
-      particlesRef.current.geometry.attributes.position.needsUpdate = true
-      
-      // Xoay particles
-      particlesRef.current.rotation.y = time * 0.1
-    }
   })
   
   return (
     <group ref={groupRef} scale={[scale, scale, scale]}>
-      {/* Particles quanh chữ */}
-      <points ref={particlesRef}>
-        <bufferGeometry>
-          <bufferAttribute
-            attach="attributes-position"
-            count={particleData.count}
-            array={particleData.positions}
-            itemSize={3}
-          />
-          <bufferAttribute
-            attach="attributes-color"
-            count={particleData.count}
-            array={particleData.colors}
-            itemSize={3}
-          />
-          <bufferAttribute
-            attach="attributes-size"
-            count={particleData.count}
-            array={particleData.sizes}
-            itemSize={1}
-          />
-        </bufferGeometry>
-        <pointsMaterial
-          size={0.8}
-          vertexColors
-          transparent
-          opacity={0.8}
-          blending={THREE.AdditiveBlending}
-          depthWrite={false}
-        />
-      </points>
-      
-      {/* Ring glow effect */}
-      <mesh rotation={[Math.PI / 2, 0, 0]} position={[0, 0, 0]}>
-        <ringGeometry args={[12, 14, 64]} />
-        <meshBasicMaterial 
-          color="#FFD700" 
-          transparent 
-          opacity={0.3}
-          blending={THREE.AdditiveBlending}
-          side={THREE.DoubleSide}
-        />
-      </mesh>
-      
       {/* HAPPY NEW YEAR với nhiều layers */}
       <Float speed={2} rotationIntensity={0.3} floatIntensity={0.8}>
         <group>
@@ -606,9 +517,6 @@ function SceneContent({ scene, handleLaunch, soundRef, isPlaying, setIsPlaying }
           <pointLight position={[20, 5, 20]} intensity={8} color="#FF8C00" />
           <pointLight position={[-20, 5, -20]} intensity={8} color="#FFA500" />
           <ambientLight intensity={0.2} color="#FFE4B5" />
-          
-          {/* Fog để tạo chiều sâu */}
-          <fog attach="fog" args={['#0a0a0a', 30, 100]} />
         </Suspense>
       )}
     </>
