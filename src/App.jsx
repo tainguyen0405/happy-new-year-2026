@@ -204,6 +204,133 @@ function InteractiveDust({ count = 6000 }) {
   return (<points ref={mesh}><bufferGeometry><bufferAttribute attach="attributes-position" count={pos.length/3} array={pos} itemSize={3} /><bufferAttribute attach="attributes-color" count={col.length/3} array={col} itemSize={3} /></bufferGeometry><pointsMaterial size={0.8} vertexColors transparent map={starTexture} blending={THREE.AdditiveBlending} depthWrite={false} /></points>)
 }
 
+// --- FLOATING LANTERNS (Đèn lồng bay) ---
+function FloatingLanterns({ count = 80 }) {
+  const lanternsRef = useRef([])
+  
+  // Tạo data cho đèn lồng
+  const lanternData = useMemo(() => {
+    const data = []
+    for (let i = 0; i < count; i++) {
+      const angle = Math.random() * Math.PI * 2
+      const radius = 30 + Math.random() * 80
+      data.push({
+        id: i,
+        startX: Math.cos(angle) * radius,
+        startY: -15 + Math.random() * 10,
+        startZ: Math.sin(angle) * radius,
+        speed: 0.3 + Math.random() * 0.4,
+        sway: Math.random() * 2,
+        scale: 0.6 + Math.random() * 0.8,
+        delay: Math.random() * 10,
+        glowIntensity: 0.5 + Math.random() * 0.5
+      })
+    }
+    return data
+  }, [count])
+  
+  return (
+    <group>
+      {lanternData.map((lantern) => (
+        <Lantern key={lantern.id} data={lantern} />
+      ))}
+    </group>
+  )
+}
+
+function Lantern({ data }) {
+  const meshRef = useRef()
+  const lightRef = useRef()
+  const groupRef = useRef()
+  
+  useFrame((state) => {
+    if (!groupRef.current) return
+    
+    const time = state.clock.getElapsedTime() + data.delay
+    
+    // Bay lên từ từ
+    const height = (time * data.speed) % 80 - 15
+    groupRef.current.position.y = height
+    
+    // Lắc lư nhẹ
+    groupRef.current.position.x = data.startX + Math.sin(time * 0.5) * data.sway
+    groupRef.current.position.z = data.startZ + Math.cos(time * 0.3) * data.sway
+    
+    // Xoay nhẹ
+    groupRef.current.rotation.y = time * 0.2
+    
+    // Ánh sáng nhấp nháy nhẹ
+    if (lightRef.current) {
+      lightRef.current.intensity = data.glowIntensity * (0.8 + Math.sin(time * 2) * 0.2)
+    }
+    
+    // Fade in/out ở đầu và cuối
+    if (meshRef.current) {
+      const fadeZone = 5
+      if (height < -10) {
+        meshRef.current.material.opacity = 0
+      } else if (height < -10 + fadeZone) {
+        meshRef.current.material.opacity = (height + 10) / fadeZone
+      } else if (height > 60) {
+        meshRef.current.material.opacity = Math.max(0, (80 - height) / 20)
+      } else {
+        meshRef.current.material.opacity = 1
+      }
+    }
+  })
+  
+  return (
+    <group ref={groupRef} scale={data.scale}>
+      {/* Thân đèn lồng */}
+      <mesh ref={meshRef} position={[0, 0, 0]}>
+        <cylinderGeometry args={[0.8, 0.6, 1.5, 8]} />
+        <meshStandardMaterial
+          color="#FFD700"
+          emissive="#FFA500"
+          emissiveIntensity={0.8}
+          transparent
+          opacity={1}
+          side={THREE.DoubleSide}
+        />
+      </mesh>
+      
+      {/* Đỉnh đèn */}
+      <mesh position={[0, 0.9, 0]}>
+        <cylinderGeometry args={[0.3, 0.8, 0.3, 8]} />
+        <meshStandardMaterial color="#8B4513" />
+      </mesh>
+      
+      {/* Đáy đèn */}
+      <mesh position={[0, -0.9, 0]}>
+        <cylinderGeometry args={[0.6, 0.3, 0.3, 8]} />
+        <meshStandardMaterial color="#8B4513" />
+      </mesh>
+      
+      {/* Dây treo */}
+      <mesh position={[0, 1.3, 0]}>
+        <cylinderGeometry args={[0.02, 0.02, 0.8, 4]} />
+        <meshStandardMaterial color="#8B4513" />
+      </mesh>
+      
+      {/* Tua rua phía dưới */}
+      <mesh position={[0, -1.2, 0]}>
+        <coneGeometry args={[0.1, 0.6, 4]} />
+        <meshStandardMaterial color="#DC143C" emissive="#DC143C" emissiveIntensity={0.5} />
+      </mesh>
+      
+      {/* Ánh sáng phát ra */}
+      <pointLight
+        ref={lightRef}
+        position={[0, 0, 0]}
+        color="#FFD700"
+        intensity={data.glowIntensity}
+        distance={8}
+        decay={2}
+      />
+    </group>
+  )
+}
+
 // --- CINEMATIC CAMERA CONTROLLER (180° Multi-Stage) ---
 function CinematicCamera() {
   const { camera } = useThree()
@@ -535,6 +662,9 @@ function SceneContent({ scene, handleLaunch, soundRef, isPlaying, setIsPlaying }
           {/* Cinematic Camera Animation */}
           <CinematicCamera />
           
+          {/* Đèn lồng bay */}
+          <FloatingLanterns count={80} />
+          
           {/* Thảm cỏ 360° mở rộng */}
           <GrassField count={12000} />
           
@@ -605,7 +735,7 @@ export default function App() {
       <div style={{ position: 'absolute', inset: 0, backgroundColor: 'white', opacity: flash, zIndex: 10, pointerEvents: 'none' }} />
 
       <Canvas camera={{ position: [0, 8, 35], fov: 50 }}>
-        <color attach="background" args={['#0a0a0a']} />
+        <color attach="background" args={['#0a0a1a']} />
         <Environment preset="city" />
         <SceneContent 
           scene={scene} 
