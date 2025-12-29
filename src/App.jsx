@@ -374,6 +374,8 @@ const FireworksCanvas = () => {
 }
 
 // 3.3 Game Lì xì Cinematic
+// --- COMPONENT LÌ XÌ ĐÃ FIX LỖI Z-INDEX & LAYERING ---
+
 const LuckyMoneyGame = () => {
   // States: 'idle' | 'focus' | 'revealed'
   const [viewState, setViewState] = useState('idle') 
@@ -397,7 +399,7 @@ const LuckyMoneyGame = () => {
       const r = rewards[Math.floor(Math.random() * rewards.length)]
       setReward(r)
       setViewState('revealed')
-    }, 1500) 
+    }, 1000) 
   }
 
   const handleReset = () => {
@@ -409,7 +411,7 @@ const LuckyMoneyGame = () => {
   return (
     <div style={{ 
       width: '100%', 
-      height: '300px', 
+      height: '350px', // Tăng chiều cao container để không bị cắt ngọn
       position: 'relative', 
       display: 'flex', 
       justifyContent: 'center', 
@@ -417,25 +419,26 @@ const LuckyMoneyGame = () => {
       perspective: '1000px'
     }}>
       
-      {/* Overlay */}
+      {/* Overlay làm tối nền */}
       <div style={{
         position: 'fixed',
         inset: 0,
-        background: 'rgba(0,0,0,0.8)',
-        backdropFilter: 'blur(8px)',
+        background: 'rgba(0,0,0,0.85)',
+        backdropFilter: 'blur(5px)',
         zIndex: 90,
         opacity: viewState === 'idle' ? 0 : 1,
         pointerEvents: viewState === 'idle' ? 'none' : 'auto',
-        transition: 'all 0.8s cubic-bezier(0.22, 1, 0.36, 1)'
+        transition: 'all 0.5s ease'
       }} onClick={viewState === 'revealed' ? handleReset : undefined} />
 
       {/* Danh sách bao lì xì */}
       <div style={{ 
         display: 'flex', 
-        gap: '30px', 
+        gap: '20px', 
         zIndex: 100,
         width: '100%',
-        justifyContent: 'center'
+        justifyContent: 'center',
+        alignItems: 'center'
       }}>
         {envelopes.map((id) => {
           const isSelected = selectedId === id
@@ -453,128 +456,160 @@ const LuckyMoneyGame = () => {
                 top: isSelected && viewState !== 'idle' ? '50%' : 'auto',
                 left: isSelected && viewState !== 'idle' ? '50%' : 'auto',
                 transform: isSelected && viewState !== 'idle' 
-                  ? 'translate(-50%, -50%) scale(2)'
-                  : (isHidden ? 'scale(0.8) translateY(50px)' : 'scale(1)'),
+                  ? 'translate(-50%, -50%) scale(2.2)' // Scale to hơn chút
+                  : (isHidden ? 'scale(0) opacity(0)' : 'scale(1)'),
                 opacity: isHidden ? 0 : 1,
-                transition: 'all 0.8s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                transition: 'all 0.6s cubic-bezier(0.25, 1, 0.5, 1)',
                 cursor: 'pointer',
-                transformStyle: 'preserve-3d',
-                zIndex: isSelected ? 100 : 10
+                zIndex: isSelected ? 100 : 10,
+                transformStyle: 'preserve-3d' // Quan trọng
               }}
             >
-              {/* BODY */}
+              
+              {/* --- LAYER 1: CARD (TỜ LỘC) --- 
+                  Nằm dưới cùng về DOM nhưng sẽ trượt lên.
+                  Z-index thấp hơn Front Face để bị che khuất phần dưới.
+              */}
+              <div style={{
+                position: 'absolute',
+                left: '5px',
+                right: '5px',
+                height: '140px', // Ngắn hơn bao lì xì chút
+                bottom: '0',
+                background: 'linear-gradient(to bottom, #fffdf0, #fff)',
+                borderRadius: '5px 5px 0 0',
+                zIndex: 1, // Thấp hơn body
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'flex-start',
+                textAlign: 'center',
+                padding: '10px 5px',
+                transition: 'transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) 0.5s', // Delay đợi nắp mở
+                transform: viewState === 'revealed' ? 'translateY(-80px)' : 'translateY(10px)',
+                boxShadow: '0 -2px 10px rgba(0,0,0,0.1)'
+              }}>
+                {viewState === 'revealed' && (
+                  <div style={{ animation: 'fadeIn 0.5s ease 0.8s backwards', width: '100%' }}>
+                    <div style={{ fontSize: '8px', color: '#888', textTransform: 'uppercase', marginBottom: '5px' }}>Lộc Xuân 2026</div>
+                    <div style={{ color: '#d60000', fontWeight: '900', fontSize: '13px', lineHeight: '1.4' }}>
+                      {reward}
+                    </div>
+                    {/* Hình trang trí nhỏ trên card */}
+                    <div style={{ marginTop: '5px', fontSize: '20px' }}>💰</div>
+                  </div>
+                )}
+              </div>
+
+              {/* --- LAYER 2: FRONT BODY (MẶT TRƯỚC BAO) --- 
+                  Đây là cái túi chứa Card. Z-index cao hơn Card để che phần chân Card.
+              */}
               <div style={{
                 position: 'absolute',
                 inset: 0,
                 background: 'linear-gradient(135deg, #d60000 0%, #990000 100%)',
                 borderRadius: '8px',
                 border: '1px solid #ffcc00',
-                boxShadow: isSelected 
-                  ? '0 20px 50px rgba(255, 215, 0, 0.4), 0 0 20px rgba(214, 0, 0, 0.8)'
-                  : '0 4px 10px rgba(0,0,0,0.5)',
+                zIndex: 2, // Đè lên Card
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
                 justifyContent: 'center',
-                overflow: 'hidden',
-                transition: 'box-shadow 0.5s ease'
+                boxShadow: isSelected 
+                  ? '0 20px 50px rgba(0,0,0,0.5)' 
+                  : '0 4px 10px rgba(0,0,0,0.3)',
               }}>
-                 {/* Pattern */}
+                {/* Pattern mờ */}
                 <div style={{
                     position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
-                    opacity: 0.1,
+                    opacity: 0.15,
                     backgroundImage: 'radial-gradient(#ffd700 1px, transparent 1px)',
-                    backgroundSize: '10px 10px'
+                    backgroundSize: '12px 12px'
                 }}/>
 
-                {/* ICON CON NGỰA */}
+                {/* ICON & TEXT */}
                 <div style={{ 
                   width: '60%', 
                   height: 'auto', 
-                  marginTop: '20px',
-                  animation: viewState === 'idle' ? 'floatIcon 3s ease-in-out infinite' : 'none'
+                  marginTop: '30px', // Đẩy xuống một chút để tránh nắp
+                  position: 'relative',
+                  zIndex: 3
                 }}>
                   <HorseIcon color="#ffd700" />
                 </div>
-                
                 <div style={{ 
                   color: '#ffd700', 
                   fontWeight: 'bold', 
-                  marginTop: '10px', 
+                  marginTop: '15px', 
                   fontSize: '14px',
-                  letterSpacing: '2px'
+                  letterSpacing: '2px',
+                  position: 'relative',
+                  zIndex: 3
                 }}>
                   2026
                 </div>
               </div>
 
-              {/* FLAP */}
+              {/* --- LAYER 3: FLAP (NẮP BAO) --- 
+                  Nằm trên cùng. RotateX để mở.
+              */}
               <div style={{
                 position: 'absolute',
                 top: 0,
                 left: 0,
                 width: '100%',
-                height: '40px',
-                background: '#c50000',
-                borderBottom: '1px solid #ffd700',
+                height: '50px', // Nắp dài hơn chút
+                background: '#b30000', // Màu tối hơn thân chút cho có chiều sâu
+                borderBottom: '2px solid #ffd700',
                 borderRadius: '8px 8px 50% 50%',
                 transformOrigin: 'top',
-                transition: 'transform 0.6s ease 0.5s',
+                transition: 'transform 0.5s ease',
                 transform: viewState === 'revealed' ? 'rotateX(180deg)' : 'rotateX(0deg)',
-                zIndex: 2
+                zIndex: 3, // Cao nhất khi đóng
+                backfaceVisibility: 'hidden' // Giúp mượt hơn
+              }} />
+              
+              {/* Mặt trong của nắp (khi lật lên sẽ thấy) */}
+               <div style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                width: '100%',
+                height: '50px',
+                background: '#8a0000', // Mặt trong tối hơn
+                borderRadius: '8px 8px 50% 50%',
+                transformOrigin: 'top',
+                transition: 'transform 0.5s ease',
+                transform: viewState === 'revealed' ? 'rotateX(0deg)' : 'rotateX(-180deg)', // Ngược lại với nắp ngoài
+                zIndex: 1, // Thấp để nằm sau card khi mở
+                pointerEvents: 'none'
               }} />
 
-              {/* CARD */}
-              <div style={{
-                position: 'absolute',
-                top: '5px',
-                left: '5px',
-                right: '5px',
-                bottom: '10px',
-                background: 'linear-gradient(to bottom, #fffdf0, #fff)',
-                borderRadius: '6px',
-                zIndex: 1,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                textAlign: 'center',
-                padding: '5px',
-                transition: 'transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) 0.8s',
-                transform: viewState === 'revealed' ? 'translateY(-60%)' : 'translateY(0)',
-                boxShadow: '0 -5px 15px rgba(0,0,0,0.1)'
-              }}>
-                {viewState === 'revealed' ? (
-                  <div style={{ animation: 'fadeIn 0.5s ease 1s backwards' }}>
-                    <div style={{ fontSize: '10px', color: '#888', textTransform: 'uppercase' }}>Lộc Xuân</div>
-                    <div style={{ color: '#d60000', fontWeight: '900', fontSize: '14px', marginTop: '5px' }}>
-                      {reward}
-                    </div>
-                  </div>
-                ) : null}
-              </div>
             </div>
           )
         })}
       </div>
 
-      {/* Button Reset */}
+      {/* Button Reset - Đã chỉnh vị trí xuống thấp hẳn để không đè bao lì xì */}
       {viewState === 'revealed' && (
         <button
           onClick={handleReset}
           style={{
             position: 'fixed',
-            bottom: '15%',
-            zIndex: 101,
-            padding: '12px 30px',
+            bottom: '10%', // Đặt thấp xuống
+            zIndex: 200, // Z-index cao nhất
+            padding: '12px 35px',
             background: 'linear-gradient(90deg, #ffd700, #ffaa00)',
-            border: 'none',
+            border: '2px solid #fff',
             borderRadius: '50px',
-            color: '#5a0000',
-            fontWeight: 'bold',
+            color: '#8b0000',
+            fontWeight: '800',
             fontSize: '16px',
             cursor: 'pointer',
-            boxShadow: '0 0 20px rgba(255, 215, 0, 0.5)',
-            animation: 'slideUpFade 0.5s ease 1.5s backwards'
+            boxShadow: '0 0 20px rgba(255, 215, 0, 0.6)',
+            animation: 'slideUpFade 0.5s ease 0.5s backwards',
+            textTransform: 'uppercase',
+            letterSpacing: '1px'
           }}
         >
           Nhận lộc & Quay lại
@@ -582,20 +617,16 @@ const LuckyMoneyGame = () => {
       )}
 
       <style>{`
-        @keyframes floatIcon {
-          0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-5px); }
-        }
         @keyframes fadeIn {
-          from { opacity: 0; transform: scale(0.8); }
-          to { opacity: 1; transform: scale(1); }
+          from { opacity: 0; transform: translateY(5px); }
+          to { opacity: 1; transform: translateY(0); }
         }
         @keyframes slideUpFade {
-          from { opacity: 0; transform: translateY(20px); }
+          from { opacity: 0; transform: translateY(30px); }
           to { opacity: 1; transform: translateY(0); }
         }
         .envelope-idle:hover {
-           transform: translateY(-10px) scale(1.05) !important;
+           transform: translateY(-10px) !important;
         }
       `}</style>
     </div>
