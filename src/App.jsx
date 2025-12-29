@@ -335,131 +335,276 @@ const FireworksCanvas = () => {
 }
 
 // Component Bao Lì Xì
+// 1. Icon Con Ngựa (SVG)
+const HorseIcon = ({ color = "#ffd700" }) => (
+  <svg viewBox="0 0 100 100" width="100%" height="100%" style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))' }}>
+    <path
+      fill={color}
+      d="M78.5,32.6c-2.3-4.8-6.1-8.5-9.9-10.9c-2.9-1.8-8.6-3.8-12.8-2.6c-2.6,0.7-3.9,2.8-4.2,3.3c-0.4,0.6-0.8,1.3-1.2,2
+      c-0.8,1.4-1.6,2.9-2.7,4.1c-1.3,1.4-2.8,2.3-4.6,2.8c-1.5,0.4-3.1,0.2-4.6-0.6c-1.2-0.6-2.2-1.6-3-2.8c-0.6-0.9-1-1.9-1.2-3
+      c-0.1-0.5-0.1-1.1,0-1.6c0.3-1.7,1.6-3.1,3.1-3.9c0.8-0.4,1.7-0.6,2.6-0.6c0.9,0,1.8,0.2,2.6,0.6c1.3,0.7,2.2,2,2.4,3.5
+      c0.1,0.6,0,1.2-0.2,1.8c-0.4,1.1-1.3,1.9-2.4,2.3c-0.9,0.3-1.9,0.2-2.8-0.3c-0.7-0.4-1.2-1-1.4-1.8c-0.1-0.4-0.1-0.8,0.1-1.2
+      c0.3-0.8,1-1.3,1.8-1.4c0.6-0.1,1.2,0.1,1.7,0.5c0.3,0.3,0.5,0.7,0.6,1.1c0,0.1,0,0.2,0,0.3c-0.1,0.3-0.3,0.5-0.6,0.6
+      c-0.2,0.1-0.4,0.1-0.6,0c-0.2-0.1-0.3-0.3-0.3-0.5c0-0.1,0-0.2,0.1-0.3c0.1-0.1,0.2-0.2,0.3-0.2c0.1,0,0.2,0,0.3,0.1
+      c0.4,0.2,0.5,0.7,0.3,1.1c-0.3,0.5-0.9,0.6-1.4,0.4c-0.4-0.2-0.6-0.6-0.6-1c0-0.3,0.1-0.6,0.3-0.8c0.4-0.4,1-0.4,1.4-0.1
+      c0.3,0.2,0.4,0.6,0.3,0.9c-0.1,0.2-0.3,0.4-0.6,0.4c-0.2,0-0.4-0.1-0.4-0.3c-0.1-0.2,0-0.3,0.1-0.4c0.2-0.2,0.5-0.1,0.6,0.1
+      c0.1,0.1,0.1,0.3,0,0.4C51,44.2,51,44.2,50.9,44.2c-0.1,0-0.2-0.1-0.2-0.2c0-0.1,0-0.2,0.1-0.2c0.1-0.1,0.2-0.1,0.3,0
+      c1.7,1.8,2.7,4.6,1.4,7.3c-1,2.1-3.2,3.3-5.4,3.7c-2.8,0.5-5.6-0.4-7.8-2.1c-1.8-1.4-3.1-3.3-3.9-5.4c-0.6-1.6-0.9-3.2-0.8-4.9
+      c0.1-1.4,0.4-2.7,1-4c0.9-1.8,2.2-3.3,3.8-4.5c2.4-1.8,5.4-2.5,8.3-2.1c2.3,0.3,4.4,1.4,6.1,2.9c1.4,1.2,2.4,2.8,3,4.5
+      c0.5,1.4,0.6,2.9,0.3,4.4c-0.3,1.3-0.9,2.5-1.9,3.5c-1.6,1.7-4,2.5-6.3,2.2c-1.8-0.3-3.4-1.3-4.6-2.7c-0.9-1.1-1.5-2.5-1.7-3.9
+      c-0.2-1.1,0-2.2,0.5-3.2c0.7-1.4,2-2.3,3.5-2.7c1.2-0.3,2.5-0.1,3.6,0.5c0.9,0.5,1.7,1.3,2.2,2.2c0.5,0.9,0.7,1.9,0.6,2.9
+      c-0.1,0.8-0.4,1.6-0.9,2.3c-0.7,1-1.8,1.7-3,2c-1,0.2-2,0-2.9-0.5c-0.7-0.4-1.3-1-1.6-1.8c-0.3-0.6-0.3-1.3-0.2-1.9
+      c0.2-0.9,0.8-1.6,1.6-2c0.7-0.3,1.4-0.3,2.1,0c0.6,0.2,1,0.7,1.2,1.3c0.1,0.4,0.1,0.9,0,1.3c-0.2,0.6-0.7,1-1.3,1.2
+      c-0.5,0.2-1,0.1-1.4-0.2c-0.3-0.2-0.5-0.6-0.5-1c0-0.3,0.1-0.6,0.3-0.8c0.3-0.3,0.7-0.4,1.1-0.3c0.3,0.1,0.5,0.3,0.6,0.6
+      c0.1,0.2,0,0.4-0.1,0.6c-0.2,0.2-0.4,0.3-0.7,0.2c-0.2,0-0.3-0.2-0.3-0.4c0-0.1,0.1-0.3,0.2-0.3c0.1-0.1,0.2,0,0.3,0.1
+      C35.9,40.1,36,40.6,35.9,41c-0.2,0.5-0.7,0.8-1.2,0.7c-0.4-0.1-0.7-0.4-0.8-0.8c0-0.3,0.1-0.6,0.4-0.8c0.3-0.2,0.7-0.2,1,0
+      c0.2,0.1,0.3,0.4,0.3,0.6c0,0.2-0.1,0.3-0.3,0.4c-0.1,0.1-0.3,0-0.3-0.1c-0.1-0.1-0.1-0.2,0-0.3c0.1-0.1,0.2-0.1,0.2,0
+      c0.6,1,0.9,2.2,0.7,3.4c-0.2,1-0.7,1.9-1.4,2.6c-1.1,1.1-2.7,1.6-4.2,1.4c-1.2-0.2-2.3-0.8-3.1-1.7c-0.7-0.8-1.1-1.8-1.2-2.9
+      c-0.1-0.9,0.1-1.8,0.5-2.6c0.6-1.1,1.6-1.9,2.7-2.3c1-0.3,2.1-0.2,3,0.3c0.8,0.4,1.5,1.1,1.8,1.9c0.3,0.7,0.3,1.5,0.1,2.3
+      c-0.2,0.6-0.6,1.2-1.1,1.6c-0.6,0.4-1.3,0.6-2,0.5c-0.6-0.1-1.1-0.4-1.5-0.9c-0.3-0.4-0.4-0.9-0.3-1.4c0.1-0.6,0.4-1,0.9-1.3
+      c0.4-0.2,0.9-0.2,1.3-0.1c0.4,0.1,0.7,0.4,0.9,0.8c0.1,0.3,0.1,0.6,0,0.9c-0.1,0.4-0.4,0.7-0.8,0.8c-0.3,0.1-0.6,0-0.9-0.2
+      c-0.2-0.2-0.3-0.5-0.2-0.8c0-0.2,0.2-0.4,0.4-0.4c0.2,0,0.3,0.1,0.4,0.3c0,0.1,0,0.2-0.1,0.3c-0.1,0.1-0.2,0.1-0.2,0
+      c-1.7,0.7-3.1,2.1-3.8,3.8c-0.6,1.4-0.5,3,0.3,4.4c0.9,1.6,2.5,2.7,4.3,3.1c1.8,0.4,3.7-0.1,5.2-1.2c1.4-1,2.4-2.6,2.7-4.4
+      c0.2-1.4,0-2.8-0.7-4.1c-0.8-1.4-2.1-2.4-3.6-2.9c-1.4-0.5-3-0.3-4.3,0.4c-1.2,0.7-2.1,1.8-2.5,3.1c-0.3,1.1-0.2,2.3,0.4,3.3
+      c0.7,1.2,1.9,2,3.3,2.2c1.1,0.2,2.3-0.2,3.2-1c0.8-0.7,1.3-1.8,1.3-2.9c0.1-0.9-0.2-1.9-0.8-2.6c-0.7-0.9-1.8-1.4-2.9-1.4
+      c-1,0-1.9,0.4-2.6,1.1c-0.6,0.6-0.9,1.4-0.9,2.2c0,0.7,0.3,1.4,0.8,1.9c0.6,0.6,1.4,0.9,2.2,0.8c0.7-0.1,1.3-0.5,1.7-1.1
+      c0.3-0.5,0.4-1.1,0.2-1.6c-0.1-0.5-0.5-0.9-1-1.1c-0.4-0.2-0.9-0.2-1.3,0c-0.4,0.2-0.6,0.6-0.7,1c-0.1,0.4,0,0.7,0.2,1
+      c0.2,0.2,0.5,0.4,0.8,0.3c0.2-0.1,0.4-0.2,0.4-0.5c0.1-0.2,0-0.4-0.2-0.5c-0.2-0.1-0.3-0.1-0.4,0.1c-0.1,0.1-0.1,0.3,0,0.4
+      L78.5,32.6z"
+    />
+  </svg>
+)
+
+// 2. Component Lì Xì Cinematic
 const LuckyMoneyGame = () => {
-  const [selected, setSelected] = useState(null)
+  // States: 'idle' | 'focus' | 'revealed'
+  const [viewState, setViewState] = useState('idle') 
+  const [selectedId, setSelectedId] = useState(null)
   const [reward, setReward] = useState(null)
   
-  // Danh sách lì xì
   const envelopes = [1, 2, 3, 4]
-  
-  // Danh sách phần thưởng (có trọng số nếu muốn, ở đây random đều)
   const rewards = [
-    "10.000 VNĐ",
-    "20.000 VNĐ",
-    "50.000 VNĐ",
-    "100.000 VNĐ",
-    "500.000 VNĐ",
-    "1 Tờ vé số",
-    "Lời chúc may mắn",
-    "1 chuyến du lịch (trong mơ)"
+    "10.000 VNĐ", "20.000 VNĐ", "50.000 VNĐ", "100.000 VNĐ", 
+    "500.000 VNĐ", "1 Tờ vé số", "Một nụ cười", "Chuyến du lịch"
   ]
 
-  const handleOpen = (id) => {
-    if (selected !== null) return // Chỉ được chọn 1 cái
-    setSelected(id)
+  const handleSelect = (id) => {
+    if (viewState !== 'idle') return
+    setSelectedId(id)
+    setViewState('focus')
     
-    // Giả lập delay mở bao
+    // Sequence animation
     setTimeout(() => {
-      const randomReward = rewards[Math.floor(Math.random() * rewards.length)]
-      setReward(randomReward)
-    }, 1000)
+      // Random reward
+      const r = rewards[Math.floor(Math.random() * rewards.length)]
+      setReward(r)
+      setViewState('revealed')
+    }, 1500) // Đợi bao lì xì bay ra giữa và mở nắp
   }
 
-  const resetGame = () => {
-    setSelected(null)
+  const handleReset = () => {
+    setViewState('idle')
+    setSelectedId(null)
     setReward(null)
   }
 
   return (
-    <div style={{ zIndex: 10, position: 'relative', marginTop: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+    <div style={{ 
+      width: '100%', 
+      height: '300px', 
+      position: 'relative', 
+      display: 'flex', 
+      justifyContent: 'center', 
+      alignItems: 'center',
+      perspective: '1000px' // Quan trọng cho 3D transform
+    }}>
       
+      {/* Overlay làm tối nền khi focus */}
+      <div style={{
+        position: 'fixed',
+        inset: 0,
+        background: 'rgba(0,0,0,0.8)',
+        backdropFilter: 'blur(8px)',
+        zIndex: 90,
+        opacity: viewState === 'idle' ? 0 : 1,
+        pointerEvents: viewState === 'idle' ? 'none' : 'auto',
+        transition: 'all 0.8s cubic-bezier(0.22, 1, 0.36, 1)'
+      }} onClick={viewState === 'revealed' ? handleReset : undefined} />
+
       {/* Danh sách bao lì xì */}
-      <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap', justifyContent: 'center' }}>
-        {envelopes.map((id) => (
-          <div 
-            key={id}
-            onClick={() => handleOpen(id)}
-            style={{
-              width: '80px',
-              height: '120px',
-              backgroundColor: '#d60000',
-              border: '2px solid #ffd700',
-              borderRadius: '8px',
-              cursor: selected === null ? 'pointer' : 'default',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              flexDirection: 'column',
-              transition: 'all 0.3s ease',
-              transform: selected === id ? 'scale(1.1) translateY(-10px)' : (selected !== null ? 'scale(0.8) opacity(0.5)' : 'scale(1)'),
-              boxShadow: '0 4px 15px rgba(255, 215, 0, 0.3)',
-              position: 'relative',
-              overflow: 'hidden'
-            }}
-            className="envelope"
-          >
-            {/* Họa tiết trang trí */}
-            <div style={{ width: '40px', height: '40px', border: '1px solid #ffd700', transform: 'rotate(45deg)', marginTop: '-60px' }}></div>
-            <div style={{ fontSize: '24px', color: '#ffd700', fontWeight: 'bold', marginTop: '10px' }}>福</div>
-            <style>{`
-              .envelope:hover {
-                 animation: ${selected === null ? 'shake 0.5s infinite' : 'none'};
-              }
-              @keyframes shake {
-                0% { transform: rotate(0deg); }
-                25% { transform: rotate(5deg); }
-                75% { transform: rotate(-5deg); }
-                100% { transform: rotate(0deg); }
-              }
-            `}</style>
-          </div>
-        ))}
+      <div style={{ 
+        display: 'flex', 
+        gap: '30px', 
+        zIndex: 100,
+        width: '100%',
+        justifyContent: 'center'
+      }}>
+        {envelopes.map((id) => {
+          const isSelected = selectedId === id
+          const isHidden = selectedId !== null && !isSelected
+
+          return (
+            <div
+              key={id}
+              onClick={() => handleSelect(id)}
+              className={isSelected && viewState !== 'idle' ? 'envelope-hero' : 'envelope-idle'}
+              style={{
+                width: '100px',
+                height: '160px',
+                position: isSelected && viewState !== 'idle' ? 'fixed' : 'relative',
+                top: isSelected && viewState !== 'idle' ? '50%' : 'auto',
+                left: isSelected && viewState !== 'idle' ? '50%' : 'auto',
+                transform: isSelected && viewState !== 'idle' 
+                  ? 'translate(-50%, -50%) scale(2)' // Scale to khi ra giữa
+                  : (isHidden ? 'scale(0.8) translateY(50px)' : 'scale(1)'),
+                opacity: isHidden ? 0 : 1,
+                transition: 'all 0.8s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                cursor: 'pointer',
+                transformStyle: 'preserve-3d', // Cho 3D flip
+                zIndex: isSelected ? 100 : 10
+              }}
+            >
+              {/* BODY BAO LÌ XÌ */}
+              <div style={{
+                position: 'absolute',
+                inset: 0,
+                background: 'linear-gradient(135deg, #d60000 0%, #990000 100%)',
+                borderRadius: '8px',
+                border: '1px solid #ffcc00',
+                boxShadow: isSelected 
+                  ? '0 20px 50px rgba(255, 215, 0, 0.4), 0 0 20px rgba(214, 0, 0, 0.8)' // Glow mạnh khi chọn
+                  : '0 4px 10px rgba(0,0,0,0.5)',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                overflow: 'hidden',
+                transition: 'box-shadow 0.5s ease'
+              }}>
+                {/* Pattern mây cổ điển mờ nền */}
+                <div style={{
+                    position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
+                    opacity: 0.1,
+                    backgroundImage: 'radial-gradient(#ffd700 1px, transparent 1px)',
+                    backgroundSize: '10px 10px'
+                }}/>
+
+                {/* ICON CON NGỰA */}
+                <div style={{ 
+                  width: '60%', 
+                  height: 'auto', 
+                  marginTop: '20px',
+                  animation: viewState === 'idle' ? 'floatIcon 3s ease-in-out infinite' : 'none'
+                }}>
+                  <HorseIcon color="#ffd700" />
+                </div>
+                
+                <div style={{ 
+                  color: '#ffd700', 
+                  fontWeight: 'bold', 
+                  marginTop: '10px', 
+                  fontSize: '14px',
+                  letterSpacing: '2px'
+                }}>
+                  2026
+                </div>
+              </div>
+
+              {/* NẮP BAO (FLAP) - Animation mở nắp */}
+              <div style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                width: '100%',
+                height: '40px',
+                background: '#c50000',
+                borderBottom: '1px solid #ffd700',
+                borderRadius: '8px 8px 50% 50%',
+                transformOrigin: 'top',
+                transition: 'transform 0.6s ease 0.5s', // Delay 0.5s sau khi ra giữa mới mở
+                transform: viewState === 'revealed' ? 'rotateX(180deg)' : 'rotateX(0deg)',
+                zIndex: 2
+              }} />
+
+              {/* LÁ THĂM / TIỀN (CARD) - Trượt từ trong ra */}
+              <div style={{
+                position: 'absolute',
+                top: '5px',
+                left: '5px',
+                right: '5px',
+                bottom: '10px',
+                background: 'linear-gradient(to bottom, #fffdf0, #fff)',
+                borderRadius: '6px',
+                zIndex: 1,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                textAlign: 'center',
+                padding: '5px',
+                transition: 'transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) 0.8s', // Delay sau khi mở nắp
+                transform: viewState === 'revealed' ? 'translateY(-60%)' : 'translateY(0)',
+                boxShadow: '0 -5px 15px rgba(0,0,0,0.1)'
+              }}>
+                {viewState === 'revealed' ? (
+                  <div style={{ animation: 'fadeIn 0.5s ease 1s backwards' }}>
+                    <div style={{ fontSize: '10px', color: '#888', textTransform: 'uppercase' }}>Lộc Xuân</div>
+                    <div style={{ color: '#d60000', fontWeight: '900', fontSize: '14px', marginTop: '5px' }}>
+                      {reward}
+                    </div>
+                  </div>
+                ) : null}
+              </div>
+            </div>
+          )
+        })}
       </div>
 
-      {/* Kết quả sau khi rút */}
-      {reward && (
-        <div style={{
-          marginTop: '30px',
-          background: 'rgba(255, 255, 255, 0.1)',
-          backdropFilter: 'blur(10px)',
-          padding: '20px 40px',
-          borderRadius: '15px',
-          border: '1px solid rgba(255, 215, 0, 0.5)',
-          textAlign: 'center',
-          animation: 'popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
-        }}>
-          <div style={{ color: '#ffd700', fontSize: '18px', marginBottom: '10px' }}>Lộc đầu xuân của bạn:</div>
-          <div style={{ color: '#fff', fontSize: '32px', fontWeight: 'bold', textShadow: '0 0 10px #ff0055' }}>{reward}</div>
-          <button 
-            onClick={resetGame}
-            style={{
-              marginTop: '15px',
-              padding: '8px 20px',
-              background: '#d60000',
-              color: 'white',
-              border: 'none',
-              borderRadius: '20px',
-              cursor: 'pointer',
-              fontWeight: 'bold',
-              boxShadow: '0 4px 10px rgba(0,0,0,0.3)'
-            }}
-          >
-            Rút lại
-          </button>
-        </div>
+      {/* Button Reset sau khi mở */}
+      {viewState === 'revealed' && (
+        <button
+          onClick={handleReset}
+          style={{
+            position: 'fixed',
+            bottom: '15%',
+            zIndex: 101,
+            padding: '12px 30px',
+            background: 'linear-gradient(90deg, #ffd700, #ffaa00)',
+            border: 'none',
+            borderRadius: '50px',
+            color: '#5a0000',
+            fontWeight: 'bold',
+            fontSize: '16px',
+            cursor: 'pointer',
+            boxShadow: '0 0 20px rgba(255, 215, 0, 0.5)',
+            animation: 'slideUpFade 0.5s ease 1.5s backwards'
+          }}
+        >
+          Nhận lộc & Quay lại
+        </button>
       )}
-      
+
       <style>{`
-        @keyframes popIn {
-          from { opacity: 0; transform: scale(0.5); }
+        @keyframes floatIcon {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-5px); }
+        }
+        @keyframes fadeIn {
+          from { opacity: 0; transform: scale(0.8); }
           to { opacity: 1; transform: scale(1); }
+        }
+        @keyframes slideUpFade {
+          from { opacity: 0; transform: translateY(20px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .envelope-idle:hover {
+           transform: translateY(-10px) scale(1.05) !important;
         }
       `}</style>
     </div>
   )
 }
 
-// Thay thế component 2D cũ bằng component này
+// 3. Scene Chính (Đã Update)
 function HappyNewYear2026Scene() {
   const [active, setActive] = useState(false)
 
@@ -473,7 +618,7 @@ function HappyNewYear2026Scene() {
       position: 'relative',
       width: '100%',
       height: '100%',
-      background: 'radial-gradient(circle at center, #1a0b0b 0%, #000000 100%)',
+      background: 'radial-gradient(circle at center, #1a0b0b 0%, #050505 100%)',
       overflow: 'hidden',
       fontFamily: '"Orbitron", sans-serif',
       color: '#fff',
@@ -483,7 +628,7 @@ function HappyNewYear2026Scene() {
       alignItems: 'center'
     }}>
       
-      {/* 1. Nền Pháo Hoa */}
+      {/* 1. Nền Pháo Hoa (Sử dụng component cũ của bạn hoặc cái mới đều được, ở đây dùng lại FireworksCanvas từ phần trước) */}
       <FireworksCanvas />
       
       {/* 2. Nội dung chính */}
@@ -491,178 +636,62 @@ function HappyNewYear2026Scene() {
         position: 'relative',
         zIndex: 10,
         textAlign: 'center',
-        padding: '20px'
+        padding: '20px',
+        width: '100%'
       }}>
-        {/* Năm 2026 rực rỡ */}
+        {/* Năm 2026 rực rỡ - GOLD SHADER EFFECT */}
         <div style={{
-          fontSize: 'clamp(60px, 15vw, 200px)',
+          fontSize: 'clamp(80px, 20vw, 250px)',
           fontWeight: 900,
-          lineHeight: 1,
-          marginBottom: '10px',
-          background: 'linear-gradient(to bottom, #ffd700 0%, #ff8c00 100%)',
+          lineHeight: 0.9,
+          marginBottom: '20px',
+          background: 'linear-gradient(to bottom, #FFFFE0 0%, #FFD700 30%, #B8860B 60%, #8B4513 100%)', // Gold Metallic Gradient
           WebkitBackgroundClip: 'text',
           WebkitTextFillColor: 'transparent',
-          filter: 'drop-shadow(0 0 20px rgba(255, 215, 0, 0.5))',
+          filter: 'drop-shadow(0 10px 20px rgba(0,0,0,0.5)) drop-shadow(0 0 30px rgba(255, 215, 0, 0.3))',
           opacity: active ? 1 : 0,
-          transform: active ? 'scale(1)' : 'scale(0.5)',
-          transition: 'all 1s cubic-bezier(0.34, 1.56, 0.64, 1)'
+          transform: active ? 'scale(1) translateY(0)' : 'scale(1.5) translateY(50px)',
+          transition: 'all 1.2s cubic-bezier(0.22, 1, 0.36, 1)',
+          letterSpacing: '-0.05em'
         }}>
           2026
         </div>
 
         {/* Chữ Happy New Year */}
         <h1 style={{
-          fontSize: 'clamp(24px, 4vw, 50px)',
-          margin: '0 0 40px 0',
+          fontSize: 'clamp(20px, 3vw, 40px)',
+          margin: '0 0 60px 0',
           color: '#ffffff',
-          letterSpacing: '5px',
+          letterSpacing: '0.5em',
           textTransform: 'uppercase',
-          opacity: active ? 1 : 0,
+          fontWeight: 300,
+          opacity: active ? 0.9 : 0,
           transform: active ? 'translateY(0)' : 'translateY(20px)',
-          transition: 'all 1s ease 0.5s'
+          transition: 'all 1s ease 0.4s',
+          textShadow: '0 0 10px rgba(255,255,255,0.5)'
         }}>
           Happy New Year
         </h1>
 
-        {/* Game Lì Xì */}
+        {/* Game Lì Xì Cinematic */}
         <div style={{
           opacity: active ? 1 : 0,
-          transition: 'opacity 1s ease 1s'
+          transform: active ? 'translateY(0)' : 'translateY(40px)',
+          transition: 'all 1s cubic-bezier(0.22, 1, 0.36, 1) 0.6s'
         }}>
-          <div style={{ marginBottom: '15px', fontStyle: 'italic', color: '#aaa' }}>Chọn bao lì xì để nhận lộc:</div>
+          <div style={{ 
+            marginBottom: '25px', 
+            fontStyle: 'italic', 
+            color: 'rgba(255,255,255,0.6)', 
+            fontSize: '14px',
+            letterSpacing: '1px'
+          }}>
+            Mời bạn chọn lộc đầu năm
+          </div>
           <LuckyMoneyGame />
         </div>
       </div>
 
-    </div>
-  )
-}
-
-// --- 4. SCENE CONTENT WRAPPER (GIỮ NGUYÊN) ---
-function SceneContent({ scene, handleLaunch, soundRef, isPlaying, setIsPlaying }) {
-  const hasAutoPlayed = useRef(false)
-
-  useEffect(() => {
-    if (scene === 'celebration' && !hasAutoPlayed.current && soundRef.current) {
-      setTimeout(() => {
-        if (soundRef.current.play) {
-            soundRef.current.play().catch(e => console.log("Audio play failed:", e));
-        }
-        setIsPlaying(true)
-        hasAutoPlayed.current = true
-      }, 200)
-    }
-  }, [scene, soundRef, setIsPlaying])
-
-  return (
-    <>
-      {scene === 'countdown' ? (
-        <Suspense fallback={null}>
-          <InteractiveDust count={6000} />
-          <Stars radius={250} count={3000} factor={4} fade speed={1} />
-          <ambientLight intensity={0.5} />
-          <CountdownDisplay onFinishTransition={handleLaunch} />
-          <CircularAudioVisualizer soundRef={soundRef} radius={18} count={200} />
-          <PositionalAudio ref={soundRef} url="/happy-new-year-2026/sounds/lofi.mp3" distance={30} loop />
-        </Suspense>
-      ) : null}
-    </>
-  )
-}
-
-// --- 5. APP COMPONENT (GIỮ NGUYÊN) ---
-export default function App() {
-  const soundRef = useRef()
-  const [scene, setScene] = useState('countdown')
-  const [flash, setFlash] = useState(0)
-  const [isUiVisible, setUiVisible] = useState(true)
-  const [isPlaying, setIsPlaying] = useState(false)
-  const [volume, setVolume] = useState(0.5)
-
-  const handleLaunch = () => {
-    setUiVisible(false)
-    setFlash(1)
-    
-    setTimeout(() => {
-      setScene('celebration')
-      const fade = setInterval(() => {
-        setFlash(prev => {
-          if (prev <= 0) { clearInterval(fade); return 0; }
-          return prev - 0.05 
-        })
-      }, 30)
-    }, 600)
-  }
-
-  return (
-    <div style={{ 
-      width: '100vw', 
-      height: '100vh', 
-      position: 'relative', 
-      background: '#000', 
-      overflow: 'hidden',
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-    }}>
-      {isUiVisible && scene === 'countdown' && (
-        <>
-          <CinematicVolume soundRef={soundRef} volume={volume} setVolume={setVolume} />
-          <CinematicPlayButton soundRef={soundRef} isPlaying={isPlaying} setIsPlaying={setIsPlaying} />
-        </>
-      )}
-
-      {scene === 'celebration' && (
-        <>
-          <MusicToggleButton 
-            soundRef={soundRef} 
-            isPlaying={isPlaying} 
-            setIsPlaying={setIsPlaying}
-          />
-        </>
-      )}
-
-      <div style={{ 
-        position: 'absolute', 
-        inset: 0, 
-        backgroundColor: 'white', 
-        opacity: flash, 
-        zIndex: 999, 
-        pointerEvents: 'none' 
-      }} />
-
-      {scene === 'countdown' ? (
-        <Canvas camera={{ position: [0, 8, 35], fov: 50 }}>
-          <color attach="background" args={['#0a0a1a']} />
-          <Environment preset="city" />
-          <SceneContent 
-            scene={scene} 
-            handleLaunch={handleLaunch} 
-            soundRef={soundRef} 
-            isPlaying={isPlaying}
-            setIsPlaying={setIsPlaying}
-          />
-          <EffectComposer disableNormalPass>
-            <Bloom luminanceThreshold={0.1} intensity={2.8} mipmapBlur />
-          </EffectComposer>
-          <OrbitControls 
-            enablePan={false} 
-            minDistance={20} 
-            maxDistance={100}
-            maxPolarAngle={Math.PI / 2}
-            minPolarAngle={0}
-            enabled={true}
-          />
-        </Canvas>
-      ) : (
-        <>
-          <HappyNewYear2026Scene />
-          <audio 
-            ref={soundRef} 
-            src="/happy-new-year-2026/sounds/celebration.mp3" 
-            loop 
-            style={{ display: 'none' }}
-          />
-        </>
-      )}
     </div>
   )
 }
