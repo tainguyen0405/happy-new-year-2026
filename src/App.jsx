@@ -659,9 +659,6 @@ function SceneContent({ scene, handleLaunch, soundRef, isPlaying, setIsPlaying }
           <Stars radius={150} count={1200} factor={2} fade speed={0.4} />
           <FireworkManager triggerShake={triggerShake} />
           
-          {/* Cinematic Camera Animation */}
-          <CinematicCamera />
-          
           {/* Đèn lồng bay */}
           <FloatingLanterns count={80} />
           
