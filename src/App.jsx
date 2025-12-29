@@ -5,11 +5,14 @@ import { EffectComposer, Bloom, ChromaticAberration, Noise, Vignette } from '@re
 import { BlendFunction } from 'postprocessing' 
 import * as THREE from 'three'
 
-// --- IMPORT COMPONENT ÂM THANH CỦA BẠN ---
+// --- IMPORT COMPONENT ÂM THANH CỦA BẠN (GIỮ NGUYÊN) ---
 import CinematicVolume from './CinematicVolume'
 import CinematicPlayButton from './CinematicPlayButton'
 import CircularAudioVisualizer from './CircularAudioVisualizer'
 import MusicToggleButton from './MusicToggleButton'
+
+// --- GLOBAL SETTINGS (TỪ CODE 1) ---
+const isTesting = true; // Set false nếu muốn chạy đúng ngày 1/1/2026
 
 // --- 1. UTILS ---
 const playCustomClick = () => {
@@ -32,9 +35,9 @@ const playCustomClick = () => {
   playPulse(now + 0.05, 900, 0.06);
 };
 
-// --- 2. 3D COMPONENTS (COUNTDOWN PHASE) ---
+// --- 2. 3D COMPONENTS ---
 
-// Hiệu ứng bụi không gian + Warp Speed
+// Hiệu ứng bụi không gian + Warp Speed (GIỮ CỦA CODE 2 ĐỂ CÓ HIỆU ỨNG BAY)
 function InteractiveDust({ count = 6000, isLaunching }) {
   const mesh = useRef(); const { raycaster, camera } = useThree(); const shockwaveRef = useRef(0)
   const starTexture = useMemo(() => {
@@ -62,7 +65,7 @@ function InteractiveDust({ count = 6000, isLaunching }) {
     for (let i = 0; i < count; i++) {
       const i3 = i * 3
       if (isLaunching) {
-        // Warp Speed Logic
+        // Warp Speed Logic (Code 2)
         vel[i3 + 2] += 2.0; 
         positions[i3 + 2] += vel[i3 + 2];
         if (positions[i3 + 2] > 50) { positions[i3 + 2] = -200; vel[i3 + 2] = 0; }
@@ -84,31 +87,43 @@ function InteractiveDust({ count = 6000, isLaunching }) {
   return (<points ref={mesh}><bufferGeometry><bufferAttribute attach="attributes-position" count={pos.length/3} array={pos} itemSize={3} /><bufferAttribute attach="attributes-color" count={col.length/3} array={col} itemSize={3} /></bufferGeometry><pointsMaterial size={isLaunching ? 2.0 : 0.8} vertexColors transparent map={starTexture} blending={THREE.AdditiveBlending} depthWrite={false} /></points>)
 }
 
+// --- LOGIC COUNTDOWN & DISPLAY (LẤY TỪ CODE 1) ---
+
 function RainbowMaterial() {
-  const matRef = useRef()
-  useFrame((state) => { 
-    if (matRef.current) { 
-      const hue = (state.clock.getElapsedTime() * 0.1) % 1
-      matRef.current.color.setHSL(hue, 1, 0.5)
-      matRef.current.emissive.setHSL(hue, 1, 0.2)
-    } 
-  })
-  return <meshPhysicalMaterial ref={matRef} metalness={1} roughness={0.1} emissiveIntensity={0.5} />
+    const matRef = useRef()
+    useFrame((state) => { if (matRef.current) { const hue = (state.clock.getElapsedTime() * 0.1) % 1; matRef.current.color.setHSL(hue, 1, 0.5); matRef.current.emissive.setHSL(hue, 1, 0.2); } })
+    return <meshPhysicalMaterial ref={matRef} metalness={1} roughness={0.1} emissiveIntensity={0.5} />
 }
 
-function ArcText({ text, radius = 15, startAngle = Math.PI * 0.7, endAngle = Math.PI * 0.3, fontSize = 0.8, textHeight = 0.3, verticalOffset = 0 }) {
+function ArcText({ 
+  text, 
+  radius = 15,
+  startAngle = Math.PI * 0.7,
+  endAngle = Math.PI * 0.3,
+  fontSize = 0.8,
+  textHeight = 0.3,
+  verticalOffset = 0
+}) {
   const fontUrl = '/happy-new-year-2026/fonts/Orbitron_Regular.json'
   const characters = text.split('')
   const totalAngle = startAngle - endAngle
   const angleStep = totalAngle / (characters.length - 1)
+  
   return (
     <group position={[0, verticalOffset, 0]}>
       {characters.map((char, i) => {
         const angle = startAngle - (angleStep * i)
-        const x = Math.cos(angle) * radius; const y = Math.sin(angle) * radius
+        const x = Math.cos(angle) * radius
+        const y = Math.sin(angle) * radius
+        
         return (
           <group key={i} position={[x, y, 0]} rotation={[0, 0, angle - Math.PI / 2]}>
-            <Center><Text3D font={fontUrl} size={fontSize} height={textHeight} bevelEnabled curveSegments={8}>{char}<RainbowMaterial /></Text3D></Center>
+            <Center>
+              <Text3D font={fontUrl} size={fontSize} height={textHeight} bevelEnabled curveSegments={8}>
+                {char}
+                <RainbowMaterial />
+              </Text3D>
+            </Center>
           </group>
         )
       })}
@@ -117,58 +132,76 @@ function ArcText({ text, radius = 15, startAngle = Math.PI * 0.7, endAngle = Mat
 }
 
 function CountdownDisplay({ onFinishTransition }) {
-  const [timeLeft, setTimeLeft] = useState({ d: 0, h: 0, m: 0, s: 0, total: 999 })
-  const fontUrl = '/happy-new-year-2026/fonts/Orbitron_Regular.json'
-  const isTesting = true; // Set false for real time
+    const [timeLeft, setTimeLeft] = useState({ d: 0, h: 0, m: 0, s: 0, total: 999 })
+    const fontUrl = '/happy-new-year-2026/fonts/Orbitron_Regular.json'
+    
+    // Logic đếm ngược từ Code 1
+    useEffect(() => {
+      const targetTime = isTesting ? new Date().getTime() + 15000 : new Date("Jan 1, 2026 00:00:00").getTime();
+      const timer = setInterval(() => {
+        const dist = targetTime - new Date().getTime()
+        if (dist <= 0) { setTimeLeft({ total: 0 }); clearInterval(timer); return; }
+        setTimeLeft({ d: Math.floor(dist/86400000), h: Math.floor((dist%86400000)/3600000), m: Math.floor((dist%3600000)/60000), s: Math.floor((dist%60000)/1000), total: Math.floor(dist/1000) })
+      }, 1000); return () => clearInterval(timer)
+    }, [])
 
-  useEffect(() => {
-    const targetTime = isTesting ? new Date().getTime() + 15000 : new Date("Jan 1, 2026 00:00:00").getTime();
-    const timer = setInterval(() => {
-      const dist = targetTime - new Date().getTime()
-      if (dist <= 0) { setTimeLeft({ total: 0 }); clearInterval(timer); return; }
-      setTimeLeft({ d: Math.floor(dist/86400000), h: Math.floor((dist%86400000)/3600000), m: Math.floor((dist%3600000)/60000), s: Math.floor((dist%60000)/1000), total: Math.floor(dist/1000) })
-    }, 1000)
-    return () => clearInterval(timer)
-  }, [])
-  
-  if (timeLeft.total <= 0) return <MechanicalButton onActivate={onFinishTransition} />
-  
-  return (
-    <group>
-      {timeLeft.total <= 10 ? (
-        <Center><Text3D font={fontUrl} size={8} height={2.5} bevelEnabled>{timeLeft.total}<meshPhysicalMaterial metalness={1} roughness={0.1} color="white" /></Text3D></Center>
-      ) : (
-        <Float speed={2} rotationIntensity={0.1} floatIntensity={0.4}>
-          <group>
-            <ArcText text="COUNTDOWN 2026" radius={15} startAngle={Math.PI * 0.7} endAngle={Math.PI * 0.3} fontSize={0.8} textHeight={0.3} verticalOffset={-3} />
-            <Center top position={[-0.5, 2, 0]}><Text3D font={fontUrl} size={5} height={1.5} bevelEnabled>{timeLeft.d}<RainbowMaterial /></Text3D></Center>
-            <Center position={[-0.2, -1, 0]}><Text3D font={fontUrl} size={1} height={0.5}>DAYS TO 2026<meshStandardMaterial color="#888" /></Text3D></Center>
-            <Center bottom position={[-1.5, -4, 0]}><Text3D font={fontUrl} size={1.2} height={0.4}>{`${timeLeft.h}h  ${timeLeft.m}m  ${timeLeft.s}s`}<RainbowMaterial /></Text3D></Center>
-          </group>
-        </Float>
-      )}
-    </group>
-  )
+    if (timeLeft.total <= 0) return <MechanicalButton onActivate={onFinishTransition} />
+
+    return (
+      <group>
+        {timeLeft.total <= 10 ? (
+          <Center><Text3D font={fontUrl} size={8} height={2.5} bevelEnabled>{timeLeft.total}<meshPhysicalMaterial metalness={1} roughness={0.1} color="white" /></Text3D></Center>
+        ) : (
+          <Float speed={2} rotationIntensity={0.1} floatIntensity={0.4}>
+              <group>
+                  <ArcText 
+                    text="COUNTDOWN 2026" 
+                    radius={15}
+                    startAngle={Math.PI * 0.7}
+                    endAngle={Math.PI * 0.3}
+                    fontSize={0.8}
+                    textHeight={0.3}
+                    verticalOffset={-3}
+                  />
+
+                  <Center top position={[-0.5, 2, 0]}><Text3D font={fontUrl} size={5} height={1.5} bevelEnabled>{timeLeft.d}<RainbowMaterial /></Text3D></Center>
+                  <Center position={[-0.2, -1, 0]}><Text3D font={fontUrl} size={1} height={0.5}>DAYS TO 2026<meshStandardMaterial color="#888" /></Text3D></Center>
+                  <Center bottom position={[-1.5, -4, 0]}><Text3D font={fontUrl} size={1.2} height={0.4}>{`${timeLeft.h}h  ${timeLeft.m}m  ${timeLeft.s}s`}<RainbowMaterial /></Text3D></Center>
+              </group>
+          </Float>
+        )}
+      </group>
+    )
 }
 
 function MechanicalButton({ onActivate }) {
-  const [hovered, setHover] = useState(false); const [pressed, setPressed] = useState(false); const outerGroupRef = useRef(); const buttonCoreRef = useRef()
+  const [hovered, setHover] = useState(false); const [pressed, setPressed] = useState(false)
+  const outerGroupRef = useRef(); const buttonCoreRef = useRef()
   useFrame((state) => {
     if (outerGroupRef.current) outerGroupRef.current.lookAt(state.camera.position)
-    if (buttonCoreRef.current) { const targetZ = pressed ? -0.8 : 0; buttonCoreRef.current.position.z = THREE.MathUtils.lerp(buttonCoreRef.current.position.z, targetZ, 0.4) }
+    if (buttonCoreRef.current) {
+      const targetZ = pressed ? -0.8 : 0 
+      buttonCoreRef.current.position.z = THREE.MathUtils.lerp(buttonCoreRef.current.position.z, targetZ, 0.4)
+    }
   })
   return (
     <group ref={outerGroupRef}>
-      <Cylinder args={[3, 3.2, 0.5, 64]} rotation={[Math.PI / 2, 0, 0]} position={[0, 0, -0.4]}><meshStandardMaterial color="#050505" metalness={1} roughness={0.2} /></Cylinder>
-      <group onPointerOver={() => setHover(true)} onPointerOut={() => (setHover(false), setPressed(false))} onPointerDown={() => { setPressed(true); playCustomClick(); }} onPointerUp={() => { setPressed(false); onActivate() }} ref={buttonCoreRef}>
-        <Cylinder args={[2, 2.1, 0.8, 64]} rotation={[Math.PI / 2, 0, 0]}><meshStandardMaterial color={hovered ? "#ff0033" : "#220000"} metalness={1} emissive="#ff0000" emissiveIntensity={hovered ? 1.2 : 0.1} /></Cylinder>
+      <Cylinder args={[3, 3.2, 0.5, 64]} rotation={[Math.PI / 2, 0, 0]} position={[0, 0, -0.4]}>
+        <meshStandardMaterial color="#050505" metalness={1} roughness={0.2} />
+      </Cylinder>
+      <group onPointerOver={() => setHover(true)} onPointerOut={() => (setHover(false), setPressed(false))}
+        onPointerDown={() => { setPressed(true); playCustomClick(); }} 
+        onPointerUp={() => { setPressed(false); onActivate() }} ref={buttonCoreRef}>
+        <Cylinder args={[2, 2.1, 0.8, 64]} rotation={[Math.PI / 2, 0, 0]}>
+          <meshStandardMaterial color={hovered ? "#ff0033" : "#220000"} metalness={1} emissive="#ff0000" emissiveIntensity={hovered ? 1.2 : 0.1}/>
+        </Cylinder>
       </group>
       <Center position={[0, -4.8, 0]}><Text3D font="/happy-new-year-2026/fonts/Orbitron_Regular.json" size={0.5} height={0.1}>LAUNCH 2026<meshStandardMaterial color="white" /></Text3D></Center>
     </group>
   )
 }
 
-// Helper Camera Rig
+// Helper Camera Rig (Code 2)
 function CameraRig({ isLaunching }) {
     useFrame((state) => {
         if (isLaunching) {
@@ -182,7 +215,7 @@ function CameraRig({ isLaunching }) {
     return null
 }
 
-// --- 3. 2D CINEMATIC & MINI GAMES ---
+// --- 3. 2D CINEMATIC & MINI GAMES (GIỮ NGUYÊN CỦA CODE 2) ---
 
 // 3.0 Icon & Golden Title
 const HorseIcon = ({ color = "#ffd700" }) => (
@@ -285,7 +318,7 @@ const SparklerEffect = () => {
   )
 }
 
-// 3.2 Game Lì xì (FIXED)
+// 3.2 Game Lì xì
 const LuckyMoneyGame = () => {
   const [viewState, setViewState] = useState('idle'); const [selectedId, setSelectedId] = useState(null); const [reward, setReward] = useState(null)
   const envelopes = [1, 2, 3, 4]; const rewards = ["10.000 VNĐ", "20.000 VNĐ", "50.000 VNĐ", "100.000 VNĐ", "500.000 VNĐ", "1 Tờ vé số", "Một nụ cười", "Chuyến du lịch"]
@@ -358,7 +391,7 @@ const FortuneSticksGame = () => {
   )
 }
 
-// 3.4 Thả Đèn Trời (FIXED)
+// 3.4 Thả Đèn Trời
 const WishLanterns = () => {
   const [wish, setWish] = useState(''); const [lanterns, setLanterns] = useState([])
   const handleSendWish = (e) => { e.preventDefault(); if (!wish.trim()) return; const colors = ['linear-gradient(to bottom, #ff5500, #ffaa00)', 'linear-gradient(to bottom, #d60000, #ff5500)', 'linear-gradient(to bottom, #ff8c00, #ffd700)']; const randomColor = colors[Math.floor(Math.random() * colors.length)]; const newLantern = { id: Date.now(), text: wish, left: Math.random() * 80 + 10, speed: Math.random() * 5 + 15, bg: randomColor }; setLanterns([...lanterns, newLantern]); setWish('') }
@@ -413,13 +446,18 @@ function SceneContent({ scene, handleLaunch, soundRef, isPlaying, setIsPlaying, 
       setTimeout(() => { if (soundRef.current.play) { soundRef.current.play().catch(e => console.log("Audio play failed:", e)); } setIsPlaying(true); hasAutoPlayed.current = true }, 200)
     }
   }, [scene, soundRef, setIsPlaying])
+  
   return (
     <>
       {scene === 'countdown' ? (
         <Suspense fallback={null}>
           <InteractiveDust count={6000} isLaunching={isLaunching} />
+          {/* LOGIC COUNTDOWN CŨNG NHƯ VÒNG TRÒN AUDIO ĐƯỢC GIỮ LẠI CHO ĐẾN KHI PHÓNG */}
           {!isLaunching && (
-             <><CountdownDisplay onFinishTransition={handleLaunch} /><CircularAudioVisualizer soundRef={soundRef} radius={18} count={200} /></>
+             <>
+               <CountdownDisplay onFinishTransition={handleLaunch} />
+               <CircularAudioVisualizer soundRef={soundRef} radius={18} count={200} />
+             </>
           )}
           <Stars radius={250} count={3000} factor={4} fade speed={isLaunching ? 20 : 1} />
           <ambientLight intensity={0.5} />
@@ -433,10 +471,12 @@ function SceneContent({ scene, handleLaunch, soundRef, isPlaying, setIsPlaying, 
 // --- 5. APP COMPONENT ---
 export default function App() {
   const soundRef = useRef(); const [scene, setScene] = useState('countdown'); const [flash, setFlash] = useState(0); const [isUiVisible, setUiVisible] = useState(true); const [isPlaying, setIsPlaying] = useState(false); const [volume, setVolume] = useState(0.5); const [isLaunching, setIsLaunching] = useState(false)
+  
   const handleLaunch = () => {
     setUiVisible(false); setIsLaunching(true)
     setTimeout(() => { setFlash(1); setTimeout(() => { setScene('celebration'); setIsLaunching(false); const fade = setInterval(() => { setFlash(prev => { if (prev <= 0) { clearInterval(fade); return 0; } return prev - 0.05 }) }, 30) }, 600) }, 1500)
   }
+
   return (
     <div style={{ width: '100vw', height: '100vh', position: 'relative', background: '#000', overflow: 'hidden', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
       {isUiVisible && scene === 'countdown' && (
