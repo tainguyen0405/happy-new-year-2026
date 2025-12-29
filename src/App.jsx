@@ -236,62 +236,20 @@ function CinematicText() {
   
   return (
     <group ref={groupRef} scale={[scale, scale, scale]}>
-      {/* HAPPY NEW YEAR với nhiều layers */}
+      {/* HAPPY NEW YEAR */}
       <Float speed={2} rotationIntensity={0.3} floatIntensity={0.8}>
         <group>
-          {/* Layer 1: Shadow/Depth */}
-          <Center position={[0.3, 1.7, -0.5]}>
-            <Text3D font="/happy-new-year-2026/fonts/Orbitron_Regular.json" size={2.5} height={0.6} bevelEnabled>
-              HAPPY NEW YEAR
-              <meshStandardMaterial color="#000000" opacity={0.5} transparent />
-            </Text3D>
-          </Center>
-          
-          {/* Layer 2: Main text với gradient effect */}
           <Center position={[0, 2, 0]}>
             <Text3D font="/happy-new-year-2026/fonts/Orbitron_Regular.json" size={2.5} height={0.6} bevelEnabled>
               HAPPY NEW YEAR
               <GradientMaterial />
             </Text3D>
           </Center>
-          
-          {/* Layer 3: Glow outline */}
-          <Center position={[0, 2, 0.1]}>
-            <Text3D font="/happy-new-year-2026/fonts/Orbitron_Regular.json" size={2.6} height={0.1} bevelEnabled>
-              HAPPY NEW YEAR
-              <meshBasicMaterial 
-                color="#FFD700" 
-                transparent 
-                opacity={0.4}
-                blending={THREE.AdditiveBlending}
-              />
-            </Text3D>
-          </Center>
 
-          {/* 2026 với hiệu ứng tương tự */}
-          <Center position={[0.3, -4.1, -0.5]}>
-            <Text3D font="/happy-new-year-2026/fonts/Orbitron_Regular.json" size={5} height={1.2} bevelEnabled>
-              2026
-              <meshStandardMaterial color="#000000" opacity={0.5} transparent />
-            </Text3D>
-          </Center>
-          
           <Center position={[0, -3.8, 0]}>
             <Text3D font="/happy-new-year-2026/fonts/Orbitron_Regular.json" size={5} height={1.2} bevelEnabled>
               2026
               <GradientMaterial scale={2} />
-            </Text3D>
-          </Center>
-          
-          <Center position={[0, -3.8, 0.1]}>
-            <Text3D font="/happy-new-year-2026/fonts/Orbitron_Regular.json" size={5.2} height={0.1} bevelEnabled>
-              2026
-              <meshBasicMaterial 
-                color="#FFD700" 
-                transparent 
-                opacity={0.5}
-                blending={THREE.AdditiveBlending}
-              />
             </Text3D>
           </Center>
         </group>
