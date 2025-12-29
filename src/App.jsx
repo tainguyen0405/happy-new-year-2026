@@ -4,12 +4,12 @@ import { OrbitControls, Text3D, Center, Float, Stars, Environment, PositionalAud
 import { EffectComposer, Bloom } from '@react-three/postprocessing'
 import * as THREE from 'three'
 
-// Đảm bảo đường dẫn import đúng với project của bạn
+// Đảm bảo bạn vẫn giữ các file component âm thanh này trong folder project
 import CinematicVolume from './CinematicVolume'
 import CinematicPlayButton from './CinematicPlayButton'
 import CircularAudioVisualizer from './CircularAudioVisualizer'
 import MusicToggleButton from './MusicToggleButton'
-import VolumeControl from './VolumeControl'
+// import VolumeControl from './VolumeControl' // Bỏ comment nếu dùng
 
 const isTesting = true;
 
@@ -35,7 +35,6 @@ const playCustomClick = () => {
 };
 
 // --- 2. 3D COMPONENTS (COUNTDOWN PHASE) ---
-
 function InteractiveDust({ count = 6000 }) {
   const mesh = useRef(); const { raycaster, camera } = useThree(); const shockwaveRef = useRef(0)
   const starTexture = useMemo(() => {
@@ -216,9 +215,49 @@ function MechanicalButton({ onActivate }) {
   )
 }
 
-// --- 3. NEW 2D CELEBRATION COMPONENTS (PHÁO HOA & LÌ XÌ) ---
+// --- 3. 2D CELEBRATION COMPONENTS (UPDATED V2) ---
 
-// Component Pháo Hoa chạy bằng Canvas thuần để tối ưu hiệu năng
+// 3.1 Icon Con Ngựa (SVG)
+const HorseIcon = ({ color = "#ffd700" }) => (
+  <svg viewBox="0 0 100 100" width="100%" height="100%" style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))' }}>
+    <path
+      fill={color}
+      d="M78.5,32.6c-2.3-4.8-6.1-8.5-9.9-10.9c-2.9-1.8-8.6-3.8-12.8-2.6c-2.6,0.7-3.9,2.8-4.2,3.3c-0.4,0.6-0.8,1.3-1.2,2
+      c-0.8,1.4-1.6,2.9-2.7,4.1c-1.3,1.4-2.8,2.3-4.6,2.8c-1.5,0.4-3.1,0.2-4.6-0.6c-1.2-0.6-2.2-1.6-3-2.8c-0.6-0.9-1-1.9-1.2-3
+      c-0.1-0.5-0.1-1.1,0-1.6c0.3-1.7,1.6-3.1,3.1-3.9c0.8-0.4,1.7-0.6,2.6-0.6c0.9,0,1.8,0.2,2.6,0.6c1.3,0.7,2.2,2,2.4,3.5
+      c0.1,0.6,0,1.2-0.2,1.8c-0.4,1.1-1.3,1.9-2.4,2.3c-0.9,0.3-1.9,0.2-2.8-0.3c-0.7-0.4-1.2-1-1.4-1.8c-0.1-0.4-0.1-0.8,0.1-1.2
+      c0.3-0.8,1-1.3,1.8-1.4c0.6-0.1,1.2,0.1,1.7,0.5c0.3,0.3,0.5,0.7,0.6,1.1c0,0.1,0,0.2,0,0.3c-0.1,0.3-0.3,0.5-0.6,0.6
+      c-0.2,0.1-0.4,0.1-0.6,0c-0.2-0.1-0.3-0.3-0.3-0.5c0-0.1,0-0.2,0.1-0.3c0.1-0.1,0.2-0.2,0.3-0.2c0.1,0,0.2,0,0.3,0.1
+      c0.4,0.2,0.5,0.7,0.3,1.1c-0.3,0.5-0.9,0.6-1.4,0.4c-0.4-0.2-0.6-0.6-0.6-1c0-0.3,0.1-0.6,0.3-0.8c0.4-0.4,1-0.4,1.4-0.1
+      c0.3,0.2,0.4,0.6,0.3,0.9c-0.1,0.2-0.3,0.4-0.6,0.4c-0.2,0-0.4-0.1-0.4-0.3c-0.1-0.2,0-0.3,0.1-0.4c0.2-0.2,0.5-0.1,0.6,0.1
+      c0.1,0.1,0.1,0.3,0,0.4C51,44.2,51,44.2,50.9,44.2c-0.1,0-0.2-0.1-0.2-0.2c0-0.1,0-0.2,0.1-0.2c0.1-0.1,0.2-0.1,0.3,0
+      c1.7,1.8,2.7,4.6,1.4,7.3c-1,2.1-3.2,3.3-5.4,3.7c-2.8,0.5-5.6-0.4-7.8-2.1c-1.8-1.4-3.1-3.3-3.9-5.4c-0.6-1.6-0.9-3.2-0.8-4.9
+      c0.1-1.4,0.4-2.7,1-4c0.9-1.8,2.2-3.3,3.8-4.5c2.4-1.8,5.4-2.5,8.3-2.1c2.3,0.3,4.4,1.4,6.1,2.9c1.4,1.2,2.4,2.8,3,4.5
+      c0.5,1.4,0.6,2.9,0.3,4.4c-0.3,1.3-0.9,2.5-1.9,3.5c-1.6,1.7-4,2.5-6.3,2.2c-1.8-0.3-3.4-1.3-4.6-2.7c-0.9-1.1-1.5-2.5-1.7-3.9
+      c-0.2-1.1,0-2.2,0.5-3.2c0.7-1.4,2-2.3,3.5-2.7c1.2-0.3,2.5-0.1,3.6,0.5c0.9,0.5,1.7,1.3,2.2,2.2c0.5,0.9,0.7,1.9,0.6,2.9
+      c-0.1,0.8-0.4,1.6-0.9,2.3c-0.7,1-1.8,1.7-3,2c-1,0.2-2,0-2.9-0.5c-0.7-0.4-1.3-1-1.6-1.8c-0.3-0.6-0.3-1.3-0.2-1.9
+      c0.2-0.9,0.8-1.6,1.6-2c0.7-0.3,1.4-0.3,2.1,0c0.6,0.2,1,0.7,1.2,1.3c0.1,0.4,0.1,0.9,0,1.3c-0.2,0.6-0.7,1-1.3,1.2
+      c-0.5,0.2-1,0.1-1.4-0.2c-0.3-0.2-0.5-0.6-0.5-1c0-0.3,0.1-0.6,0.3-0.8c0.3-0.3,0.7-0.4,1.1-0.3c0.3,0.1,0.5,0.3,0.6,0.6
+      c0.1,0.2,0,0.4-0.1,0.6c-0.2,0.2-0.4,0.3-0.7,0.2c-0.2,0-0.3-0.2-0.3-0.4c0-0.1,0.1-0.3,0.2-0.3c0.1-0.1,0.2,0,0.3,0.1
+      C35.9,40.1,36,40.6,35.9,41c-0.2,0.5-0.7,0.8-1.2,0.7c-0.4-0.1-0.7-0.4-0.8-0.8c0-0.3,0.1-0.6,0.4-0.8c0.3-0.2,0.7-0.2,1,0
+      c0.2,0.1,0.3,0.4,0.3,0.6c0,0.2-0.1,0.3-0.3,0.4c-0.1,0.1-0.3,0-0.3-0.1c-0.1-0.1-0.1-0.2,0-0.3c0.1-0.1,0.2-0.1,0.2,0
+      c0.6,1,0.9,2.2,0.7,3.4c-0.2,1-0.7,1.9-1.4,2.6c-1.1,1.1-2.7,1.6-4.2,1.4c-1.2-0.2-2.3-0.8-3.1-1.7c-0.7-0.8-1.1-1.8-1.2-2.9
+      c-0.1-0.9,0.1-1.8,0.5-2.6c0.6-1.1,1.6-1.9,2.7-2.3c1-0.3,2.1-0.2,3,0.3c0.8,0.4,1.5,1.1,1.8,1.9c0.3,0.7,0.3,1.5,0.1,2.3
+      c-0.2,0.6-0.6,1.2-1.1,1.6c-0.6,0.4-1.3,0.6-2,0.5c-0.6-0.1-1.1-0.4-1.5-0.9c-0.3-0.4-0.4-0.9-0.3-1.4c0.1-0.6,0.4-1,0.9-1.3
+      c0.4-0.2,0.9-0.2,1.3-0.1c0.4,0.1,0.7,0.4,0.9,0.8c0.1,0.3,0.1,0.6,0,0.9c-0.1,0.4-0.4,0.7-0.8,0.8c-0.3,0.1-0.6,0-0.9-0.2
+      c-0.2-0.2-0.3-0.5-0.2-0.8c0-0.2,0.2-0.4,0.4-0.4c0.2,0,0.3,0.1,0.4,0.3c0,0.1,0,0.2-0.1,0.3c-0.1,0.1-0.2,0.1-0.2,0
+      c-1.7,0.7-3.1,2.1-3.8,3.8c-0.6,1.4-0.5,3,0.3,4.4c0.9,1.6,2.5,2.7,4.3,3.1c1.8,0.4,3.7-0.1,5.2-1.2c1.4-1,2.4-2.6,2.7-4.4
+      c0.2-1.4,0-2.8-0.7-4.1c-0.8-1.4-2.1-2.4-3.6-2.9c-1.4-0.5-3-0.3-4.3,0.4c-1.2,0.7-2.1,1.8-2.5,3.1c-0.3,1.1-0.2,2.3,0.4,3.3
+      c0.7,1.2,1.9,2,3.3,2.2c1.1,0.2,2.3-0.2,3.2-1c0.8-0.7,1.3-1.8,1.3-2.9c0.1-0.9-0.2-1.9-0.8-2.6c-0.7-0.9-1.8-1.4-2.9-1.4
+      c-1,0-1.9,0.4-2.6,1.1c-0.6,0.6-0.9,1.4-0.9,2.2c0,0.7,0.3,1.4,0.8,1.9c0.6,0.6,1.4,0.9,2.2,0.8c0.7-0.1,1.3-0.5,1.7-1.1
+      c0.3-0.5,0.4-1.1,0.2-1.6c-0.1-0.5-0.5-0.9-1-1.1c-0.4-0.2-0.9-0.2-1.3,0c-0.4,0.2-0.6,0.6-0.7,1c-0.1,0.4,0,0.7,0.2,1
+      c0.2,0.2,0.5,0.4,0.8,0.3c0.2-0.1,0.4-0.2,0.4-0.5c0.1-0.2,0-0.4-0.2-0.5c-0.2-0.1-0.3-0.1-0.4,0.1c-0.1,0.1-0.1,0.3,0,0.4
+      L78.5,32.6z"
+    />
+  </svg>
+)
+
+// 3.2 Fireworks Canvas (Pháo hoa)
 const FireworksCanvas = () => {
   const canvasRef = useRef(null)
 
@@ -334,48 +373,7 @@ const FireworksCanvas = () => {
   return <canvas ref={canvasRef} style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 1, pointerEvents: 'none' }} />
 }
 
-// Component Bao Lì Xì
-// 1. Icon Con Ngựa (SVG)
-const HorseIcon = ({ color = "#ffd700" }) => (
-  <svg viewBox="0 0 100 100" width="100%" height="100%" style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))' }}>
-    <path
-      fill={color}
-      d="M78.5,32.6c-2.3-4.8-6.1-8.5-9.9-10.9c-2.9-1.8-8.6-3.8-12.8-2.6c-2.6,0.7-3.9,2.8-4.2,3.3c-0.4,0.6-0.8,1.3-1.2,2
-      c-0.8,1.4-1.6,2.9-2.7,4.1c-1.3,1.4-2.8,2.3-4.6,2.8c-1.5,0.4-3.1,0.2-4.6-0.6c-1.2-0.6-2.2-1.6-3-2.8c-0.6-0.9-1-1.9-1.2-3
-      c-0.1-0.5-0.1-1.1,0-1.6c0.3-1.7,1.6-3.1,3.1-3.9c0.8-0.4,1.7-0.6,2.6-0.6c0.9,0,1.8,0.2,2.6,0.6c1.3,0.7,2.2,2,2.4,3.5
-      c0.1,0.6,0,1.2-0.2,1.8c-0.4,1.1-1.3,1.9-2.4,2.3c-0.9,0.3-1.9,0.2-2.8-0.3c-0.7-0.4-1.2-1-1.4-1.8c-0.1-0.4-0.1-0.8,0.1-1.2
-      c0.3-0.8,1-1.3,1.8-1.4c0.6-0.1,1.2,0.1,1.7,0.5c0.3,0.3,0.5,0.7,0.6,1.1c0,0.1,0,0.2,0,0.3c-0.1,0.3-0.3,0.5-0.6,0.6
-      c-0.2,0.1-0.4,0.1-0.6,0c-0.2-0.1-0.3-0.3-0.3-0.5c0-0.1,0-0.2,0.1-0.3c0.1-0.1,0.2-0.2,0.3-0.2c0.1,0,0.2,0,0.3,0.1
-      c0.4,0.2,0.5,0.7,0.3,1.1c-0.3,0.5-0.9,0.6-1.4,0.4c-0.4-0.2-0.6-0.6-0.6-1c0-0.3,0.1-0.6,0.3-0.8c0.4-0.4,1-0.4,1.4-0.1
-      c0.3,0.2,0.4,0.6,0.3,0.9c-0.1,0.2-0.3,0.4-0.6,0.4c-0.2,0-0.4-0.1-0.4-0.3c-0.1-0.2,0-0.3,0.1-0.4c0.2-0.2,0.5-0.1,0.6,0.1
-      c0.1,0.1,0.1,0.3,0,0.4C51,44.2,51,44.2,50.9,44.2c-0.1,0-0.2-0.1-0.2-0.2c0-0.1,0-0.2,0.1-0.2c0.1-0.1,0.2-0.1,0.3,0
-      c1.7,1.8,2.7,4.6,1.4,7.3c-1,2.1-3.2,3.3-5.4,3.7c-2.8,0.5-5.6-0.4-7.8-2.1c-1.8-1.4-3.1-3.3-3.9-5.4c-0.6-1.6-0.9-3.2-0.8-4.9
-      c0.1-1.4,0.4-2.7,1-4c0.9-1.8,2.2-3.3,3.8-4.5c2.4-1.8,5.4-2.5,8.3-2.1c2.3,0.3,4.4,1.4,6.1,2.9c1.4,1.2,2.4,2.8,3,4.5
-      c0.5,1.4,0.6,2.9,0.3,4.4c-0.3,1.3-0.9,2.5-1.9,3.5c-1.6,1.7-4,2.5-6.3,2.2c-1.8-0.3-3.4-1.3-4.6-2.7c-0.9-1.1-1.5-2.5-1.7-3.9
-      c-0.2-1.1,0-2.2,0.5-3.2c0.7-1.4,2-2.3,3.5-2.7c1.2-0.3,2.5-0.1,3.6,0.5c0.9,0.5,1.7,1.3,2.2,2.2c0.5,0.9,0.7,1.9,0.6,2.9
-      c-0.1,0.8-0.4,1.6-0.9,2.3c-0.7,1-1.8,1.7-3,2c-1,0.2-2,0-2.9-0.5c-0.7-0.4-1.3-1-1.6-1.8c-0.3-0.6-0.3-1.3-0.2-1.9
-      c0.2-0.9,0.8-1.6,1.6-2c0.7-0.3,1.4-0.3,2.1,0c0.6,0.2,1,0.7,1.2,1.3c0.1,0.4,0.1,0.9,0,1.3c-0.2,0.6-0.7,1-1.3,1.2
-      c-0.5,0.2-1,0.1-1.4-0.2c-0.3-0.2-0.5-0.6-0.5-1c0-0.3,0.1-0.6,0.3-0.8c0.3-0.3,0.7-0.4,1.1-0.3c0.3,0.1,0.5,0.3,0.6,0.6
-      c0.1,0.2,0,0.4-0.1,0.6c-0.2,0.2-0.4,0.3-0.7,0.2c-0.2,0-0.3-0.2-0.3-0.4c0-0.1,0.1-0.3,0.2-0.3c0.1-0.1,0.2,0,0.3,0.1
-      C35.9,40.1,36,40.6,35.9,41c-0.2,0.5-0.7,0.8-1.2,0.7c-0.4-0.1-0.7-0.4-0.8-0.8c0-0.3,0.1-0.6,0.4-0.8c0.3-0.2,0.7-0.2,1,0
-      c0.2,0.1,0.3,0.4,0.3,0.6c0,0.2-0.1,0.3-0.3,0.4c-0.1,0.1-0.3,0-0.3-0.1c-0.1-0.1-0.1-0.2,0-0.3c0.1-0.1,0.2-0.1,0.2,0
-      c0.6,1,0.9,2.2,0.7,3.4c-0.2,1-0.7,1.9-1.4,2.6c-1.1,1.1-2.7,1.6-4.2,1.4c-1.2-0.2-2.3-0.8-3.1-1.7c-0.7-0.8-1.1-1.8-1.2-2.9
-      c-0.1-0.9,0.1-1.8,0.5-2.6c0.6-1.1,1.6-1.9,2.7-2.3c1-0.3,2.1-0.2,3,0.3c0.8,0.4,1.5,1.1,1.8,1.9c0.3,0.7,0.3,1.5,0.1,2.3
-      c-0.2,0.6-0.6,1.2-1.1,1.6c-0.6,0.4-1.3,0.6-2,0.5c-0.6-0.1-1.1-0.4-1.5-0.9c-0.3-0.4-0.4-0.9-0.3-1.4c0.1-0.6,0.4-1,0.9-1.3
-      c0.4-0.2,0.9-0.2,1.3-0.1c0.4,0.1,0.7,0.4,0.9,0.8c0.1,0.3,0.1,0.6,0,0.9c-0.1,0.4-0.4,0.7-0.8,0.8c-0.3,0.1-0.6,0-0.9-0.2
-      c-0.2-0.2-0.3-0.5-0.2-0.8c0-0.2,0.2-0.4,0.4-0.4c0.2,0,0.3,0.1,0.4,0.3c0,0.1,0,0.2-0.1,0.3c-0.1,0.1-0.2,0.1-0.2,0
-      c-1.7,0.7-3.1,2.1-3.8,3.8c-0.6,1.4-0.5,3,0.3,4.4c0.9,1.6,2.5,2.7,4.3,3.1c1.8,0.4,3.7-0.1,5.2-1.2c1.4-1,2.4-2.6,2.7-4.4
-      c0.2-1.4,0-2.8-0.7-4.1c-0.8-1.4-2.1-2.4-3.6-2.9c-1.4-0.5-3-0.3-4.3,0.4c-1.2,0.7-2.1,1.8-2.5,3.1c-0.3,1.1-0.2,2.3,0.4,3.3
-      c0.7,1.2,1.9,2,3.3,2.2c1.1,0.2,2.3-0.2,3.2-1c0.8-0.7,1.3-1.8,1.3-2.9c0.1-0.9-0.2-1.9-0.8-2.6c-0.7-0.9-1.8-1.4-2.9-1.4
-      c-1,0-1.9,0.4-2.6,1.1c-0.6,0.6-0.9,1.4-0.9,2.2c0,0.7,0.3,1.4,0.8,1.9c0.6,0.6,1.4,0.9,2.2,0.8c0.7-0.1,1.3-0.5,1.7-1.1
-      c0.3-0.5,0.4-1.1,0.2-1.6c-0.1-0.5-0.5-0.9-1-1.1c-0.4-0.2-0.9-0.2-1.3,0c-0.4,0.2-0.6,0.6-0.7,1c-0.1,0.4,0,0.7,0.2,1
-      c0.2,0.2,0.5,0.4,0.8,0.3c0.2-0.1,0.4-0.2,0.4-0.5c0.1-0.2,0-0.4-0.2-0.5c-0.2-0.1-0.3-0.1-0.4,0.1c-0.1,0.1-0.1,0.3,0,0.4
-      L78.5,32.6z"
-    />
-  </svg>
-)
-
-// 2. Component Lì Xì Cinematic
+// 3.3 Game Lì xì Cinematic
 const LuckyMoneyGame = () => {
   // States: 'idle' | 'focus' | 'revealed'
   const [viewState, setViewState] = useState('idle') 
@@ -399,7 +397,7 @@ const LuckyMoneyGame = () => {
       const r = rewards[Math.floor(Math.random() * rewards.length)]
       setReward(r)
       setViewState('revealed')
-    }, 1500) // Đợi bao lì xì bay ra giữa và mở nắp
+    }, 1500) 
   }
 
   const handleReset = () => {
@@ -416,10 +414,10 @@ const LuckyMoneyGame = () => {
       display: 'flex', 
       justifyContent: 'center', 
       alignItems: 'center',
-      perspective: '1000px' // Quan trọng cho 3D transform
+      perspective: '1000px'
     }}>
       
-      {/* Overlay làm tối nền khi focus */}
+      {/* Overlay */}
       <div style={{
         position: 'fixed',
         inset: 0,
@@ -455,16 +453,16 @@ const LuckyMoneyGame = () => {
                 top: isSelected && viewState !== 'idle' ? '50%' : 'auto',
                 left: isSelected && viewState !== 'idle' ? '50%' : 'auto',
                 transform: isSelected && viewState !== 'idle' 
-                  ? 'translate(-50%, -50%) scale(2)' // Scale to khi ra giữa
+                  ? 'translate(-50%, -50%) scale(2)'
                   : (isHidden ? 'scale(0.8) translateY(50px)' : 'scale(1)'),
                 opacity: isHidden ? 0 : 1,
                 transition: 'all 0.8s cubic-bezier(0.34, 1.56, 0.64, 1)',
                 cursor: 'pointer',
-                transformStyle: 'preserve-3d', // Cho 3D flip
+                transformStyle: 'preserve-3d',
                 zIndex: isSelected ? 100 : 10
               }}
             >
-              {/* BODY BAO LÌ XÌ */}
+              {/* BODY */}
               <div style={{
                 position: 'absolute',
                 inset: 0,
@@ -472,7 +470,7 @@ const LuckyMoneyGame = () => {
                 borderRadius: '8px',
                 border: '1px solid #ffcc00',
                 boxShadow: isSelected 
-                  ? '0 20px 50px rgba(255, 215, 0, 0.4), 0 0 20px rgba(214, 0, 0, 0.8)' // Glow mạnh khi chọn
+                  ? '0 20px 50px rgba(255, 215, 0, 0.4), 0 0 20px rgba(214, 0, 0, 0.8)'
                   : '0 4px 10px rgba(0,0,0,0.5)',
                 display: 'flex',
                 flexDirection: 'column',
@@ -481,7 +479,7 @@ const LuckyMoneyGame = () => {
                 overflow: 'hidden',
                 transition: 'box-shadow 0.5s ease'
               }}>
-                {/* Pattern mây cổ điển mờ nền */}
+                 {/* Pattern */}
                 <div style={{
                     position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
                     opacity: 0.1,
@@ -510,7 +508,7 @@ const LuckyMoneyGame = () => {
                 </div>
               </div>
 
-              {/* NẮP BAO (FLAP) - Animation mở nắp */}
+              {/* FLAP */}
               <div style={{
                 position: 'absolute',
                 top: 0,
@@ -521,12 +519,12 @@ const LuckyMoneyGame = () => {
                 borderBottom: '1px solid #ffd700',
                 borderRadius: '8px 8px 50% 50%',
                 transformOrigin: 'top',
-                transition: 'transform 0.6s ease 0.5s', // Delay 0.5s sau khi ra giữa mới mở
+                transition: 'transform 0.6s ease 0.5s',
                 transform: viewState === 'revealed' ? 'rotateX(180deg)' : 'rotateX(0deg)',
                 zIndex: 2
               }} />
 
-              {/* LÁ THĂM / TIỀN (CARD) - Trượt từ trong ra */}
+              {/* CARD */}
               <div style={{
                 position: 'absolute',
                 top: '5px',
@@ -541,7 +539,7 @@ const LuckyMoneyGame = () => {
                 justifyContent: 'center',
                 textAlign: 'center',
                 padding: '5px',
-                transition: 'transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) 0.8s', // Delay sau khi mở nắp
+                transition: 'transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) 0.8s',
                 transform: viewState === 'revealed' ? 'translateY(-60%)' : 'translateY(0)',
                 boxShadow: '0 -5px 15px rgba(0,0,0,0.1)'
               }}>
@@ -559,7 +557,7 @@ const LuckyMoneyGame = () => {
         })}
       </div>
 
-      {/* Button Reset sau khi mở */}
+      {/* Button Reset */}
       {viewState === 'revealed' && (
         <button
           onClick={handleReset}
@@ -604,7 +602,7 @@ const LuckyMoneyGame = () => {
   )
 }
 
-// 3. Scene Chính (Đã Update)
+// 3.4 HappyNewYear2026Scene (Wrapper cho phần 2D)
 function HappyNewYear2026Scene() {
   const [active, setActive] = useState(false)
 
@@ -628,10 +626,8 @@ function HappyNewYear2026Scene() {
       alignItems: 'center'
     }}>
       
-      {/* 1. Nền Pháo Hoa (Sử dụng component cũ của bạn hoặc cái mới đều được, ở đây dùng lại FireworksCanvas từ phần trước) */}
       <FireworksCanvas />
       
-      {/* 2. Nội dung chính */}
       <div style={{
         position: 'relative',
         zIndex: 10,
@@ -639,13 +635,13 @@ function HappyNewYear2026Scene() {
         padding: '20px',
         width: '100%'
       }}>
-        {/* Năm 2026 rực rỡ - GOLD SHADER EFFECT */}
+        {/* Năm 2026 */}
         <div style={{
           fontSize: 'clamp(80px, 20vw, 250px)',
           fontWeight: 900,
           lineHeight: 0.9,
           marginBottom: '20px',
-          background: 'linear-gradient(to bottom, #FFFFE0 0%, #FFD700 30%, #B8860B 60%, #8B4513 100%)', // Gold Metallic Gradient
+          background: 'linear-gradient(to bottom, #FFFFE0 0%, #FFD700 30%, #B8860B 60%, #8B4513 100%)',
           WebkitBackgroundClip: 'text',
           WebkitTextFillColor: 'transparent',
           filter: 'drop-shadow(0 10px 20px rgba(0,0,0,0.5)) drop-shadow(0 0 30px rgba(255, 215, 0, 0.3))',
@@ -673,7 +669,7 @@ function HappyNewYear2026Scene() {
           Happy New Year
         </h1>
 
-        {/* Game Lì Xì Cinematic */}
+        {/* Game Lì Xì */}
         <div style={{
           opacity: active ? 1 : 0,
           transform: active ? 'translateY(0)' : 'translateY(40px)',
@@ -691,7 +687,142 @@ function HappyNewYear2026Scene() {
           <LuckyMoneyGame />
         </div>
       </div>
+    </div>
+  )
+}
 
+// --- 4. SCENE CONTENT WRAPPER ---
+function SceneContent({ scene, handleLaunch, soundRef, isPlaying, setIsPlaying }) {
+  const hasAutoPlayed = useRef(false)
+
+  useEffect(() => {
+    // Tự động play nhạc khi chuyển sang màn celebration
+    if (scene === 'celebration' && !hasAutoPlayed.current && soundRef.current) {
+      setTimeout(() => {
+        if (soundRef.current.play) {
+            soundRef.current.play().catch(e => console.log("Audio play failed:", e));
+        }
+        setIsPlaying(true)
+        hasAutoPlayed.current = true
+      }, 200)
+    }
+  }, [scene, soundRef, setIsPlaying])
+
+  return (
+    <>
+      {scene === 'countdown' ? (
+        <Suspense fallback={null}>
+          <InteractiveDust count={6000} />
+          <Stars radius={250} count={3000} factor={4} fade speed={1} />
+          <ambientLight intensity={0.5} />
+          <CountdownDisplay onFinishTransition={handleLaunch} />
+          <CircularAudioVisualizer soundRef={soundRef} radius={18} count={200} />
+          <PositionalAudio ref={soundRef} url="/happy-new-year-2026/sounds/lofi.mp3" distance={30} loop />
+        </Suspense>
+      ) : null}
+    </>
+  )
+}
+
+// --- 5. APP COMPONENT (ĐÂY LÀ PHẦN QUAN TRỌNG ĐỂ SỬA LỖI BUILD) ---
+export default function App() {
+  const soundRef = useRef()
+  const [scene, setScene] = useState('countdown')
+  const [flash, setFlash] = useState(0)
+  const [isUiVisible, setUiVisible] = useState(true)
+  const [isPlaying, setIsPlaying] = useState(false)
+  const [volume, setVolume] = useState(0.5)
+
+  const handleLaunch = () => {
+    setUiVisible(false)
+    setFlash(1)
+    
+    setTimeout(() => {
+      setScene('celebration')
+      const fade = setInterval(() => {
+        setFlash(prev => {
+          if (prev <= 0) { clearInterval(fade); return 0; }
+          return prev - 0.05 
+        })
+      }, 30)
+    }, 600)
+  }
+
+  return (
+    <div style={{ 
+      width: '100vw', 
+      height: '100vh', 
+      position: 'relative', 
+      background: '#000', 
+      overflow: 'hidden',
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+    }}>
+      {/* UI Controls cho countdown */}
+      {isUiVisible && scene === 'countdown' && (
+        <>
+          <CinematicVolume soundRef={soundRef} volume={volume} setVolume={setVolume} />
+          <CinematicPlayButton soundRef={soundRef} isPlaying={isPlaying} setIsPlaying={setIsPlaying} />
+        </>
+      )}
+
+      {/* Music controls cho celebration */}
+      {scene === 'celebration' && (
+        <>
+          <MusicToggleButton 
+            soundRef={soundRef} 
+            isPlaying={isPlaying} 
+            setIsPlaying={setIsPlaying}
+          />
+        </>
+      )}
+
+      {/* Flash transition */}
+      <div style={{ 
+        position: 'absolute', 
+        inset: 0, 
+        backgroundColor: 'white', 
+        opacity: flash, 
+        zIndex: 999, 
+        pointerEvents: 'none' 
+      }} />
+
+      {/* 3D Canvas cho countdown */}
+      {scene === 'countdown' ? (
+        <Canvas camera={{ position: [0, 8, 35], fov: 50 }}>
+          <color attach="background" args={['#0a0a1a']} />
+          <Environment preset="city" />
+          <SceneContent 
+            scene={scene} 
+            handleLaunch={handleLaunch} 
+            soundRef={soundRef} 
+            isPlaying={isPlaying}
+            setIsPlaying={setIsPlaying}
+          />
+          <EffectComposer disableNormalPass>
+            <Bloom luminanceThreshold={0.1} intensity={2.8} mipmapBlur />
+          </EffectComposer>
+          <OrbitControls 
+            enablePan={false} 
+            minDistance={20} 
+            maxDistance={100}
+            maxPolarAngle={Math.PI / 2}
+            minPolarAngle={0}
+            enabled={true}
+          />
+        </Canvas>
+      ) : (
+        /* 2D Scene cho celebration */
+        <>
+          <HappyNewYear2026Scene />
+          {/* Audio tag cho 2D Scene */}
+          <audio 
+            ref={soundRef} 
+            src="/happy-new-year-2026/sounds/celebration.mp3" 
+            loop 
+            style={{ display: 'none' }}
+          />
+        </>
+      )}
     </div>
   )
 }
