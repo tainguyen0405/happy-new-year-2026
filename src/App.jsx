@@ -4,6 +4,7 @@ import { OrbitControls, Text3D, Center, Float, Stars, Environment, PositionalAud
 import { EffectComposer, Bloom } from '@react-three/postprocessing'
 import * as THREE from 'three'
 
+// Đảm bảo đường dẫn import đúng với project của bạn
 import CinematicVolume from './CinematicVolume'
 import CinematicPlayButton from './CinematicPlayButton'
 import CircularAudioVisualizer from './CircularAudioVisualizer'
@@ -12,7 +13,7 @@ import VolumeControl from './VolumeControl'
 
 const isTesting = true;
 
-// --- 1. HÀM TẠO ÂM THANH CLICK ---
+// --- 1. UTILS ---
 const playCustomClick = () => {
   const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   const playPulse = (time, freq, dur) => {
@@ -33,7 +34,8 @@ const playCustomClick = () => {
   playPulse(now + 0.05, 900, 0.06);
 };
 
-// --- 2. BỤI KHÔNG GIAN (cho countdown) ---
+// --- 2. 3D COMPONENTS (COUNTDOWN PHASE) ---
+
 function InteractiveDust({ count = 6000 }) {
   const mesh = useRef(); const { raycaster, camera } = useThree(); const shockwaveRef = useRef(0)
   const starTexture = useMemo(() => {
@@ -70,16 +72,19 @@ function InteractiveDust({ count = 6000 }) {
   return (<points ref={mesh}><bufferGeometry><bufferAttribute attach="attributes-position" count={pos.length/3} array={pos} itemSize={3} /><bufferAttribute attach="attributes-color" count={col.length/3} array={col} itemSize={3} /></bufferGeometry><pointsMaterial size={0.8} vertexColors transparent map={starTexture} blending={THREE.AdditiveBlending} depthWrite={false} /></points>)
 }
 
-// --- CHỮ VÒNG CUNG (cho countdown) ---
-function ArcText({ 
-  text, 
-  radius = 15,
-  startAngle = Math.PI * 0.7,
-  endAngle = Math.PI * 0.3,
-  fontSize = 0.8,
-  textHeight = 0.3,
-  verticalOffset = 0
-}) {
+function RainbowMaterial() {
+  const matRef = useRef()
+  useFrame((state) => { 
+    if (matRef.current) { 
+      const hue = (state.clock.getElapsedTime() * 0.1) % 1
+      matRef.current.color.setHSL(hue, 1, 0.5)
+      matRef.current.emissive.setHSL(hue, 1, 0.2)
+    } 
+  })
+  return <meshPhysicalMaterial ref={matRef} metalness={1} roughness={0.1} emissiveIntensity={0.5} />
+}
+
+function ArcText({ text, radius = 15, startAngle = Math.PI * 0.7, endAngle = Math.PI * 0.3, fontSize = 0.8, textHeight = 0.3, verticalOffset = 0 }) {
   const fontUrl = '/happy-new-year-2026/fonts/Orbitron_Regular.json'
   const characters = text.split('')
   const totalAngle = startAngle - endAngle
@@ -91,7 +96,6 @@ function ArcText({
         const angle = startAngle - (angleStep * i)
         const x = Math.cos(angle) * radius
         const y = Math.sin(angle) * radius
-        
         return (
           <group key={i} position={[x, y, 0]} rotation={[0, 0, angle - Math.PI / 2]}>
             <Center>
@@ -107,19 +111,6 @@ function ArcText({
   )
 }
 
-function RainbowMaterial() {
-  const matRef = useRef()
-  useFrame((state) => { 
-    if (matRef.current) { 
-      const hue = (state.clock.getElapsedTime() * 0.1) % 1
-      matRef.current.color.setHSL(hue, 1, 0.5)
-      matRef.current.emissive.setHSL(hue, 1, 0.2)
-    } 
-  })
-  return <meshPhysicalMaterial ref={matRef} metalness={1} roughness={0.1} emissiveIntensity={0.5} />
-}
-
-// --- COUNTDOWN DISPLAY (3D Scene) ---
 function CountdownDisplay({ onFinishTransition }) {
   const [timeLeft, setTimeLeft] = useState({ d: 0, h: 0, m: 0, s: 0, total: 999 })
   const fontUrl = '/happy-new-year-2026/fonts/Orbitron_Regular.json'
@@ -154,15 +145,7 @@ function CountdownDisplay({ onFinishTransition }) {
       ) : (
         <Float speed={2} rotationIntensity={0.1} floatIntensity={0.4}>
           <group>
-            <ArcText 
-              text="COUNTDOWN 2026" 
-              radius={15}
-              startAngle={Math.PI * 0.7}
-              endAngle={Math.PI * 0.3}
-              fontSize={0.8}
-              textHeight={0.3}
-              verticalOffset={-3}
-            />
+            <ArcText text="COUNTDOWN 2026" radius={15} startAngle={Math.PI * 0.7} endAngle={Math.PI * 0.3} fontSize={0.8} textHeight={0.3} verticalOffset={-3} />
             <Center top position={[-0.5, 2, 0]}>
               <Text3D font={fontUrl} size={5} height={1.5} bevelEnabled>
                 {timeLeft.d}
@@ -233,226 +216,7 @@ function MechanicalButton({ onActivate }) {
   )
 }
 
-// --- 2D GLASS MORPHISM COMPONENTS ---
-function GlassCard({ 
-  children, 
-  delay = 0, 
-  fromDirection = 'bottom',
-  className = '',
-  style = {}
-}) {
-  const [isVisible, setIsVisible] = useState(false)
-  const cardRef = useRef(null)
-  const [tilt, setTilt] = useState({ x: 0, y: 0 })
-
-  useEffect(() => {
-    const timer = setTimeout(() => setIsVisible(true), delay)
-    return () => clearTimeout(timer)
-  }, [delay])
-
-  const handleMouseMove = (e) => {
-    if (!cardRef.current) return
-    const rect = cardRef.current.getBoundingClientRect()
-    const x = (e.clientX - rect.left) / rect.width - 0.5
-    const y = (e.clientY - rect.top) / rect.height - 0.5
-    setTilt({ x: y * 15, y: -x * 15 })
-  }
-
-  const handleMouseLeave = () => {
-    setTilt({ x: 0, y: 0 })
-  }
-
-  const getInitialTransform = () => {
-    switch(fromDirection) {
-      case 'left': return 'translateX(-120vw) rotate(-15deg) scale(0.8)'
-      case 'right': return 'translateX(120vw) rotate(15deg) scale(0.8)'
-      case 'top': return 'translateY(-120vh) rotate(-10deg) scale(0.8)'
-      case 'bottom': return 'translateY(120vh) rotate(10deg) scale(0.8)'
-      default: return 'scale(0) rotate(180deg)'
-    }
-  }
-
-  return (
-    <div
-      ref={cardRef}
-      onMouseMove={handleMouseMove}
-      onMouseLeave={handleMouseLeave}
-      className={className}
-      style={{
-        ...style,
-        opacity: isVisible ? 1 : 0,
-        transform: isVisible 
-          ? `perspective(1000px) rotateX(${tilt.x}deg) rotateY(${tilt.y}deg) scale(1)`
-          : getInitialTransform(),
-        transition: isVisible 
-          ? 'transform 0.3s ease-out, opacity 0.3s ease-out'
-          : 'all 1.2s cubic-bezier(0.34, 1.56, 0.64, 1)',
-        background: 'rgba(255, 255, 255, 0.05)',
-        backdropFilter: 'blur(20px)',
-        border: '1px solid rgba(255, 255, 255, 0.1)',
-        borderRadius: '24px',
-        padding: '32px',
-        boxShadow: `
-          0 8px 32px 0 rgba(0, 0, 0, 0.37),
-          inset 0 1px 0 0 rgba(255, 255, 255, 0.1)
-        `,
-      }}
-    >
-      {children}
-    </div>
-  )
-}
-
-function AnimatedGradientBackground() {
-  const canvasRef = useRef(null)
-
-  useEffect(() => {
-    const canvas = canvasRef.current
-    if (!canvas) return
-    
-    const ctx = canvas.getContext('2d')
-    canvas.width = window.innerWidth
-    canvas.height = window.innerHeight
-
-    let time = 0
-    
-    const animate = () => {
-      time += 0.01
-      
-      const gradient1 = ctx.createRadialGradient(
-        canvas.width * (0.5 + Math.sin(time) * 0.3),
-        canvas.height * (0.5 + Math.cos(time * 0.7) * 0.3),
-        0,
-        canvas.width * 0.5,
-        canvas.height * 0.5,
-        canvas.width * 0.8
-      )
-      gradient1.addColorStop(0, `hsla(${(time * 20) % 360}, 100%, 60%, 0.3)`)
-      gradient1.addColorStop(0.5, `hsla(${(time * 20 + 60) % 360}, 100%, 50%, 0.2)`)
-      gradient1.addColorStop(1, 'transparent')
-
-      const gradient2 = ctx.createRadialGradient(
-        canvas.width * (0.5 + Math.cos(time * 1.3) * 0.4),
-        canvas.height * (0.5 + Math.sin(time * 0.9) * 0.4),
-        0,
-        canvas.width * 0.3,
-        canvas.height * 0.3,
-        canvas.width * 0.6
-      )
-      gradient2.addColorStop(0, `hsla(${(time * 30 + 180) % 360}, 100%, 60%, 0.3)`)
-      gradient2.addColorStop(0.5, `hsla(${(time * 30 + 240) % 360}, 100%, 50%, 0.2)`)
-      gradient2.addColorStop(1, 'transparent')
-
-      ctx.fillStyle = '#0a0a1a'
-      ctx.fillRect(0, 0, canvas.width, canvas.height)
-      
-      ctx.fillStyle = gradient1
-      ctx.fillRect(0, 0, canvas.width, canvas.height)
-      
-      ctx.fillStyle = gradient2
-      ctx.fillRect(0, 0, canvas.width, canvas.height)
-      
-      requestAnimationFrame(animate)
-    }
-    
-    animate()
-
-    const handleResize = () => {
-      canvas.width = window.innerWidth
-      canvas.height = window.innerHeight
-    }
-    
-    window.addEventListener('resize', handleResize)
-    return () => window.removeEventListener('resize', handleResize)
-  }, [])
-
-  return (
-    <canvas
-      ref={canvasRef}
-      style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        width: '100%',
-        height: '100%',
-        zIndex: 0
-      }}
-    />
-  )
-}
-
-function FloatingParticles({ count = 50 }) {
-  const canvasRef = useRef(null)
-
-  useEffect(() => {
-    const canvas = canvasRef.current
-    if (!canvas) return
-    
-    const ctx = canvas.getContext('2d')
-    canvas.width = window.innerWidth
-    canvas.height = window.innerHeight
-
-    const particles = Array.from({ length: count }, () => ({
-      x: Math.random() * canvas.width,
-      y: Math.random() * canvas.height,
-      vx: (Math.random() - 0.5) * 0.5,
-      vy: (Math.random() - 0.5) * 0.5,
-      radius: Math.random() * 3 + 1,
-      opacity: Math.random() * 0.5 + 0.2,
-      hue: Math.random() * 360
-    }))
-
-    const animate = () => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height)
-      
-      particles.forEach(p => {
-        p.x += p.vx
-        p.y += p.vy
-        
-        if (p.x < 0 || p.x > canvas.width) p.vx *= -1
-        if (p.y < 0 || p.y > canvas.height) p.vy *= -1
-        
-        const gradient = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.radius * 2)
-        gradient.addColorStop(0, `hsla(${p.hue}, 100%, 70%, ${p.opacity})`)
-        gradient.addColorStop(1, 'transparent')
-        
-        ctx.fillStyle = gradient
-        ctx.beginPath()
-        ctx.arc(p.x, p.y, p.radius * 2, 0, Math.PI * 2)
-        ctx.fill()
-      })
-      
-      requestAnimationFrame(animate)
-    }
-    
-    animate()
-
-    const handleResize = () => {
-      canvas.width = window.innerWidth
-      canvas.height = window.innerHeight
-    }
-    
-    window.addEventListener('resize', handleResize)
-    return () => window.removeEventListener('resize', handleResize)
-  }, [count])
-
-  return (
-    <canvas
-      ref={canvasRef}
-      style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        width: '100%',
-        height: '100%',
-        zIndex: 1,
-        pointerEvents: 'none'
-      }}
-    />
-  )
-}
-
-// --- 2D CINEMATIC SCENE (Title Sequence Style) ---
+// --- 3. 2D CINEMATIC SCENE (NEW - REPLACES GLASS CARDS) ---
 function HappyNewYear2026Scene() {
   const [active, setActive] = useState(false)
 
@@ -469,14 +233,14 @@ function HappyNewYear2026Scene() {
       height: '100%',
       background: '#000',
       overflow: 'hidden',
-      fontFamily: '"Orbitron", sans-serif', // Đảm bảo bạn đã load font này hoặc font tương tự
+      fontFamily: '"Orbitron", sans-serif',
       color: '#fff'
     }}>
       
       {/* 1. BACKGROUND: AURORA MESH GRADIENT */}
       <div style={{
         position: 'absolute',
-        inset: -100, // Làm rộng hơn màn hình để khi xoay không bị lẹm
+        inset: -100,
         background: `
           radial-gradient(circle at 50% 50%, rgba(0,0,0,0) 0%, rgba(0,0,0,0.8) 100%),
           conic-gradient(from 0deg at 50% 50%, #0f0c29, #302b63, #24243e, #0f0c29)
@@ -487,7 +251,7 @@ function HappyNewYear2026Scene() {
         zIndex: 1
       }} />
       
-      {/* Thêm các đốm sáng trôi nổi (Orbs) */}
+      {/* Orbs */}
       <div className="orb" style={{ 
         top: '20%', left: '20%', background: '#ff0055', animationDelay: '0s' 
       }} />
@@ -495,14 +259,14 @@ function HappyNewYear2026Scene() {
         bottom: '20%', right: '20%', background: '#00ccff', animationDelay: '-5s' 
       }} />
 
-      {/* 2. FILM GRAIN & VIGNETTE (Tạo cảm giác máy quay phim) */}
+      {/* 2. FILM GRAIN & VIGNETTE */}
       <div style={{
         position: 'absolute',
         inset: 0,
         zIndex: 2,
         pointerEvents: 'none',
         backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.65%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22 opacity=%221%22/%3E%3C/svg%3E")',
-        opacity: 0.07, // Độ nhiễu hạt
+        opacity: 0.07,
         backgroundSize: '200px',
       }} />
       
@@ -511,7 +275,7 @@ function HappyNewYear2026Scene() {
         inset: 0,
         zIndex: 3,
         pointerEvents: 'none',
-        background: 'radial-gradient(circle at center, transparent 0%, #000 120%)' // Vignette tối 4 góc
+        background: 'radial-gradient(circle at center, transparent 0%, #000 120%)'
       }} />
 
       {/* 3. MAIN CONTENT */}
@@ -527,7 +291,7 @@ function HappyNewYear2026Scene() {
         textAlign: 'center'
       }}>
         
-        {/* Dòng chữ nhỏ trên cùng */}
+        {/* Dòng chữ nhỏ */}
         <div style={{
           fontSize: 'clamp(14px, 1.5vw, 18px)',
           letterSpacing: '0.8em',
@@ -541,25 +305,25 @@ function HappyNewYear2026Scene() {
           Goodbye 2025
         </div>
 
-        {/* Chữ HAPPY NEW YEAR - Hiệu ứng Gradient Text + Mask */}
+        {/* HAPPY NEW YEAR */}
         <h1 style={{
           fontSize: 'clamp(40px, 6vw, 80px)',
           fontWeight: 800,
           margin: 0,
           lineHeight: 1.1,
           letterSpacing: '-0.02em',
-          background: 'linear-gradient(to bottom, #ffffff 30%, #a5a5a5 100%)', // Giả kim loại bạc
+          background: 'linear-gradient(to bottom, #ffffff 30%, #a5a5a5 100%)',
           WebkitBackgroundClip: 'text',
           WebkitTextFillColor: 'transparent',
           opacity: active ? 1 : 0,
-          transform: active ? 'scale(1)' : 'scale(1.1) blur(10px)', // Blur in effect
+          transform: active ? 'scale(1)' : 'scale(1.1) blur(10px)',
           filter: active ? 'blur(0px)' : 'blur(20px)',
           transition: 'all 2s cubic-bezier(0.16, 1, 0.3, 1) 0.8s'
         }}>
           HAPPY NEW YEAR
         </h1>
 
-        {/* SỐ 2026 KHỔNG LỒ */}
+        {/* SỐ 2026 */}
         <div style={{
           fontSize: 'clamp(100px, 25vw, 350px)',
           fontWeight: 900,
@@ -569,7 +333,6 @@ function HappyNewYear2026Scene() {
           opacity: active ? 1 : 0,
           transform: active ? 'translateY(0) scale(1)' : 'translateY(50px) scale(0.9)',
           transition: 'all 2.5s cubic-bezier(0.16, 1, 0.3, 1) 1s',
-          // Hiệu ứng chữ mạ vàng (Gold text)
           backgroundImage: 'linear-gradient(135deg, #BF953F, #FCF6BA, #B38728, #FBF5B7, #AA771C)',
           backgroundSize: '200% auto',
           backgroundClip: 'text',
@@ -580,7 +343,7 @@ function HappyNewYear2026Scene() {
           2026
         </div>
 
-        {/* Dòng quote bên dưới */}
+        {/* Quote */}
         <div style={{
           maxWidth: '600px',
           padding: '0 20px',
@@ -598,7 +361,6 @@ function HappyNewYear2026Scene() {
 
       </div>
 
-      {/* STYLE CSS INLINE CHO ANIMATION */}
       <style>{`
         @keyframes auroraSpin {
           0% { transform: rotate(0deg) scale(1.5); }
@@ -628,6 +390,145 @@ function HappyNewYear2026Scene() {
           100% { transform: translate(30px, -50px); }
         }
       `}</style>
+    </div>
+  )
+}
+
+// --- 4. SCENE CONTENT WRAPPER ---
+function SceneContent({ scene, handleLaunch, soundRef, isPlaying, setIsPlaying }) {
+  const hasAutoPlayed = useRef(false)
+
+  useEffect(() => {
+    // Tự động play nhạc khi chuyển sang màn celebration
+    if (scene === 'celebration' && !hasAutoPlayed.current && soundRef.current) {
+      setTimeout(() => {
+        // Kiểm tra xem soundRef.current có phải là HTMLAudioElement không để gọi .play()
+        if (soundRef.current.play) {
+            soundRef.current.play().catch(e => console.log("Audio play failed:", e));
+        }
+        setIsPlaying(true)
+        hasAutoPlayed.current = true
+      }, 200)
+    }
+  }, [scene, soundRef, setIsPlaying])
+
+  return (
+    <>
+      {scene === 'countdown' ? (
+        <Suspense fallback={null}>
+          <InteractiveDust count={6000} />
+          <Stars radius={250} count={3000} factor={4} fade speed={1} />
+          <ambientLight intensity={0.5} />
+          <CountdownDisplay onFinishTransition={handleLaunch} />
+          <CircularAudioVisualizer soundRef={soundRef} radius={18} count={200} />
+          <PositionalAudio ref={soundRef} url="/happy-new-year-2026/sounds/lofi.mp3" distance={30} loop />
+        </Suspense>
+      ) : null}
+    </>
+  )
+}
+
+// --- 5. APP COMPONENT ---
+export default function App() {
+  const soundRef = useRef()
+  const [scene, setScene] = useState('countdown')
+  const [flash, setFlash] = useState(0)
+  const [isUiVisible, setUiVisible] = useState(true)
+  const [isPlaying, setIsPlaying] = useState(false)
+  const [volume, setVolume] = useState(0.5)
+
+  const handleLaunch = () => {
+    setUiVisible(false)
+    setFlash(1)
+    
+    setTimeout(() => {
+      setScene('celebration')
+      const fade = setInterval(() => {
+        setFlash(prev => {
+          if (prev <= 0) { clearInterval(fade); return 0; }
+          return prev - 0.05 
+        })
+      }, 30)
+    }, 600)
+  }
+
+  return (
+    <div style={{ 
+      width: '100vw', 
+      height: '100vh', 
+      position: 'relative', 
+      background: '#000', 
+      overflow: 'hidden',
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+    }}>
+      {/* UI Controls cho countdown */}
+      {isUiVisible && scene === 'countdown' && (
+        <>
+          <CinematicVolume soundRef={soundRef} volume={volume} setVolume={setVolume} />
+          <CinematicPlayButton soundRef={soundRef} isPlaying={isPlaying} setIsPlaying={setIsPlaying} />
+        </>
+      )}
+
+      {/* Music controls cho celebration */}
+      {scene === 'celebration' && (
+        <>
+          <MusicToggleButton 
+            soundRef={soundRef} 
+            isPlaying={isPlaying} 
+            setIsPlaying={setIsPlaying}
+          />
+          {/* Nếu muốn chỉnh volume ở màn hình cuối thì bật dòng này lên */}
+          {/* <VolumeControl soundRef={soundRef} volume={volume} setVolume={setVolume} /> */}
+        </>
+      )}
+
+      {/* Flash transition */}
+      <div style={{ 
+        position: 'absolute', 
+        inset: 0, 
+        backgroundColor: 'white', 
+        opacity: flash, 
+        zIndex: 999, 
+        pointerEvents: 'none' 
+      }} />
+
+      {/* 3D Canvas cho countdown */}
+      {scene === 'countdown' ? (
+        <Canvas camera={{ position: [0, 8, 35], fov: 50 }}>
+          <color attach="background" args={['#0a0a1a']} />
+          <Environment preset="city" />
+          <SceneContent 
+            scene={scene} 
+            handleLaunch={handleLaunch} 
+            soundRef={soundRef} 
+            isPlaying={isPlaying}
+            setIsPlaying={setIsPlaying}
+          />
+          <EffectComposer disableNormalPass>
+            <Bloom luminanceThreshold={0.1} intensity={2.8} mipmapBlur />
+          </EffectComposer>
+          <OrbitControls 
+            enablePan={false} 
+            minDistance={20} 
+            maxDistance={100}
+            maxPolarAngle={Math.PI / 2}
+            minPolarAngle={0}
+            enabled={true}
+          />
+        </Canvas>
+      ) : (
+        /* 2D Scene cho celebration */
+        <>
+          <HappyNewYear2026Scene />
+          {/* Audio tag cho 2D Scene (HTML) vì Scene 3D đã bị unmount */}
+          <audio 
+            ref={soundRef} 
+            src="/happy-new-year-2026/sounds/celebration.mp3" 
+            loop 
+            style={{ display: 'none' }}
+          />
+        </>
+      )}
     </div>
   )
 }
