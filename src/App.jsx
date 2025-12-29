@@ -410,14 +410,14 @@ function ArcText({
 }
 
 // --- GRASS FIELD 360° (Cỏ thực tế bằng Instanced Mesh) ---
-function GrassField({ count = 8000 }) {
+function GrassField({ count = 12000 }) {
   const meshRef = useRef()
   const dummy = useMemo(() => new THREE.Object3D(), [])
   
   // Tạo vị trí và kích thước ngẫu nhiên cho mỗi cọng cỏ
   const grassData = useMemo(() => {
     const data = []
-    const radius = 60 // Bán kính vùng cỏ
+    const radius = 120 // Tăng bán kính lên gấp đôi
     
     for (let i = 0; i < count; i++) {
       // Phân bố ngẫu nhiên trong vòng tròn
@@ -471,9 +471,9 @@ function GrassField({ count = 8000 }) {
   
   return (
     <>
-      {/* Sàn nền */}
+      {/* Sàn nền lớn hơn nhiều */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -8.05, 0]} receiveShadow>
-        <circleGeometry args={[65, 64]} />
+        <circleGeometry args={[130, 64]} />
         <meshStandardMaterial color="#2d5016" roughness={0.9} />
       </mesh>
       
@@ -535,8 +535,8 @@ function SceneContent({ scene, handleLaunch, soundRef, isPlaying, setIsPlaying }
           {/* Cinematic Camera Animation */}
           <CinematicCamera />
           
-          {/* Thảm cỏ 360° */}
-          <GrassField count={8000} />
+          {/* Thảm cỏ 360° mở rộng */}
+          <GrassField count={12000} />
           
           <PositionalAudio ref={soundRef} url="/happy-new-year-2026/sounds/celebration.mp3" distance={50} loop />
           
