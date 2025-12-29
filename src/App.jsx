@@ -92,7 +92,7 @@ function FireworkTrail({ startPos, endPos, color }) {
   )
 }
 
-function Firework({ color, position, triggerShake }) {
+function Firework({ color, position }) {
   const meshRef = useRef()
   const count = 500
   const burstRef = useRef(false)
@@ -124,7 +124,6 @@ function Firework({ color, position, triggerShake }) {
     }
     
     if (!burstRef.current) {
-      triggerShake(0.5) 
       burstRef.current = true
     }
 
@@ -151,7 +150,7 @@ function Firework({ color, position, triggerShake }) {
   )
 }
 
-function FireworkManager({ triggerShake }) {
+function FireworkManager() {
   const [list, setList] = useState([])
   useEffect(() => {
     const interval = setInterval(() => {
@@ -164,7 +163,7 @@ function FireworkManager({ triggerShake }) {
     }, 600)
     return () => clearInterval(interval)
   }, [])
-  return <>{list.map(f => <Firework key={f.id} position={f.pos} color={f.color} triggerShake={triggerShake} />)}</>
+  return <>{list.map(f => <Firework key={f.id} position={f.pos} color={f.color} />)}</>
 }
 
 // --- 3. BỤI KHÔNG GIAN ---
@@ -499,64 +498,51 @@ function GradientMaterial({ scale = 1 }) {
   )
 }
 
-// --- CHỮ VÒNG CUNG ---
-function ArcText({ 
-  text, 
-  radius = 15,
-  startAngle = Math.PI * 0.7,
-  endAngle = Math.PI * 0.3,
-  fontSize = 0.8,
-  textHeight = 0.3,
-  verticalOffset = 0
-}) {
-  const fontUrl = '/happy-new-year-2026/fonts/Orbitron_Regular.json'
-  const characters = text.split('')
-  const totalAngle = startAngle - endAngle
-  const angleStep = totalAngle / (characters.length - 1)
-  
+// --- GLOWING MUSHROOM FOREST (Rừng nấm phát sáng) ---
+function GlowingMushroomForest({ mushroomCount = 150, grassCount = 8000 }) {
   return (
-    <group position={[0, verticalOffset, 0]}>
-      {characters.map((char, i) => {
-        const angle = startAngle - (angleStep * i)
-        const x = Math.cos(angle) * radius
-        const y = Math.sin(angle) * radius
-        
-        return (
-          <group key={i} position={[x, y, 0]} rotation={[0, 0, angle - Math.PI / 2]}>
-            <Center>
-              <Text3D font={fontUrl} size={fontSize} height={textHeight} bevelEnabled curveSegments={8}>
-                {char}
-                <RainbowMaterial />
-              </Text3D>
-            </Center>
-          </group>
-        )
-      })}
+    <group>
+      {/* Sàn nền tối màu */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -8.05, 0]} receiveShadow>
+        <circleGeometry args={[130, 64]} />
+        <meshStandardMaterial color="#1a1a2e" roughness={0.9} />
+      </mesh>
+      
+      {/* Cỏ phát sáng sinh học */}
+      <BioluminescentGrass count={grassCount} />
+      
+      {/* Nấm phát sáng */}
+      <Mushrooms count={mushroomCount} />
+      
+      {/* Particles phát sáng bay lơ lửng */}
+      <FloatingSpores count={300} />
     </group>
   )
 }
 
-// --- GRASS FIELD 360° (Cỏ thực tế bằng Instanced Mesh) ---
-function GrassField({ count = 12000 }) {
+// Cỏ phát sáng sinh học
+function BioluminescentGrass({ count }) {
   const meshRef = useRef()
   const dummy = useMemo(() => new THREE.Object3D(), [])
   
-  // Tạo vị trí và kích thước ngẫu nhiên cho mỗi cọng cỏ
   const grassData = useMemo(() => {
     const data = []
-    const radius = 120 // Tăng bán kính lên gấp đôi
+    const radius = 120
     
     for (let i = 0; i < count; i++) {
-      // Phân bố ngẫu nhiên trong vòng tròn
       const angle = Math.random() * Math.PI * 2
       const dist = Math.sqrt(Math.random()) * radius
       const x = Math.cos(angle) * dist
       const z = Math.sin(angle) * dist
       
+      // Tạo clusters - một số khu vực có nhiều cỏ hơn
+      const clusterBoost = Math.random() > 0.7 ? 1 : 0
+      
       data.push({
         position: [x, -8, z],
-        scale: [0.3 + Math.random() * 0.4, 1 + Math.random() * 1.5, 0.3 + Math.random() * 0.4],
-        rotation: [0, Math.random() * Math.PI * 2, (Math.random() - 0.5) * 0.3]
+        scale: [0.2 + Math.random() * 0.3, 0.6 + Math.random() * 1.2, 0.2 + Math.random() * 0.3],
+        rotation: [0, Math.random() * Math.PI * 2, (Math.random() - 0.5) * 0.3],
+        glowPhase: Math.random() * Math.PI * 2
       })
     }
     return data
@@ -575,61 +561,263 @@ function GrassField({ count = 12000 }) {
     meshRef.current.instanceMatrix.needsUpdate = true
   }, [grassData, dummy])
   
-  // Animation: cỏ lắc lư nhẹ
   useFrame((state) => {
     if (!meshRef.current) return
     
-    grassData.forEach((grass, i) => {
-      const time = state.clock.getElapsedTime()
-      const offset = i * 0.1
-      
-      dummy.position.set(...grass.position)
-      dummy.scale.set(...grass.scale)
-      dummy.rotation.set(
-        Math.sin(time * 0.5 + offset) * 0.1,
-        grass.rotation[1],
-        Math.cos(time * 0.3 + offset) * 0.1
-      )
-      dummy.updateMatrix()
-      meshRef.current.setMatrixAt(i, dummy.matrix)
-    })
-    meshRef.current.instanceMatrix.needsUpdate = true
+    const time = state.clock.getElapsedTime()
+    
+    // Cập nhật màu phát sáng
+    const hue = 0.55 + Math.sin(time * 0.3) * 0.1 // Xanh lam -> xanh lục
+    meshRef.current.material.color.setHSL(hue, 0.8, 0.4)
+    meshRef.current.material.emissive.setHSL(hue, 1, 0.3)
+    meshRef.current.material.emissiveIntensity = 0.6 + Math.sin(time * 0.5) * 0.2
   })
   
   return (
-    <>
-      {/* Sàn nền lớn hơn nhiều */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -8.05, 0]} receiveShadow>
-        <circleGeometry args={[130, 64]} />
-        <meshStandardMaterial color="#2d5016" roughness={0.9} />
+    <instancedMesh ref={meshRef} args={[null, null, count]} castShadow>
+      <coneGeometry args={[0.08, 0.8, 3]} />
+      <meshStandardMaterial 
+        color="#4a9d9c"
+        emissive="#3a8d8c"
+        emissiveIntensity={0.6}
+        roughness={0.8}
+        side={THREE.DoubleSide}
+      />
+    </instancedMesh>
+  )
+}
+
+// Nấm phát sáng
+function Mushrooms({ count }) {
+  const mushrooms = useMemo(() => {
+    const data = []
+    const radius = 110
+    
+    for (let i = 0; i < count; i++) {
+      const angle = Math.random() * Math.PI * 2
+      const dist = 20 + Math.sqrt(Math.random()) * radius
+      const x = Math.cos(angle) * dist
+      const z = Math.sin(angle) * dist
+      
+      data.push({
+        id: i,
+        position: [x, -8, z],
+        scale: 0.8 + Math.random() * 1.5,
+        rotation: Math.random() * Math.PI * 2,
+        // Màu sắc: xanh dương, tím, xanh lục
+        colorType: Math.floor(Math.random() * 3),
+        glowPhase: Math.random() * Math.PI * 2
+      })
+    }
+    return data
+  }, [count])
+  
+  return (
+    <group>
+      {mushrooms.map(m => (
+        <Mushroom key={m.id} data={m} />
+      ))}
+    </group>
+  )
+}
+
+function Mushroom({ data }) {
+  const groupRef = useRef()
+  const lightRef = useRef()
+  const capRef = useRef()
+  
+  const colors = [
+    { cap: '#4ecdc4', glow: '#2ba39b', light: '#4ecdc4' }, // Xanh cyan
+    { cap: '#a78bfa', glow: '#7c3aed', light: '#a78bfa' }, // Tím
+    { cap: '#34d399', glow: '#059669', light: '#34d399' }  // Xanh lục
+  ]
+  
+  const color = colors[data.colorType]
+  
+  useFrame((state) => {
+    const time = state.clock.getElapsedTime()
+    
+    // Phát sáng nhấp nháy nhẹ
+    if (lightRef.current && capRef.current) {
+      const intensity = 0.7 + Math.sin(time * 1.5 + data.glowPhase) * 0.3
+      lightRef.current.intensity = intensity * 2
+      capRef.current.material.emissiveIntensity = intensity
+    }
+  })
+  
+  return (
+    <group 
+      ref={groupRef} 
+      position={data.position} 
+      scale={data.scale}
+      rotation={[0, data.rotation, 0]}
+    >
+      {/* Thân nấm */}
+      <mesh position={[0, 0.3, 0]}>
+        <cylinderGeometry args={[0.15, 0.18, 0.6, 8]} />
+        <meshStandardMaterial 
+          color="#e8e8e8" 
+          roughness={0.7}
+        />
       </mesh>
       
-      {/* Cỏ instanced */}
-      <instancedMesh ref={meshRef} args={[null, null, count]} castShadow receiveShadow>
-        <coneGeometry args={[0.1, 1, 3]} />
+      {/* Mũ nấm */}
+      <mesh ref={capRef} position={[0, 0.7, 0]}>
+        <sphereGeometry args={[0.5, 16, 16, 0, Math.PI * 2, 0, Math.PI / 2]} />
         <meshStandardMaterial 
-          color="#4a7c2c" 
-          roughness={0.8}
-          side={THREE.DoubleSide}
+          color={color.cap}
+          emissive={color.glow}
+          emissiveIntensity={0.7}
+          roughness={0.4}
         />
-      </instancedMesh>
-    </>
+      </mesh>
+      
+      {/* Chấm trắng trên mũ nấm */}
+      {[...Array(5)].map((_, i) => {
+        const angle = (i / 5) * Math.PI * 2
+        const r = 0.25
+        return (
+          <mesh 
+            key={i}
+            position={[
+              Math.cos(angle) * r, 
+              0.75, 
+              Math.sin(angle) * r
+            ]}
+          >
+            <sphereGeometry args={[0.08, 8, 8]} />
+            <meshStandardMaterial 
+              color="#ffffff"
+              emissive="#ffffff"
+              emissiveIntensity={0.5}
+            />
+          </mesh>
+        )
+      })}
+      
+      {/* Ánh sáng phát ra */}
+      <pointLight
+        ref={lightRef}
+        position={[0, 0.7, 0]}
+        color={color.light}
+        intensity={2}
+        distance={5}
+        decay={2}
+      />
+    </group>
+  )
+}
+
+// Bào tử phát sáng bay lơ lửng
+function FloatingSpores({ count }) {
+  const pointsRef = useRef()
+  
+  const sporeData = useMemo(() => {
+    const positions = new Float32Array(count * 3)
+    const colors = new Float32Array(count * 3)
+    const sizes = new Float32Array(count)
+    const velocities = []
+    
+    for (let i = 0; i < count; i++) {
+      const angle = Math.random() * Math.PI * 2
+      const radius = Math.random() * 100
+      const x = Math.cos(angle) * radius
+      const z = Math.sin(angle) * radius
+      const y = Math.random() * 10 - 8
+      
+      positions[i * 3] = x
+      positions[i * 3 + 1] = y
+      positions[i * 3 + 2] = z
+      
+      const colorType = Math.floor(Math.random() * 3)
+      const colorValues = [
+        [0.3, 0.8, 0.77], // cyan
+        [0.65, 0.55, 0.98], // purple
+        [0.2, 0.83, 0.6]  // green
+      ]
+      const col = colorValues[colorType]
+      colors[i * 3] = col[0]
+      colors[i * 3 + 1] = col[1]
+      colors[i * 3 + 2] = col[2]
+      
+      sizes[i] = 0.1 + Math.random() * 0.2
+      
+      velocities.push({
+        x: (Math.random() - 0.5) * 0.02,
+        y: 0.01 + Math.random() * 0.02,
+        z: (Math.random() - 0.5) * 0.02
+      })
+    }
+    
+    return { positions, colors, sizes, velocities }
+  }, [count])
+  
+  useFrame(() => {
+    if (!pointsRef.current) return
+    
+    const positions = pointsRef.current.geometry.attributes.position.array
+    
+    for (let i = 0; i < count; i++) {
+      const i3 = i * 3
+      
+      positions[i3] += sporeData.velocities[i].x
+      positions[i3 + 1] += sporeData.velocities[i].y
+      positions[i3 + 2] += sporeData.velocities[i].z
+      
+      // Reset nếu bay quá cao
+      if (positions[i3 + 1] > 15) {
+        positions[i3 + 1] = -8
+      }
+      
+      // Giới hạn trong bán kính
+      const dist = Math.sqrt(positions[i3] ** 2 + positions[i3 + 2] ** 2)
+      if (dist > 100) {
+        positions[i3] *= 0.95
+        positions[i3 + 2] *= 0.95
+      }
+    }
+    
+    pointsRef.current.geometry.attributes.position.needsUpdate = true
+  })
+  
+  return (
+    <points ref={pointsRef}>
+      <bufferGeometry>
+        <bufferAttribute
+          attach="attributes-position"
+          count={count}
+          array={sporeData.positions}
+          itemSize={3}
+        />
+        <bufferAttribute
+          attach="attributes-color"
+          count={count}
+          array={sporeData.colors}
+          itemSize={3}
+        />
+        <bufferAttribute
+          attach="attributes-size"
+          count={count}
+          array={sporeData.sizes}
+          itemSize={1}
+        />
+      </bufferGeometry>
+      <pointsMaterial
+        size={0.3}
+        vertexColors
+        transparent
+        opacity={0.8}
+        blending={THREE.AdditiveBlending}
+        depthWrite={false}
+      />
+    </points>
   )
 }
 
 // --- SCENE CONTENT ---
 function SceneContent({ scene, handleLaunch, soundRef, isPlaying, setIsPlaying }) {
   const { camera } = useThree()
-  const shakeIntensity = useRef(0)
   const hasAutoPlayed = useRef(false)
-
-  useFrame(() => {
-    if (shakeIntensity.current > 0) {
-      camera.position.x += (Math.random() - 0.5) * shakeIntensity.current
-      camera.position.y += (Math.random() - 0.5) * shakeIntensity.current
-      shakeIntensity.current *= 0.9 
-    }
-  })
 
   useEffect(() => {
     if (scene === 'fireworks' && !hasAutoPlayed.current && soundRef.current) {
@@ -640,8 +828,6 @@ function SceneContent({ scene, handleLaunch, soundRef, isPlaying, setIsPlaying }
       }, 200)
     }
   }, [scene, soundRef, setIsPlaying])
-
-  const triggerShake = (val) => { shakeIntensity.current = val }
 
   return (
     <>
@@ -657,13 +843,13 @@ function SceneContent({ scene, handleLaunch, soundRef, isPlaying, setIsPlaying }
       ) : (
         <Suspense fallback={null}>
           <Stars radius={150} count={1200} factor={2} fade speed={0.4} />
-          <FireworkManager triggerShake={triggerShake} />
+          <FireworkManager />
           
           {/* Đèn lồng bay */}
           <FloatingLanterns count={80} />
           
-          {/* Thảm cỏ 360° mở rộng */}
-          <GrassField count={12000} />
+          {/* Rừng nấm phát sáng */}
+          <GlowingMushroomForest mushroomCount={150} grassCount={8000} />
           
           <PositionalAudio ref={soundRef} url="/happy-new-year-2026/sounds/celebration.mp3" distance={50} loop />
           
