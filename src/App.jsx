@@ -5,13 +5,13 @@ import { EffectComposer, Bloom, ChromaticAberration, Noise, Vignette } from '@re
 import { BlendFunction } from 'postprocessing' 
 import * as THREE from 'three'
 
-// --- IMPORT COMPONENT ÂM THANH CỦA BẠN (GIỮ NGUYÊN) ---
+// --- IMPORT COMPONENT ÂM THANH (GIỮ NGUYÊN) ---
 import CinematicVolume from './CinematicVolume'
 import CinematicPlayButton from './CinematicPlayButton'
 import CircularAudioVisualizer from './CircularAudioVisualizer'
 import MusicToggleButton from './MusicToggleButton'
 
-// --- GLOBAL SETTINGS (TỪ CODE 1) ---
+// --- GLOBAL SETTINGS ---
 const isTesting = true; // Set false nếu muốn chạy đúng ngày 1/1/2026
 
 // --- 1. UTILS ---
@@ -37,7 +37,7 @@ const playCustomClick = () => {
 
 // --- 2. 3D COMPONENTS ---
 
-// Hiệu ứng bụi không gian + Warp Speed (GIỮ CỦA CODE 2 ĐỂ CÓ HIỆU ỨNG BAY)
+// Hiệu ứng bụi không gian + Warp Speed
 function InteractiveDust({ count = 6000, isLaunching }) {
   const mesh = useRef(); const { raycaster, camera } = useThree(); const shockwaveRef = useRef(0)
   const starTexture = useMemo(() => {
@@ -65,7 +65,7 @@ function InteractiveDust({ count = 6000, isLaunching }) {
     for (let i = 0; i < count; i++) {
       const i3 = i * 3
       if (isLaunching) {
-        // Warp Speed Logic (Code 2)
+        // Warp Speed Logic
         vel[i3 + 2] += 2.0; 
         positions[i3 + 2] += vel[i3 + 2];
         if (positions[i3 + 2] > 50) { positions[i3 + 2] = -200; vel[i3 + 2] = 0; }
@@ -87,7 +87,7 @@ function InteractiveDust({ count = 6000, isLaunching }) {
   return (<points ref={mesh}><bufferGeometry><bufferAttribute attach="attributes-position" count={pos.length/3} array={pos} itemSize={3} /><bufferAttribute attach="attributes-color" count={col.length/3} array={col} itemSize={3} /></bufferGeometry><pointsMaterial size={isLaunching ? 2.0 : 0.8} vertexColors transparent map={starTexture} blending={THREE.AdditiveBlending} depthWrite={false} /></points>)
 }
 
-// --- LOGIC COUNTDOWN & DISPLAY (LẤY TỪ CODE 1) ---
+// --- LOGIC COUNTDOWN & DISPLAY ---
 
 function RainbowMaterial() {
     const matRef = useRef()
@@ -135,7 +135,6 @@ function CountdownDisplay({ onFinishTransition }) {
     const [timeLeft, setTimeLeft] = useState({ d: 0, h: 0, m: 0, s: 0, total: 999 })
     const fontUrl = '/happy-new-year-2026/fonts/Orbitron_Regular.json'
     
-    // Logic đếm ngược từ Code 1
     useEffect(() => {
       const targetTime = isTesting ? new Date().getTime() + 15000 : new Date("Jan 1, 2026 00:00:00").getTime();
       const timer = setInterval(() => {
@@ -201,21 +200,20 @@ function MechanicalButton({ onActivate }) {
   )
 }
 
-// Helper Camera Rig (Code 2)
+// FIX: Helper Camera Rig - Chỉ hoạt động khi phóng, không can thiệp khi idle
 function CameraRig({ isLaunching }) {
     useFrame((state) => {
+        // Chỉ rung lắc camera khi đang Launch
         if (isLaunching) {
             state.camera.position.x += (Math.random() - 0.5) * 0.2
             state.camera.position.y += (Math.random() - 0.5) * 0.2
-        } else {
-            const t = state.clock.getElapsedTime()
-            state.camera.position.y = THREE.MathUtils.lerp(state.camera.position.y, 8 + Math.sin(t / 2), 0.1)
-        }
+        } 
+        // Khi không launch, không làm gì cả để OrbitControls hoạt động
     })
     return null
 }
 
-// --- 3. 2D CINEMATIC & MINI GAMES (GIỮ NGUYÊN CỦA CODE 2) ---
+// --- 3. 2D CINEMATIC & MINI GAMES ---
 
 // 3.0 Icon & Golden Title
 const HorseIcon = ({ color = "#ffd700" }) => (
@@ -452,7 +450,6 @@ function SceneContent({ scene, handleLaunch, soundRef, isPlaying, setIsPlaying, 
       {scene === 'countdown' ? (
         <Suspense fallback={null}>
           <InteractiveDust count={6000} isLaunching={isLaunching} />
-          {/* LOGIC COUNTDOWN CŨNG NHƯ VÒNG TRÒN AUDIO ĐƯỢC GIỮ LẠI CHO ĐẾN KHI PHÓNG */}
           {!isLaunching && (
              <>
                <CountdownDisplay onFinishTransition={handleLaunch} />
@@ -498,6 +495,17 @@ export default function App() {
             <Vignette eskil={false} offset={0.1} darkness={1.1} />
             <ChromaticAberration blendFunction={BlendFunction.NORMAL} offset={[isLaunching ? 0.05 : 0.002, isLaunching ? 0.05 : 0.002]} />
           </EffectComposer>
+          {/* FIX: Thêm lại OrbitControls để xoay 360, tắt khi đang launch */}
+          <OrbitControls 
+            enablePan={false} 
+            minDistance={20} 
+            maxDistance={100}
+            maxPolarAngle={Math.PI / 2}
+            minPolarAngle={0}
+            autoRotate={!isLaunching}
+            autoRotateSpeed={0.5}
+            enabled={!isLaunching}
+          />
           <CameraRig isLaunching={isLaunching} />
         </Canvas>
       ) : (
