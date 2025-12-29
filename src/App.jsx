@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useMemo, Suspense } from 'react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
-import { OrbitControls, Text3D, Center, Float, Stars, Environment, PositionalAudio, Cylinder, useGLTF } from '@react-three/drei'
+import { OrbitControls, Text3D, Center, Float, Stars, Environment, PositionalAudio, Cylinder } from '@react-three/drei'
 import { EffectComposer, Bloom } from '@react-three/postprocessing'
 import * as THREE from 'three'
 
@@ -10,7 +10,7 @@ import CircularAudioVisualizer from './CircularAudioVisualizer'
 import MusicToggleButton from './MusicToggleButton'
 import VolumeControl from './VolumeControl'
 
-const isTesting = true ;
+const isTesting = true;
 
 // --- 1. HÀM TẠO ÂM THANH CLICK ---
 const playCustomClick = () => {
@@ -241,36 +241,84 @@ function ArcText({
   )
 }
 
-// --- LAVENDER FIELD GROUND (Thảm cỏ oải hương 360°) ---
-function LavenderScene() {
-  const { scene: gltfScene } = useGLTF('/happy-new-year-2026/models/lavender.glb')
+// --- GRASS FIELD 360° (Cỏ thực tế bằng Instanced Mesh) ---
+function GrassField({ count = 8000 }) {
+  const meshRef = useRef()
+  const dummy = useMemo(() => new THREE.Object3D(), [])
   
-  // Tạo nhiều bản sao để phủ kín sàn 360°
+  // Tạo vị trí và kích thước ngẫu nhiên cho mỗi cọng cỏ
+  const grassData = useMemo(() => {
+    const data = []
+    const radius = 60 // Bán kính vùng cỏ
+    
+    for (let i = 0; i < count; i++) {
+      // Phân bố ngẫu nhiên trong vòng tròn
+      const angle = Math.random() * Math.PI * 2
+      const dist = Math.sqrt(Math.random()) * radius
+      const x = Math.cos(angle) * dist
+      const z = Math.sin(angle) * dist
+      
+      data.push({
+        position: [x, -8, z],
+        scale: [0.3 + Math.random() * 0.4, 1 + Math.random() * 1.5, 0.3 + Math.random() * 0.4],
+        rotation: [0, Math.random() * Math.PI * 2, (Math.random() - 0.5) * 0.3]
+      })
+    }
+    return data
+  }, [count])
+  
+  useEffect(() => {
+    if (!meshRef.current) return
+    
+    grassData.forEach((grass, i) => {
+      dummy.position.set(...grass.position)
+      dummy.scale.set(...grass.scale)
+      dummy.rotation.set(...grass.rotation)
+      dummy.updateMatrix()
+      meshRef.current.setMatrixAt(i, dummy.matrix)
+    })
+    meshRef.current.instanceMatrix.needsUpdate = true
+  }, [grassData, dummy])
+  
+  // Animation: cỏ lắc lư nhẹ
+  useFrame((state) => {
+    if (!meshRef.current) return
+    
+    grassData.forEach((grass, i) => {
+      const time = state.clock.getElapsedTime()
+      const offset = i * 0.1
+      
+      dummy.position.set(...grass.position)
+      dummy.scale.set(...grass.scale)
+      dummy.rotation.set(
+        Math.sin(time * 0.5 + offset) * 0.1,
+        grass.rotation[1],
+        Math.cos(time * 0.3 + offset) * 0.1
+      )
+      dummy.updateMatrix()
+      meshRef.current.setMatrixAt(i, dummy.matrix)
+    })
+    meshRef.current.instanceMatrix.needsUpdate = true
+  })
+  
   return (
-    <group position={[0, -8, 0]}>
-      {/* Trung tâm */}
-      <primitive object={gltfScene.clone()} scale={4} position={[0, 0, 0]} />
+    <>
+      {/* Sàn nền */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -8.05, 0]} receiveShadow>
+        <circleGeometry args={[65, 64]} />
+        <meshStandardMaterial color="#2d5016" roughness={0.9} />
+      </mesh>
       
-      {/* Vòng tròn xung quanh - 8 hướng */}
-      <primitive object={gltfScene.clone()} scale={4} position={[15, 0, 0]} />
-      <primitive object={gltfScene.clone()} scale={4} position={[-15, 0, 0]} />
-      <primitive object={gltfScene.clone()} scale={4} position={[0, 0, 15]} />
-      <primitive object={gltfScene.clone()} scale={4} position={[0, 0, -15]} />
-      <primitive object={gltfScene.clone()} scale={4} position={[11, 0, 11]} />
-      <primitive object={gltfScene.clone()} scale={4} position={[-11, 0, 11]} />
-      <primitive object={gltfScene.clone()} scale={4} position={[11, 0, -11]} />
-      <primitive object={gltfScene.clone()} scale={4} position={[-11, 0, -11]} />
-      
-      {/* Vòng ngoài - 16 hướng */}
-      <primitive object={gltfScene.clone()} scale={4} position={[25, 0, 0]} />
-      <primitive object={gltfScene.clone()} scale={4} position={[-25, 0, 0]} />
-      <primitive object={gltfScene.clone()} scale={4} position={[0, 0, 25]} />
-      <primitive object={gltfScene.clone()} scale={4} position={[0, 0, -25]} />
-      <primitive object={gltfScene.clone()} scale={4} position={[18, 0, 18]} />
-      <primitive object={gltfScene.clone()} scale={4} position={[-18, 0, 18]} />
-      <primitive object={gltfScene.clone()} scale={4} position={[18, 0, -18]} />
-      <primitive object={gltfScene.clone()} scale={4} position={[-18, 0, -18]} />
-    </group>
+      {/* Cỏ instanced */}
+      <instancedMesh ref={meshRef} args={[null, null, count]} castShadow receiveShadow>
+        <coneGeometry args={[0.1, 1, 3]} />
+        <meshStandardMaterial 
+          color="#4a7c2c" 
+          roughness={0.8}
+          side={THREE.DoubleSide}
+        />
+      </instancedMesh>
+    </>
   )
 }
 
@@ -316,12 +364,12 @@ function SceneContent({ scene, handleLaunch, soundRef, isPlaying, setIsPlaying }
           <Stars radius={150} count={1200} factor={2} fade speed={0.4} />
           <FireworkManager triggerShake={triggerShake} />
           
-          {/* Nến lavender làm nền */}
-          <LavenderScene />
+          {/* Thảm cỏ 360° */}
+          <GrassField count={8000} />
           
           <PositionalAudio ref={soundRef} url="/happy-new-year-2026/sounds/celebration.mp3" distance={50} loop />
           
-          {/* Chữ được đặt ở giữa không gian, không trên nến */}
+          {/* Chữ được đặt ở giữa không gian */}
           <Float speed={2} rotationIntensity={0.3} floatIntensity={0.8}>
             <Center position={[0, 2, 0]}>
               <Text3D font="/happy-new-year-2026/fonts/Orbitron_Regular.json" size={2.5} height={0.6} bevelEnabled>
@@ -338,7 +386,7 @@ function SceneContent({ scene, handleLaunch, soundRef, isPlaying, setIsPlaying }
             </Center>
           </Float>
 
-          {/* Ánh sáng chiếu từ trên xuống và từ nến */}
+          {/* Ánh sáng */}
           <pointLight position={[0, 15, 10]} intensity={10} color="#FFD700" />
           <pointLight position={[0, 0, 0]} intensity={5} color="#FF8C00" distance={30} />
           <spotLight position={[0, 20, 15]} angle={0.5} penumbra={0.5} intensity={8} color="#FFA500" target-position={[0, 0, 0]} />
@@ -416,8 +464,8 @@ export default function App() {
           enablePan={false} 
           minDistance={20} 
           maxDistance={100}
-          maxPolarAngle={Math.PI / 2}  // Giới hạn không xoay xuống dưới
-          minPolarAngle={0}  // Chỉ xoay từ trên xuống ngang
+          maxPolarAngle={Math.PI / 2}
+          minPolarAngle={0}
         />
       </Canvas>
     </div>
