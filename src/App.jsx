@@ -498,6 +498,43 @@ function GradientMaterial({ scale = 1 }) {
   )
 }
 
+// --- CHỮ VÒNG CUNG ---
+function ArcText({ 
+  text, 
+  radius = 15,
+  startAngle = Math.PI * 0.7,
+  endAngle = Math.PI * 0.3,
+  fontSize = 0.8,
+  textHeight = 0.3,
+  verticalOffset = 0
+}) {
+  const fontUrl = '/happy-new-year-2026/fonts/Orbitron_Regular.json'
+  const characters = text.split('')
+  const totalAngle = startAngle - endAngle
+  const angleStep = totalAngle / (characters.length - 1)
+  
+  return (
+    <group position={[0, verticalOffset, 0]}>
+      {characters.map((char, i) => {
+        const angle = startAngle - (angleStep * i)
+        const x = Math.cos(angle) * radius
+        const y = Math.sin(angle) * radius
+        
+        return (
+          <group key={i} position={[x, y, 0]} rotation={[0, 0, angle - Math.PI / 2]}>
+            <Center>
+              <Text3D font={fontUrl} size={fontSize} height={textHeight} bevelEnabled curveSegments={8}>
+                {char}
+                <RainbowMaterial />
+              </Text3D>
+            </Center>
+          </group>
+        )
+      })}
+    </group>
+  )
+}
+
 // --- GLOWING MUSHROOM FOREST (Rừng nấm phát sáng) ---
 function GlowingMushroomForest({ mushroomCount = 150, grassCount = 8000 }) {
   return (
