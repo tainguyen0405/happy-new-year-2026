@@ -249,7 +249,7 @@ function GrassField({ count = 8000 }) {
   // Tạo vị trí và kích thước ngẫu nhiên cho mỗi cọng cỏ
   const grassData = useMemo(() => {
     const data = []
-    const radius = 60 // Bán kính vùng cỏ
+    const radius = 100 // Bán kính vùng cỏ
     
     for (let i = 0; i < count; i++) {
       // Phân bố ngẫu nhiên trong vòng tròn
@@ -365,7 +365,7 @@ function SceneContent({ scene, handleLaunch, soundRef, isPlaying, setIsPlaying }
           <FireworkManager triggerShake={triggerShake} />
           
           {/* Thảm cỏ 360° */}
-          <GrassField count={8000} />
+          <GrassField count={12000} />
           
           <PositionalAudio ref={soundRef} url="/happy-new-year-2026/sounds/celebration.mp3" distance={50} loop />
           
