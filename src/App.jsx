@@ -204,6 +204,76 @@ function InteractiveDust({ count = 6000 }) {
   return (<points ref={mesh}><bufferGeometry><bufferAttribute attach="attributes-position" count={pos.length/3} array={pos} itemSize={3} /><bufferAttribute attach="attributes-color" count={col.length/3} array={col} itemSize={3} /></bufferGeometry><pointsMaterial size={0.8} vertexColors transparent map={starTexture} blending={THREE.AdditiveBlending} depthWrite={false} /></points>)
 }
 
+// --- CINEMATIC CAMERA CONTROLLER (180° Multi-Stage) ---
+function CinematicCamera() {
+  const { camera } = useThree()
+  const startTime = useRef(Date.now())
+  const userControlEnabled = useRef(false)
+  
+  useFrame(() => {
+    if (userControlEnabled.current) return
+    
+    const elapsed = (Date.now() - startTime.current) / 1000 // seconds
+    const lookAtTarget = new THREE.Vector3(0, 0, 0)
+    
+    // STAGE 1: Start từ bên trái (0-3s)
+    if (elapsed < 3) {
+      const progress = elapsed / 3
+      const smoothProgress = easeInOutCubic(progress)
+      
+      camera.position.x = -40 + smoothProgress * 5
+      camera.position.y = 8 + smoothProgress * 2
+      camera.position.z = 35
+      
+    } 
+    // STAGE 2: Bay vòng cung 180° từ trái sang phải (3-8s)
+    else if (elapsed < 8) {
+      const progress = (elapsed - 3) / 5
+      const smoothProgress = easeInOutCubic(progress)
+      
+      // Vòng cung 180° (từ -π/2 đến +π/2)
+      const angle = -Math.PI / 2 + smoothProgress * Math.PI
+      const radius = 45
+      
+      camera.position.x = Math.cos(angle) * radius
+      camera.position.y = 10 + Math.sin(smoothProgress * Math.PI) * 5 // Thay đổi độ cao
+      camera.position.z = Math.sin(angle) * radius + 20
+      
+    } 
+    // STAGE 3: Push in gần chữ (8-11s)
+    else if (elapsed < 11) {
+      const progress = (elapsed - 8) / 3
+      const smoothProgress = easeInOutCubic(progress)
+      
+      const startX = Math.cos(Math.PI / 2) * 45
+      const startY = 10
+      const startZ = Math.sin(Math.PI / 2) * 45 + 20
+      
+      camera.position.x = startX + smoothProgress * (0 - startX)
+      camera.position.y = startY + smoothProgress * (8 - startY)
+      camera.position.z = startZ + smoothProgress * (35 - startZ)
+      
+    } 
+    // STAGE 4: Settle at final position (11s+)
+    else {
+      camera.position.x = 0
+      camera.position.y = 8
+      camera.position.z = 35
+      userControlEnabled.current = true
+    }
+    
+    // Luôn nhìn về chữ
+    camera.lookAt(lookAtTarget)
+  })
+  
+  return null
+}
+
+// Easing function cho animation mượt
+function easeInOutCubic(t) {
+  return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2
+}
+
 // --- CINEMATIC TEXT WITH MULTI-LAYER ---
 function CinematicText() {
   const groupRef = useRef()
@@ -462,6 +532,9 @@ function SceneContent({ scene, handleLaunch, soundRef, isPlaying, setIsPlaying }
           <Stars radius={150} count={1200} factor={2} fade speed={0.4} />
           <FireworkManager triggerShake={triggerShake} />
           
+          {/* Cinematic Camera Animation */}
+          <CinematicCamera />
+          
           {/* Thảm cỏ 360° */}
           <GrassField count={8000} />
           
@@ -550,6 +623,7 @@ export default function App() {
           maxDistance={100}
           maxPolarAngle={Math.PI / 2}
           minPolarAngle={0}
+          enabled={true}
         />
       </Canvas>
     </div>
