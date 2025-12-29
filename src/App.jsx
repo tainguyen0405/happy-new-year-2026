@@ -10,7 +10,7 @@ import CircularAudioVisualizer from './CircularAudioVisualizer'
 import MusicToggleButton from './MusicToggleButton'
 import VolumeControl from './VolumeControl'
 
-const isTesting = false;
+const isTesting = true ;
 
 // --- 1. HÀM TẠO ÂM THANH CLICK ---
 const playCustomClick = () => {
