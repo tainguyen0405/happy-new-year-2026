@@ -4,13 +4,14 @@ import { OrbitControls, Text3D, Center, Float, Stars, Environment, PositionalAud
 import { EffectComposer, Bloom } from '@react-three/postprocessing'
 import * as THREE from 'three'
 
-// Đảm bảo bạn vẫn giữ các file component âm thanh này trong folder project
+// --- IMPORT CÁC COMPONENT ÂM THANH CỦA BẠN ---
+// (Đảm bảo file tồn tại trong project)
 import CinematicVolume from './CinematicVolume'
 import CinematicPlayButton from './CinematicPlayButton'
 import CircularAudioVisualizer from './CircularAudioVisualizer'
 import MusicToggleButton from './MusicToggleButton'
 
-// --- 1. UTILS & 3D COMPONENTS (GIỮ NGUYÊN) ---
+// --- 1. UTILS ---
 const playCustomClick = () => {
   const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   const playPulse = (time, freq, dur) => {
@@ -30,6 +31,8 @@ const playCustomClick = () => {
   playPulse(now, 1200, 0.04);
   playPulse(now + 0.05, 900, 0.06);
 };
+
+// --- 2. 3D COMPONENTS (COUNTDOWN PHASE) ---
 
 function InteractiveDust({ count = 6000 }) {
   const mesh = useRef(); const { raycaster, camera } = useThree(); const shockwaveRef = useRef(0)
@@ -109,7 +112,7 @@ function ArcText({ text, radius = 15, startAngle = Math.PI * 0.7, endAngle = Mat
 function CountdownDisplay({ onFinishTransition }) {
   const [timeLeft, setTimeLeft] = useState({ d: 0, h: 0, m: 0, s: 0, total: 999 })
   const fontUrl = '/happy-new-year-2026/fonts/Orbitron_Regular.json'
-  const isTesting = true; // Set false to run real date
+  const isTesting = true; // Set to false for real date
 
   useEffect(() => {
     const targetTime = isTesting ? new Date().getTime() + 15000 : new Date("Jan 1, 2026 00:00:00").getTime();
@@ -212,16 +215,16 @@ function MechanicalButton({ onActivate }) {
   )
 }
 
-// --- 2. 2D CINEMATIC & MINI GAMES ---
+// --- 3. 2D CINEMATIC & MINI GAMES ---
 
-// 2.0 Icon Ngựa
+// 3.0 Icon Ngựa
 const HorseIcon = ({ color = "#ffd700" }) => (
   <svg viewBox="0 0 100 100" width="100%" height="100%" style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))' }}>
     <path fill={color} d="M78.5,32.6c-2.3-4.8-6.1-8.5-9.9-10.9c-2.9-1.8-8.6-3.8-12.8-2.6c-2.6,0.7-3.9,2.8-4.2,3.3c-0.4,0.6-0.8,1.3-1.2,2c-0.8,1.4-1.6,2.9-2.7,4.1c-1.3,1.4-2.8,2.3-4.6,2.8c-1.5,0.4-3.1,0.2-4.6-0.6c-1.2-0.6-2.2-1.6-3-2.8c-0.6-0.9-1-1.9-1.2-3c-0.1-0.5-0.1-1.1,0-1.6c0.3-1.7,1.6-3.1,3.1-3.9c0.8-0.4,1.7-0.6,2.6-0.6c0.9,0,1.8,0.2,2.6,0.6c1.3,0.7,2.2,2,2.4,3.5c0.1,0.6,0,1.2-0.2,1.8c-0.4,1.1-1.3,1.9-2.4,2.3c-0.9,0.3-1.9,0.2-2.8-0.3c-0.7-0.4-1.2-1-1.4-1.8c-0.1-0.4-0.1-0.8,0.1-1.2c0.3-0.8,1-1.3,1.8-1.4c0.6-0.1,1.2,0.1,1.7,0.5c0.3,0.3,0.5,0.7,0.6,1.1c0,0.1,0,0.2,0,0.3c-0.1,0.3-0.3,0.5-0.6,0.6c-0.2,0.1-0.4,0.1-0.6,0c-0.2-0.1-0.3-0.3-0.3-0.5c0-0.1,0-0.2,0.1-0.3c0.1-0.1,0.2-0.2,0.3-0.2c0.1,0,0.2,0,0.3,0.1c0.4,0.2,0.5,0.7,0.3,1.1c-0.3,0.5-0.9,0.6-1.4,0.4c-0.4-0.2-0.6-0.6-0.6-1c0-0.3,0.1-0.6,0.3-0.8c0.4-0.4,1-0.4,1.4-0.1c0.3,0.2,0.4,0.6,0.3,0.9c-0.1,0.2-0.3,0.4-0.6,0.4c-0.2,0-0.4-0.1-0.4-0.3c-0.1-0.2,0-0.3,0.1-0.4c0.2-0.2,0.5-0.1,0.6,0.1c0.1,0.1,0.1,0.3,0,0.4C51,44.2,51,44.2,50.9,44.2c-0.1,0-0.2-0.1-0.2-0.2c0-0.1,0-0.2,0.1-0.2c0.1-0.1,0.2-0.1,0.3,0c1.7,1.8,2.7,4.6,1.4,7.3c-1,2.1-3.2,3.3-5.4,3.7c-2.8,0.5-5.6-0.4-7.8-2.1c-1.8-1.4-3.1-3.3-3.9-5.4c-0.6-1.6-0.9-3.2-0.8-4.9c0.1-1.4,0.4-2.7,1-4c0.9-1.8,2.2-3.3,3.8-4.5c2.4-1.8,5.4-2.5,8.3-2.1c2.3,0.3,4.4,1.4,6.1,2.9c1.4,1.2,2.4,2.8,3,4.5c0.5,1.4,0.6,2.9,0.3,4.4c-0.3,1.3-0.9,2.5-1.9,3.5c-1.6,1.7-4,2.5-6.3,2.2c-1.8-0.3-3.4-1.3-4.6-2.7c-0.9-1.1-1.5-2.5-1.7-3.9c-0.2-1.1,0-2.2,0.5-3.2c0.7-1.4,2-2.3,3.5-2.7c1.2-0.3,2.5-0.1,3.6,0.5c0.9,0.5,1.7,1.3,2.2,2.2c0.5,0.9,0.7,1.9,0.6,2.9c-0.1,0.8-0.4,1.6-0.9,2.3c-0.7,1-1.8,1.7-3,2c-1,0.2-2,0-2.9-0.5c-0.7-0.4-1.3-1-1.6-1.8c-0.3-0.6-0.3-1.3-0.2-1.9c0.2-0.9,0.8-1.6,1.6-2c0.7-0.3,1.4-0.3,2.1,0c0.6,0.2,1,0.7,1.2,1.3c0.1,0.4,0.1,0.9,0,1.3c-0.2,0.6-0.7,1-1.3,1.2c-0.5,0.2-1,0.1-1.4-0.2c-0.3-0.2-0.5-0.6-0.5-1c0-0.3,0.1-0.6,0.3-0.8c0.3-0.3,0.7-0.4,1.1-0.3c0.3,0.1,0.5,0.3,0.6,0.6c0.1,0.2,0,0.4-0.1,0.6c-0.2,0.2-0.4,0.3-0.7,0.2c-0.2,0-0.3-0.2-0.3-0.4c0-0.1,0.1-0.3,0.2-0.3c0.1-0.1,0.2,0,0.3,0.1C35.9,40.1,36,40.6,35.9,41c-0.2,0.5-0.7,0.8-1.2,0.7c-0.4-0.1-0.7-0.4-0.8-0.8c0-0.3,0.1-0.6,0.4-0.8c0.3-0.2,0.7-0.2,1,0c0.2,0.1,0.3,0.4,0.3,0.6c0,0.2-0.1,0.3-0.3,0.4c-0.1,0.1-0.3,0-0.3-0.1c-0.1-0.1-0.1-0.2,0-0.3c0.1-0.1,0.2-0.1,0.2,0c0.6,1,0.9,2.2,0.7,3.4c-0.2,1-0.7,1.9-1.4,2.6c-1.1,1.1-2.7,1.6-4.2,1.4c-1.2-0.2-2.3-0.8-3.1-1.7c-0.7-0.8-1.1-1.8-1.2-2.9c-0.1-0.9,0.1-1.8,0.5-2.6c0.6-1.1,1.6-1.9,2.7-2.3c1-0.3,2.1-0.2,3,0.3c0.8,0.4,1.5,1.1,1.8,1.9c0.3,0.7,0.3,1.5,0.1,2.3c-0.2,0.6-0.6,1.2-1.1,1.6c-0.6,0.4-1.3,0.6-2,0.5c-0.6-0.1-1.1-0.4-1.5-0.9c-0.3-0.4-0.4-0.9-0.3-1.4c0.1-0.6,0.4-1,0.9-1.3c0.4-0.2,0.9-0.2,1.3-0.1c0.4,0.1,0.7,0.4,0.9,0.8c0.1,0.3,0.1,0.6,0,0.9c-0.1,0.4-0.4,0.7-0.8,0.8c-0.3,0.1-0.6,0-0.9-0.2c-0.2-0.2-0.3-0.5-0.2-0.8c0-0.2,0.2-0.4,0.4-0.4c0.2,0,0.3,0.1,0.4,0.3c0,0.1,0,0.2-0.1,0.3c-0.1,0.1-0.2,0.1-0.2,0c-1.7,0.7-3.1,2.1-3.8,3.8c-0.6,1.4-0.5,3,0.3,4.4c0.9,1.6,2.5,2.7,4.3,3.1c1.8,0.4,3.7-0.1,5.2-1.2c1.4-1,2.4-2.6,2.7-4.4c0.2-1.4,0-2.8-0.7-4.1c-0.8-1.4-2.1-2.4-3.6-2.9c-1.4-0.5-3-0.3-4.3,0.4c-1.2,0.7-2.1,1.8-2.5,3.1c-0.3,1.1-0.2,2.3,0.4,3.3c0.7,1.2,1.9,2,3.3,2.2c1.1,0.2,2.3-0.2,3.2-1c0.8-0.7,1.3-1.8,1.3-2.9c0.1-0.9-0.2-1.9-0.8-2.6c-0.7-0.9-1.8-1.4-2.9-1.4c-1,0-1.9,0.4-2.6,1.1c-0.6,0.6-0.9,1.4-0.9,2.2c0,0.7,0.3,1.4,0.8,1.9c0.6,0.6,1.4,0.9,2.2,0.8c0.7-0.1,1.3-0.5,1.7-1.1c0.3-0.5,0.4-1.1,0.2-1.6c-0.1-0.5-0.5-0.9-1-1.1c-0.4-0.2-0.9-0.2-1.3,0c-0.4,0.2-0.6,0.6-0.7,1c-0.1,0.4,0,0.7,0.2,1c0.2,0.2,0.5,0.4,0.8,0.3c0.2-0.1,0.4-0.2,0.4-0.5c0.1-0.2,0-0.4-0.2-0.5c-0.2-0.1-0.3-0.1-0.4,0.1c-0.1,0.1-0.1,0.3,0,0.4L78.5,32.6z"/>
   </svg>
 )
 
-// 2.1 Fireworks Canvas
+// 3.1 Fireworks Canvas
 const FireworksCanvas = () => {
   const canvasRef = useRef(null)
   useEffect(() => {
@@ -315,7 +318,7 @@ const FireworksCanvas = () => {
   return <canvas ref={canvasRef} style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 1, pointerEvents: 'none' }} />
 }
 
-// 2.2 Game Lì xì (Lucky Money)
+// 3.2 Game Lì xì (FIXED VISUAL: Card inside, correct layering)
 const LuckyMoneyGame = () => {
   const [viewState, setViewState] = useState('idle') 
   const [selectedId, setSelectedId] = useState(null)
@@ -349,6 +352,7 @@ const LuckyMoneyGame = () => {
                 transform: isSelected && viewState !== 'idle' ? 'translate(-50%, -50%) scale(2.2)' : (isHidden ? 'scale(0)' : 'scale(1)'),
                 opacity: isHidden ? 0 : 1, transition: 'all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)', cursor: 'pointer', zIndex: isSelected ? 100 : 10, transformStyle: 'preserve-3d'
             }}>
+              {/* LAYER 1: CARD (Nằm dưới cùng, thụt sâu vào trong) */}
               <div style={{
                 position: 'absolute', left: '6px', right: '6px', bottom: '5px', height: '85%', background: 'linear-gradient(to bottom, #fffdf0 30%, #ffffff 100%)',
                 borderRadius: '6px', zIndex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start', paddingTop: '20px',
@@ -360,6 +364,7 @@ const LuckyMoneyGame = () => {
                     <div style={{ marginTop: '5px', fontSize: '14px' }}>💰</div>
                  </div>
               </div>
+              {/* LAYER 2: BODY (Đè lên card) */}
               <div style={{
                 position: 'absolute', inset: 0, background: '#d60000', borderRadius: '12px', border: '1px solid #ffd700', zIndex: 2, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-end',
                 paddingBottom: '25px', boxShadow: isSelected ? '0 30px 60px rgba(0,0,0,0.5)' : '0 4px 8px rgba(0,0,0,0.2)', backgroundImage: 'radial-gradient(#ffcc00 1px, transparent 1px)', backgroundSize: '15px 15px'
@@ -370,6 +375,7 @@ const LuckyMoneyGame = () => {
                   <div style={{ color: '#ffd700', fontWeight: 'bold', fontSize: '14px', letterSpacing: '2px', textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}>2026</div>
                 </div>
               </div>
+              {/* LAYER 3: FLAP (Nắp bao, đè lên tất cả) */}
               <div style={{
                 position: 'absolute', top: 0, left: 0, width: '100%', height: '35%', zIndex: 3, transformOrigin: 'top', transition: 'transform 0.5s ease',
                 transform: viewState === 'revealed' ? 'rotateX(180deg)' : 'rotateX(0deg)', perspective: '1000px', transformStyle: 'preserve-3d'
@@ -391,7 +397,7 @@ const LuckyMoneyGame = () => {
   )
 }
 
-// 2.3 Game Gieo Quẻ (Fortune Sticks) - IDEA MỚI 2
+// 3.3 Game Gieo Quẻ (Fortune Sticks)
 const FortuneSticksGame = () => {
   const [shaking, setShaking] = useState(false)
   const [result, setResult] = useState(null)
@@ -422,7 +428,6 @@ const FortuneSticksGame = () => {
             animation: shaking ? 'shakeTube 0.5s infinite' : 'none', boxShadow: '0 10px 30px rgba(0,0,0,0.5)'
           }}>
              <div style={{ position: 'absolute', top: '20px', fontSize: '40px', color: '#DEB887', fontWeight: 'bold', border: '2px solid #DEB887', borderRadius: '50%', width: '60px', height: '60px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Lộc</div>
-             {/* Các que xăm bên trong */}
              <div style={{ position: 'absolute', top: '-20px', width: '10px', height: '100px', background: '#DEB887', left: '30px', transform: 'rotate(-10deg)' }}></div>
              <div style={{ position: 'absolute', top: '-30px', width: '10px', height: '100px', background: '#DEB887', left: '55px' }}></div>
              <div style={{ position: 'absolute', top: '-20px', width: '10px', height: '100px', background: '#DEB887', left: '80px', transform: 'rotate(10deg)' }}></div>
@@ -457,7 +462,7 @@ const FortuneSticksGame = () => {
   )
 }
 
-// 2.4 Thả Đèn Trời (Wish Lanterns) - IDEA MỚI 3
+// 3.4 Thả Đèn Trời (FIXED TEXT & INPUT)
 const WishLanterns = () => {
   const [wish, setWish] = useState('')
   const [lanterns, setLanterns] = useState([])
@@ -465,45 +470,49 @@ const WishLanterns = () => {
   const handleSendWish = (e) => {
     e.preventDefault()
     if (!wish.trim()) return
-    const newLantern = { id: Date.now(), text: wish, left: Math.random() * 80 + 10, speed: Math.random() * 5 + 15 }
+    const colors = ['linear-gradient(to bottom, #ff5500, #ffaa00)', 'linear-gradient(to bottom, #d60000, #ff5500)', 'linear-gradient(to bottom, #ff8c00, #ffd700)']
+    const randomColor = colors[Math.floor(Math.random() * colors.length)]
+    const newLantern = { 
+        id: Date.now(), text: wish, left: Math.random() * 80 + 10, speed: Math.random() * 5 + 15, bg: randomColor
+    }
     setLanterns([...lanterns, newLantern])
     setWish('')
   }
 
   return (
-    <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: '40px', position: 'relative', zIndex: 100, paddingBottom: '50px' }}>
-      <form onSubmit={handleSendWish} style={{ display: 'flex', gap: '10px', zIndex: 200 }}>
-        <input type="text" value={wish} onChange={(e) => setWish(e.target.value)} placeholder="Gửi điều ước lên trời..."
-          style={{ padding: '12px 20px', borderRadius: '25px', border: '1px solid #ffd700', background: 'rgba(255,255,255,0.1)', color: '#fff', outline: 'none', backdropFilter: 'blur(5px)', width: '250px', fontSize: '16px' }} />
-        <button type="submit" style={{ padding: '12px 25px', borderRadius: '25px', background: '#d60000', color: '#fff', border: 'none', cursor: 'pointer', fontWeight: 'bold', boxShadow: '0 0 10px #d60000' }}>Gửi ➤</button>
+    <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: '40px', position: 'relative', zIndex: 100, paddingBottom: '100px' }}>
+      <form onSubmit={handleSendWish} style={{ display: 'flex', gap: '10px', zIndex: 200, alignItems: 'center' }}>
+        <input type="text" value={wish} onChange={(e) => setWish(e.target.value)} placeholder="Viết điều ước..." maxLength={50}
+            style={{ padding: '12px 20px', borderRadius: '25px', border: '1px solid #ffd700', background: 'rgba(255,255,255,0.15)', color: '#fff', outline: 'none', backdropFilter: 'blur(5px)', width: '220px', fontSize: '16px' }} 
+        />
+        <button type="submit" style={{ padding: '12px 20px', borderRadius: '50%', background: '#d60000', color: '#fff', border: '1px solid #ffcc00', cursor: 'pointer', fontWeight: 'bold', boxShadow: '0 0 10px #d60000', width: '45px', height: '45px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>➤</button>
       </form>
       {lanterns.map((l) => (
         <div key={l.id} className="lantern" style={{ left: `${l.left}%`, animationDuration: `${l.speed}s` }}>
-          <div className="lantern-body"><div className="lantern-text">{l.text}</div></div>
+          <div className="lantern-body" style={{ background: l.bg }}><div className="lantern-text">{l.text}</div></div>
           <div className="lantern-light"></div>
         </div>
       ))}
       <style>{`
         .lantern { position: fixed; bottom: -120px; display: flex; flex-direction: column; align-items: center; animation: flyUp linear forwards; z-index: 50; pointer-events: none; }
-        .lantern-body { width: 60px; height: 80px; background: linear-gradient(to bottom, #ff5500, #ffaa00); border-radius: 10px 10px 20px 20px; display: flex; align-items: center; justifyContent: center; box-shadow: 0 0 20px rgba(255, 165, 0, 0.8); position: relative; }
-        .lantern-body::after { content: ''; position: absolute; bottom: 10px; width: 20px; height: 20px; background: #fff; border-radius: 50%; filter: blur(5px); animation: flicker 0.5s infinite alternate; }
-        .lantern-text { font-size: 10px; color: #5a0000; font-weight: bold; text-align: center; padding: 2px; overflow: hidden; max-height: 100%; writing-mode: vertical-rl; text-orientation: upright; }
-        @keyframes flyUp { 0% { transform: translateY(0) scale(1) rotate(0deg); opacity: 1; } 100% { transform: translateY(-120vh) scale(0.5) rotate(5deg); opacity: 0; } }
-        @keyframes flicker { 0% { opacity: 0.8; transform: scale(1); } 100% { opacity: 1; transform: scale(1.2); } }
+        .lantern-body { width: 70px; min-height: 90px; border-radius: 15px 15px 25px 25px; display: flex; align-items: center; justifyContent: center; box-shadow: 0 0 20px rgba(255, 165, 0, 0.6); position: relative; padding: 5px; border: 1px solid rgba(255,255,255,0.2); }
+        .lantern-body::after { content: ''; position: absolute; bottom: 10px; width: 20px; height: 20px; background: #ffcc00; border-radius: 50%; filter: blur(8px); animation: flicker 0.5s infinite alternate; }
+        .lantern-text { font-size: 11px; color: #3e0000; font-weight: 800; text-align: center; line-height: 1.3; word-wrap: break-word; width: 100%; z-index: 2; text-shadow: 0 1px 0 rgba(255,255,255,0.4); }
+        @keyframes flyUp { 0% { transform: translateY(0) scale(1) rotate(0deg); opacity: 1; } 100% { transform: translateY(-120vh) scale(0.4) rotate(10deg); opacity: 0; } }
+        @keyframes flicker { 0% { opacity: 0.7; transform: scale(1); } 100% { opacity: 1; transform: scale(1.2); } }
       `}</style>
     </div>
   )
 }
 
-// 2.5 Scene Chính (Kết hợp tất cả)
+// 3.5 Scene Chính (FIXED SCROLLBAR)
 function HappyNewYear2026Scene() {
   const [active, setActive] = useState(false)
-  const [tab, setTab] = useState('money') // 'money' | 'fortune'
-  const [recipient, setRecipient] = useState('') // IDEA MỚI 1: Tên người nhận
+  const [tab, setTab] = useState('money') 
+  const [recipient, setRecipient] = useState('') 
 
   useEffect(() => {
     const t = setTimeout(() => setActive(true), 100)
-    // Lấy tên từ URL parameter (?to=TenNguoiNhan)
     const params = new URLSearchParams(window.location.search)
     const to = params.get('to')
     if (to) setRecipient(to)
@@ -514,55 +523,41 @@ function HappyNewYear2026Scene() {
     <div style={{ position: 'relative', width: '100%', height: '100%', background: 'radial-gradient(circle at center, #1a0b0b 0%, #050505 100%)', overflow: 'hidden', fontFamily: '"Orbitron", sans-serif', color: '#fff', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
       <FireworksCanvas />
       
-      {/* Scrollable Container để chứa nhiều nội dung */}
-      <div style={{ position: 'relative', zIndex: 10, textAlign: 'center', padding: '20px', width: '100%', maxWidth: '800px', height: '100%', overflowY: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+      {/* Scrollable Container with hide-scrollbar */}
+      <div className="hide-scrollbar" style={{ position: 'relative', zIndex: 10, textAlign: 'center', padding: '20px', width: '100%', maxWidth: '800px', height: '100%', overflowY: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'center', scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
         
-        {/* Năm 2026 */}
         <div style={{
           fontSize: 'clamp(60px, 15vw, 150px)', fontWeight: 900, lineHeight: 0.9, marginBottom: '10px', marginTop: '20px',
           background: 'linear-gradient(to bottom, #FFFFE0 0%, #FFD700 30%, #B8860B 60%, #8B4513 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
           filter: 'drop-shadow(0 10px 20px rgba(0,0,0,0.5)) drop-shadow(0 0 30px rgba(255, 215, 0, 0.3))',
           opacity: active ? 1 : 0, transform: active ? 'scale(1) translateY(0)' : 'scale(1.5) translateY(50px)', transition: 'all 1.2s cubic-bezier(0.22, 1, 0.36, 1)'
-        }}>
-          2026
-        </div>
+        }}>2026</div>
 
-        {/* Happy New Year + Tên Người Nhận */}
         <h1 style={{
           fontSize: 'clamp(16px, 3vw, 30px)', margin: '0 0 30px 0', color: '#ffffff', letterSpacing: '0.3em', textTransform: 'uppercase', fontWeight: 300,
           opacity: active ? 0.9 : 0, transform: active ? 'translateY(0)' : 'translateY(20px)', transition: 'all 1s ease 0.4s', textShadow: '0 0 10px rgba(255,255,255,0.5)'
-        }}>
-          Happy New Year {recipient ? `- ${recipient}` : ''}
-        </h1>
+        }}>Happy New Year {recipient ? `- ${recipient}` : ''}</h1>
 
-        {/* Tab Switcher */}
         <div style={{ display: 'flex', gap: '20px', marginBottom: '20px', opacity: active ? 1 : 0, transition: 'opacity 1s ease 0.6s' }}>
-          <button onClick={() => setTab('money')} style={{
-            padding: '10px 20px', borderRadius: '20px', border: 'none', background: tab === 'money' ? '#d60000' : 'rgba(255,255,255,0.1)',
-            color: 'white', fontWeight: 'bold', cursor: 'pointer', boxShadow: tab === 'money' ? '0 0 15px #d60000' : 'none'
-          }}>Hái Lộc 🧧</button>
-          <button onClick={() => setTab('fortune')} style={{
-            padding: '10px 20px', borderRadius: '20px', border: 'none', background: tab === 'fortune' ? '#d60000' : 'rgba(255,255,255,0.1)',
-            color: 'white', fontWeight: 'bold', cursor: 'pointer', boxShadow: tab === 'fortune' ? '0 0 15px #d60000' : 'none'
-          }}>Gieo Quẻ 🎋</button>
+          <button onClick={() => setTab('money')} style={{ padding: '10px 20px', borderRadius: '20px', border: 'none', background: tab === 'money' ? '#d60000' : 'rgba(255,255,255,0.1)', color: 'white', fontWeight: 'bold', cursor: 'pointer', boxShadow: tab === 'money' ? '0 0 15px #d60000' : 'none', transition: 'all 0.3s' }}>Hái Lộc 🧧</button>
+          <button onClick={() => setTab('fortune')} style={{ padding: '10px 20px', borderRadius: '20px', border: 'none', background: tab === 'fortune' ? '#d60000' : 'rgba(255,255,255,0.1)', color: 'white', fontWeight: 'bold', cursor: 'pointer', boxShadow: tab === 'fortune' ? '0 0 15px #d60000' : 'none', transition: 'all 0.3s' }}>Gieo Quẻ 🎋</button>
         </div>
 
-        {/* Nội dung thay đổi theo Tab */}
         <div style={{ opacity: active ? 1 : 0, transform: active ? 'translateY(0)' : 'translateY(40px)', transition: 'all 1s cubic-bezier(0.22, 1, 0.36, 1) 0.6s', width: '100%' }}>
           {tab === 'money' ? <LuckyMoneyGame /> : <FortuneSticksGame />}
         </div>
 
-        {/* Thả Đèn Trời (Luôn hiện ở dưới) */}
-        <div style={{ opacity: active ? 1 : 0, transition: 'opacity 1s ease 1s' }}>
+        <div style={{ opacity: active ? 1 : 0, transition: 'opacity 1s ease 1s', width: '100%' }}>
            <WishLanterns />
         </div>
         
       </div>
+      <style>{`.hide-scrollbar::-webkit-scrollbar { display: none; }`}</style>
     </div>
   )
 }
 
-// --- 3. SCENE CONTENT WRAPPER (GIỮ NGUYÊN) ---
+// --- 4. SCENE CONTENT WRAPPER ---
 function SceneContent({ scene, handleLaunch, soundRef, isPlaying, setIsPlaying }) {
   const hasAutoPlayed = useRef(false)
   useEffect(() => {
@@ -589,7 +584,7 @@ function SceneContent({ scene, handleLaunch, soundRef, isPlaying, setIsPlaying }
   )
 }
 
-// --- 4. APP COMPONENT (FINAL EXPORT) ---
+// --- 5. APP COMPONENT ---
 export default function App() {
   const soundRef = useRef()
   const [scene, setScene] = useState('countdown')
