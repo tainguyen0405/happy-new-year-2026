@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useMemo, Suspense } from 'react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
-import { OrbitControls, Text3D, Center, Float, Stars, Environment, PositionalAudio, Cylinder, Html } from '@react-three/drei'
+import { OrbitControls, Text3D, Center, Float, Stars, Environment, PositionalAudio, Cylinder, Html, MeshReflectorMaterial } from '@react-three/drei'
 import { EffectComposer, Bloom } from '@react-three/postprocessing'
 import * as THREE from 'three'
 
@@ -33,7 +33,7 @@ const playCustomClick = () => {
   playPulse(now + 0.05, 900, 0.06);
 };
 
-// --- 2. PHÁO HOA VỚI ĐUÔI BAY LÊN (GIỮ NGUYÊN) ---
+// --- 2. PHÁO HOA (GIỮ NGUYÊN) ---
 function FireworkTrail({ startPos, endPos, color }) {
   const trailRef = useRef()
   const progressRef = useRef(0)
@@ -78,7 +78,9 @@ function Firework({ color, position }) {
   const count = 500
   const burstRef = useRef(false)
   const launchTimeRef = useRef(1.5)
+  // Bắt đầu từ dưới mặt nước một chút để tạo cảm giác bay lên từ đáy hồ
   const startPosition = useMemo(() => [position[0], -20, position[2]], [position])
+  
   const particles = useMemo(() => {
     const p = []
     for (let i = 0; i < count; i++) {
@@ -124,7 +126,8 @@ function FireworkManager() {
     const interval = setInterval(() => {
       const newF = {
         id: Math.random(),
-        pos: [(Math.random() - 0.5) * 80, Math.random() * 30, (Math.random() - 0.5) * 40],
+        // Tạo pháo hoa ở độ cao ngẫu nhiên, nhưng luôn trên mặt nước
+        pos: [(Math.random() - 0.5) * 80, 5 + Math.random() * 25, (Math.random() - 0.5) * 40],
         color: new THREE.Color().setHSL(Math.random(), 1, 0.6)
       }
       setList(prev => [...prev.slice(-15), newF])
@@ -169,7 +172,7 @@ function InteractiveDust({ count = 6000 }) {
   return (<points ref={mesh}><bufferGeometry><bufferAttribute attach="attributes-position" count={pos.length/3} array={pos} itemSize={3} /><bufferAttribute attach="attributes-color" count={col.length/3} array={col} itemSize={3} /></bufferGeometry><pointsMaterial size={0.8} vertexColors transparent map={starTexture} blending={THREE.AdditiveBlending} depthWrite={false} /></points>)
 }
 
-// --- NEW COMPONENT: 2D CINEMATIC TITLE (CSS OVERLAY) ---
+// --- 4. 2D CINEMATIC TITLE (GIỮ NGUYÊN) ---
 function CinematicTitle2D() {
   return (
     <Html fullscreen style={{ pointerEvents: 'none', zIndex: 100 }}>
@@ -240,7 +243,6 @@ function CinematicTitle2D() {
             to { opacity: 0.8; }
           }
 
-          /* Responsive adjustments */
           @media (max-width: 768px) {
             .line-1 { font-size: 1.2rem; letter-spacing: 0.4rem; }
             .line-2 { font-size: 5rem; letter-spacing: -2px; }
@@ -261,10 +263,11 @@ function SceneContent({ scene, handleLaunch, soundRef, isPlaying, setIsPlaying }
   const { camera } = useThree()
   const hasAutoPlayed = useRef(false)
 
-  // Auto reset camera for fireworks scene
+  // Reset camera khi vào scene fireworks
   useEffect(() => {
     if (scene === 'fireworks') {
-        camera.position.set(0, 5, 40)
+        // Đặt camera thấp hơn một chút để nhìn thấy rõ mặt nước
+        camera.position.set(0, 4, 50)
         camera.lookAt(0, 0, 0)
     }
   }, [scene, camera])
@@ -292,19 +295,38 @@ function SceneContent({ scene, handleLaunch, soundRef, isPlaying, setIsPlaying }
         </Suspense>
       ) : (
         <Suspense fallback={null}>
+          {/* Sương mù để che đường chân trời, tạo cảm giác vô tận */}
+          <fog attach="fog" args={['#050505', 30, 150]} />
+          
           <Stars radius={150} count={1200} factor={2} fade speed={0.4} />
           
-          {/* Hệ thống pháo hoa giữ nguyên */}
           <FireworkManager />
           
           <PositionalAudio ref={soundRef} url="/happy-new-year-2026/sounds/celebration.mp3" distance={50} loop />
           
-          {/* Thay thế Text 3D bằng 2D Cinematic Overlay */}
           <CinematicTitle2D />
 
-          {/* Ánh sáng để chiếu sáng khói pháo hoa nếu có */}
+          {/* Ánh sáng ấm vàng để hợp với màu text và phản chiếu đẹp */}
           <pointLight position={[0, 25, 0]} intensity={5} color="#FFD700" decay={2} />
           <ambientLight intensity={0.2} color="#000022" />
+
+          {/* --- WATER REFLECTION SURFACE --- */}
+          {/* Đặt ở y = -8 để pháo hoa nổ phía trên */}
+          <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -8, 0]}>
+            <planeGeometry args={[500, 500]} />
+            <MeshReflectorMaterial
+              blur={[400, 100]} // Blur phản chiếu ngang/dọc
+              resolution={1024} // Chất lượng phản chiếu (cao)
+              mixBlur={1}       // Độ mờ
+              mixStrength={80}  // Cường độ phản chiếu mạnh
+              roughness={0.6}   // Độ nhám của nước (càng thấp càng giống gương, 0.6 là sóng nhẹ)
+              depthScale={1.2}
+              minDepthThreshold={0.4}
+              maxDepthThreshold={1.4}
+              color="#080808"   // Màu nước tối
+              metalness={0.6}
+            />
+          </mesh>
         </Suspense>
       )}
     </>
@@ -362,7 +384,7 @@ export default function App() {
       <div style={{ position: 'absolute', inset: 0, backgroundColor: 'white', opacity: flash, zIndex: 10, pointerEvents: 'none' }} />
 
       <Canvas camera={{ position: [0, 8, 35], fov: 50 }}>
-        <color attach="background" args={['#0a0a1a']} />
+        <color attach="background" args={['#050505']} />
         <Environment preset="city" />
         <SceneContent 
           scene={scene} 
@@ -372,10 +394,10 @@ export default function App() {
           setIsPlaying={setIsPlaying}
         />
         <EffectComposer disableNormalPass>
-            <Bloom luminanceThreshold={0.1} intensity={1.5} mipmapBlur />
+            {/* Bloom nhẹ hơn một chút để không làm chói mặt nước */}
+            <Bloom luminanceThreshold={0.2} intensity={1.2} mipmapBlur />
         </EffectComposer>
         
-        {/* Điều chỉnh Camera cho từng scene */}
         {scene === 'countdown' ? (
              <OrbitControls 
              enablePan={false} 
@@ -386,14 +408,14 @@ export default function App() {
              enabled={true}
            />
         ) : (
-            // Ở chế độ Fireworks + 2D Text: Auto rotate nhẹ để background động, nhưng không cho user xoay quá nhiều làm rối chữ
+            // Cho phép xoay nhẹ quanh trục Y nhưng không cho nhìn xuống dưới mặt nước
             <OrbitControls 
                 enablePan={false}
                 enableZoom={false}
                 autoRotate
-                autoRotateSpeed={0.5} // Quay thật chậm
-                maxPolarAngle={Math.PI / 1.8} // Giới hạn góc nhìn
-                minPolarAngle={Math.PI / 2.2}
+                autoRotateSpeed={0.3} // Xoay chậm rãi
+                maxPolarAngle={Math.PI / 2 - 0.1} // Không cho camera chui xuống nước
+                minPolarAngle={Math.PI / 2.5}
             />
         )}
        
