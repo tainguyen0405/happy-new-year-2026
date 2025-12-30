@@ -167,163 +167,209 @@ function FireworkManager() {
   )
 }
 
-// --- 4. FEATURE: LÌ XÌ (LUCKY MONEY) ---
-const WISHES = [
-  "Tiền vào như nước, tiền ra nhỏ giọt!",
-  "Sức khỏe dồi dào, vạn sự như ý!",
-  "Năm mới bình an, tài lộc đầy nhà!",
-  "Sự nghiệp thăng tiến, tình duyên phơi phới!",
-  "Hay ăn chóng lớn, học hành tấn tới!",
-  "Code không bao giờ bug, Deploy phát ăn ngay!",
-  "Năm mới 2026 rực rỡ hơn 2025!"
+// --- 4. FEATURE: LÌ XÌ (RÚT TIỀN THẬT) ---
+const DENOMINATIONS = [
+  { value: "50.000", color: "linear-gradient(135deg, #e492b2, #b56585)", text: "Năm mới nhẹ nhàng, tình cảm đong đầy" },
+  { value: "100.000", color: "linear-gradient(135deg, #7da36d, #4e7040)", text: "Lộc biếc mai vàng, khởi đầu suôn sẻ" },
+  { value: "200.000", color: "linear-gradient(135deg, #c9806e, #a34e3c)", text: "May mắn song hành, tài lộc gõ cửa" },
+  { value: "500.000", color: "linear-gradient(135deg, #58aeb1, #2c7a7d)", text: "Đại phú đại quý, tiền vào như nước" }
 ];
 
 function LuckyMoneyFeature() {
-  const [isOpen, setIsOpen] = useState(false);
-  const [showResult, setShowResult] = useState(false);
-  const [currentWish, setCurrentWish] = useState("");
-  const [isHovered, setIsHovered] = useState(false);
+  const [step, setStep] = useState(0); // 0: Icon, 1: Chọn bao, 2: Mở bao
+  const [selectedMoney, setSelectedMoney] = useState(null);
 
-  const handleOpen = () => {
-    if (isOpen) return;
+  // Hàm chọn ngẫu nhiên mệnh giá (có tỉ lệ)
+  const pickRandomMoney = () => {
+    const rand = Math.random();
+    // Tỉ lệ: 40% ra 50k, 30% ra 100k, 20% ra 200k, 10% ra 500k
+    if (rand < 0.4) return DENOMINATIONS[0];
+    if (rand < 0.7) return DENOMINATIONS[1];
+    if (rand < 0.9) return DENOMINATIONS[2];
+    return DENOMINATIONS[3];
+  };
+
+  const handleOpenDeck = () => {
     playCustomClick();
-    setIsOpen(true);
-    const randomWish = WISHES[Math.floor(Math.random() * WISHES.length)];
-    setCurrentWish(randomWish);
-    
-    setTimeout(() => {
-      setShowResult(true);
-    }, 600);
+    setStep(1);
+  };
+
+  const handlePickEnvelope = () => {
+    playCustomClick();
+    const money = pickRandomMoney();
+    setSelectedMoney(money);
+    setStep(2);
   };
 
   const handleClose = () => {
-    setIsOpen(false);
-    setShowResult(false);
+    setStep(0);
+    setSelectedMoney(null);
   };
 
   return (
-    <Html fullscreen style={{ pointerEvents: 'none', zIndex: 200 }}>
-       <style>
+    <Html fullscreen style={{ pointerEvents: 'none', zIndex: 9999 }}>
+      <style>
         {`
-          .lucky-money-container {
-            position: absolute;
-            bottom: 30px;
-            right: 30px;
-            pointer-events: auto;
-            display: flex;
-            flex-direction: column;
-            align-items: flex-end;
-          }
-          
-          .envelope {
-            width: 80px;
-            height: 120px;
-            background: linear-gradient(135deg, #d32f2f, #b71c1c);
-            border: 2px solid #ffd700;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-            position: relative;
-            overflow: hidden;
+          /* Nút Lì xì góc màn hình */
+          .lucky-btn-container {
+            position: absolute; bottom: 30px; right: 30px;
+            pointer-events: auto; cursor: pointer;
             animation: float 3s ease-in-out infinite;
+            text-align: center;
           }
+          .mini-envelope {
+            width: 60px; height: 90px;
+            background: #d32f2f;
+            border: 2px solid #ffd700;
+            border-radius: 6px;
+            display: flex; justify-content: center; align-items: center;
+            font-size: 24px; box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+          }
+          .mini-envelope::after { content: '福'; color: #ffd700; font-family: serif; }
 
-          .envelope:hover {
-            transform: scale(1.1) rotate(-5deg);
-          }
-
-          .envelope::before {
-            content: '🧧';
-            font-size: 40px;
-          }
-          
-          .envelope.open {
-            animation: openAnim 0.5s forwards;
-            opacity: 0;
-            pointer-events: none;
-          }
-
-          .popup-overlay {
-            position: fixed;
-            top: 0; left: 0; width: 100vw; height: 100vh;
-            background: rgba(0,0,0,0.8);
-            display: flex;
-            justify-content: center;
-            align-items: center;
+          /* Overlay màn hình đen mờ */
+          .overlay-backdrop {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(0,0,0,0.85);
+            backdrop-filter: blur(8px);
+            display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
             pointer-events: auto;
-            backdrop-filter: blur(5px);
             animation: fadeIn 0.3s ease;
           }
 
-          .lucky-card {
-            background: #fff;
-            width: 300px;
-            padding: 30px;
-            border-radius: 15px;
-            text-align: center;
-            border: 4px solid #d32f2f;
-            box-shadow: 0 0 50px rgba(211, 47, 47, 0.6);
-            transform: scale(0.5);
-            animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+          /* Bộ bài Lì xì */
+          .envelope-deck {
+            display: flex; gap: 20px;
+            perspective: 1000px;
+          }
+          .big-envelope {
+            width: 100px; height: 160px;
+            background: linear-gradient(135deg, #b71c1c, #d32f2f);
+            border: 2px solid #ffd700;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.3s;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            display: flex; justify-content: center; align-items: center;
+          }
+          .big-envelope:hover { transform: translateY(-20px) scale(1.05); }
+          .big-envelope span { font-size: 40px; color: #ffd700; }
+
+          /* Animation Rút tiền */
+          .result-container {
             position: relative;
+            width: 200px; height: 300px;
+            display: flex; justify-content: center; align-items: flex-end;
+          }
+          
+          /* Cái bao lì xì đang mở */
+          .opened-envelope-body {
+            position: absolute; bottom: 0; width: 100%; height: 60%;
+            background: #d32f2f;
+            border: 2px solid #ffd700;
+            border-top: none;
+            border-radius: 0 0 10px 10px;
+            z-index: 10;
+          }
+          .opened-envelope-flap {
+            position: absolute; bottom: 60%; width: 100%; height: 20%;
+            background: #b71c1c;
+            clip-path: polygon(0 0, 50% 100%, 100% 0);
+            z-index: 5;
           }
 
-          .lucky-card h2 {
-            color: #d32f2f;
-            margin: 0 0 10px 0;
-            font-family: 'Arial', sans-serif;
-            font-weight: bold;
+          /* Tờ tiền */
+          .money-note {
+            width: 90%; height: 80%;
+            border-radius: 4px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.2);
+            position: absolute; bottom: 10px;
+            display: flex; flex-direction: column;
+            justify-content: space-between; padding: 10px;
+            box-sizing: border-box;
+            color: white; font-family: sans-serif; font-weight: bold;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+            z-index: 2; /* Nằm giữa nắp và thân bao lúc đầu, sau đó trồi lên */
+            animation: slideUpMoney 1.5s cubic-bezier(0.25, 1, 0.5, 1) forwards;
           }
 
-          .lucky-card p {
-            font-size: 1.2rem;
-            color: #333;
-            line-height: 1.5;
-            font-family: 'Times New Roman', serif;
+          .money-value { font-size: 24px; align-self: flex-end; }
+          .money-center { font-size: 32px; align-self: center; opacity: 0.3; }
+          .money-label { font-size: 10px; text-transform: uppercase; }
+
+          @keyframes slideUpMoney {
+            0% { transform: translateY(0); z-index: 8; }
+            100% { transform: translateY(-180px) scale(1.2); z-index: 15; }
+          }
+          
+          .wish-text {
+            color: #fff; margin-top: 200px; font-family: 'Montserrat', sans-serif;
+            font-size: 1.2rem; text-align: center; max-width: 80%;
+            animation: fadeIn 1s ease 1s forwards; opacity: 0;
           }
           
           .close-btn {
-            margin-top: 20px;
-            padding: 8px 20px;
-            background: #d32f2f;
-            color: white;
-            border: none;
-            border-radius: 20px;
-            cursor: pointer;
-            font-weight: bold;
-            transition: background 0.2s;
+            margin-top: 20px; padding: 10px 30px;
+            background: white; color: #d32f2f; font-weight: bold;
+            border: none; border-radius: 20px; cursor: pointer;
           }
-          .close-btn:hover { background: #b71c1c; }
 
-          @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
-          @keyframes openAnim { to { transform: scale(1.5) translateY(-50px); opacity: 0; } }
-          @keyframes popIn { to { transform: scale(1); } }
+          @keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
           @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+          
+          @media (max-width: 600px) {
+             .envelope-deck { gap: 10px; transform: scale(0.8); }
+             .big-envelope { width: 70px; height: 110px; }
+          }
         `}
       </style>
 
-      {/* Button Lì Xì ở góc */}
-      {!showResult && (
-        <div className={`lucky-money-container`}>
-             <div className={`envelope ${isOpen ? 'open' : ''}`} onClick={handleOpen} title="Nhận Lì Xì">
-             </div>
-             <div style={{color: 'white', marginTop: '10px', fontSize: '12px', fontWeight: 'bold', textShadow: '0 2px 4px black'}}>LÌ XÌ</div>
+      {/* STEP 0: Nút Lì Xì */}
+      {step === 0 && (
+        <div className="lucky-btn-container" onClick={handleOpenDeck}>
+          <div className="mini-envelope"></div>
+          <div style={{ color: 'white', marginTop: 5, fontSize: 12, fontWeight: 'bold', textShadow: '0 2px 2px black' }}>RÚT LÌ XÌ</div>
         </div>
       )}
 
-      {/* Popup Lời Chúc */}
-      {showResult && (
-        <div className="popup-overlay">
-          <div className="lucky-card">
-            <h2>LỘC 2026</h2>
-            <hr style={{borderColor: '#ffd700', margin: '15px 0'}}/>
-            <p>"{currentWish}"</p>
-            <button className="close-btn" onClick={handleClose}>Cảm ơn</button>
+      {/* STEP 1: Chọn bao */}
+      {step === 1 && (
+        <div className="overlay-backdrop">
+          <h2 style={{ color: '#ffd700', fontFamily: 'serif', marginBottom: 40, fontSize: '2rem' }}>CHỌN LỘC ĐẦU NĂM</h2>
+          <div className="envelope-deck">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="big-envelope" onClick={handlePickEnvelope}>
+                <span>🧧</span>
+              </div>
+            ))}
           </div>
+        </div>
+      )}
+
+      {/* STEP 2: Animation Rút Tiền */}
+      {step === 2 && selectedMoney && (
+        <div className="overlay-backdrop">
+          <div className="result-container">
+            {/* Tờ tiền trượt lên */}
+            <div className="money-note" style={{ background: selectedMoney.color }}>
+               <div className="money-label">NGÂN HÀNG MAY MẮN</div>
+               <div className="money-center">VND</div>
+               <div className="money-value">{selectedMoney.value}</div>
+            </div>
+            
+            {/* Hình ảnh bao lì xì bên dưới */}
+            <div className="opened-envelope-flap"></div>
+            <div className="opened-envelope-body">
+                <div style={{textAlign: 'center', color: '#ffd700', marginTop: 20, fontSize: 30}}>福</div>
+            </div>
+          </div>
+
+          <div className="wish-text">
+            "{selectedMoney.text}"
+          </div>
+          
+          <button className="close-btn" onClick={handleClose}>Nhận Lộc</button>
         </div>
       )}
     </Html>
