@@ -4,7 +4,6 @@ import { OrbitControls, Text3D, Center, Float, Stars, Environment, PositionalAud
 import { EffectComposer, Bloom } from '@react-three/postprocessing'
 import * as THREE from 'three'
 
-
 import CinematicVolume from './CinematicVolume'
 import CinematicPlayButton from './CinematicPlayButton'
 import CircularAudioVisualizer from './CircularAudioVisualizer'
@@ -121,103 +120,42 @@ function FireworkManager() {
 
 // --- 3. UI COMPONENTS (MOVED OUTSIDE CANVAS) ---
 
-// ==========================================
-// 3.1 Cinematic Title (DESIGN UPGRADE: GOLD EFFECT)
-// ==========================================
+// 3.1 Cinematic Title (2D Overlay)
 function CinematicTitle2D() {
   return (
     <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 10, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
       <style>
         {`
-          @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Great+Vibes&family=Montserrat:wght@300;600&display=swap');
-          
+          @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Montserrat:wght@300;600&display=swap');
           .cinematic-container {
             display: flex; flex-direction: column; justify-content: center; align-items: center;
-            width: 100%; height: 100%; text-align: center;
-            perspective: 1000px;
+            width: 100%; height: 100%; color: #ffffff; text-align: center;
+            font-family: 'Cinzel', serif; text-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
           }
-
-          /* Hiệu ứng chữ vàng kim loại */
-          .gold-text-gradient {
-            background: linear-gradient(to bottom, #cfc09f 22%, #634f2c 24%, #cfc09f 26%, #cfc09f 27%, #ffecb3 40%, #3a2c0f 78%); 
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            color: #fff;
-            text-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
-            position: relative;
-          }
-
-          .line-1 { 
-            font-family: 'Cinzel', serif; 
-            font-size: 2.5rem; 
-            letter-spacing: 1rem; 
-            text-transform: uppercase;
-            animation: fadeDown 2s ease-out forwards 0.5s; 
-            opacity: 0; 
-            margin-bottom: -15px;
-          }
-          
-          .line-2 { 
-            font-family: 'Cinzel', serif; 
-            font-size: 12rem; 
-            font-weight: 700; 
-            line-height: 1;
-            background: linear-gradient(135deg, #bf953f, #fcf6ba, #b38728, #fbf5b7, #aa771c);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            filter: drop-shadow(0 0 20px rgba(255, 200, 0, 0.4));
-            animation: scaleIn 3s cubic-bezier(0.2, 0.8, 0.2, 1) forwards 1s; 
-            opacity: 0; 
-            transform: scale(0.8);
-          }
-
-          .line-3 { 
-            font-family: 'Great Vibes', cursive; 
-            font-size: 4rem; 
-            color: #ffecd2; 
-            margin-top: 10px;
-            text-shadow: 0 0 10px rgba(255,0,0,0.8);
-            animation: fadeInUp 2s ease-out forwards 2.5s; 
-            opacity: 0; 
-          }
-
-          @keyframes fadeDown { 
-            from { opacity: 0; transform: translateY(-30px); letter-spacing: 2rem; } 
-            to { opacity: 1; transform: translateY(0); letter-spacing: 1rem; } 
-          }
-          @keyframes scaleIn { 
-            from { opacity: 0; transform: scale(0.5); letter-spacing: -20px; } 
-            to { opacity: 1; transform: scale(1); letter-spacing: 0px; } 
-          }
-          @keyframes fadeInUp { 
-            from { opacity: 0; transform: translateY(30px); } 
-            to { opacity: 1; transform: translateY(0); } 
-          }
-
-          @media (max-width: 768px) { 
-            .line-1 { font-size: 1.2rem; letter-spacing: 0.5rem; } 
-            .line-2 { font-size: 6rem; } 
-            .line-3 { font-size: 2.5rem; }
-          }
+          .line-1 { font-family: 'Montserrat', sans-serif; font-size: 2rem; letter-spacing: 0.8rem; color: #ffecd2; animation: fadeUp 3s forwards 0.5s; opacity: 0; }
+          .line-2 { font-size: 10rem; font-weight: 700; background: linear-gradient(to bottom, #fff 30%, #ffd700 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; animation: zoomIn 4s forwards 1.5s; opacity: 0; filter: drop-shadow(0 0 30px rgba(255, 215, 0, 0.4)); }
+          .line-3 { font-family: 'Montserrat', sans-serif; margin-top: 20px; font-size: 1.2rem; letter-spacing: 0.5rem; color: #aaa; animation: fadeIn 3s forwards 4s; opacity: 0; }
+          @keyframes fadeUp { to { opacity: 1; transform: translateY(0); letter-spacing: 1.2rem; } }
+          @keyframes zoomIn { to { opacity: 1; transform: scale(1); letter-spacing: 0px; } }
+          @keyframes fadeIn { to { opacity: 0.8; } }
+          @media (max-width: 768px) { .line-1 { font-size: 1.2rem; } .line-2 { font-size: 5rem; } }
         `}
       </style>
       <div className="cinematic-container">
-        <div className="line-1 gold-text-gradient">Happy New Year</div>
+        <div className="line-1">Happy New Year</div>
         <div className="line-2">2026</div>
-        <div className="line-3">Cung Chúc Tân Xuân</div>
+        <div className="line-3">CHÚC MỪNG NĂM MỚI</div>
       </div>
     </div>
   )
 }
 
-// ==========================================
-// 3.2 Lucky Money Feature (DESIGN UPGRADE: 3D ENVELOPE & POLYMER MONEY)
-// ==========================================
+// 3.2 Lucky Money Feature (2D Overlay)
 const DENOMINATIONS = [
-    { value: "50.000", bg: "linear-gradient(135deg, #e492b2 0%, #b56585 100%)", text: "Tình duyên phơi phới, hạnh phúc đong đầy" },
-    { value: "100.000", bg: "linear-gradient(135deg, #95c783 0%, #4e7040 100%)", text: "Sức khỏe dồi dào, tâm trí an yên" },
-    { value: "200.000", bg: "linear-gradient(135deg, #e09f8d 0%, #a34e3c 100%)", text: "Phát tài phát lộc, vạn sự hanh thông" },
-    { value: "500.000", bg: "linear-gradient(135deg, #74dadd 0%, #2c7a7d 100%)", text: "Đại phú đại quý, tiền vào như nước" }
+    { value: "50.000", color: "linear-gradient(135deg, #e492b2, #b56585)", text: "Năm mới nhẹ nhàng, tình cảm đong đầy" },
+    { value: "100.000", color: "linear-gradient(135deg, #7da36d, #4e7040)", text: "Lộc biếc mai vàng, khởi đầu suôn sẻ" },
+    { value: "200.000", color: "linear-gradient(135deg, #c9806e, #a34e3c)", text: "May mắn song hành, tài lộc gõ cửa" },
+    { value: "500.000", color: "linear-gradient(135deg, #58aeb1, #2c7a7d)", text: "Đại phú đại quý, tiền vào như nước" }
 ];
 
 function LuckyMoneyFeature() {
@@ -226,182 +164,112 @@ function LuckyMoneyFeature() {
   
     const pickRandomMoney = () => {
       const rand = Math.random();
-      if (rand < 0.3) return DENOMINATIONS[0];
-      if (rand < 0.6) return DENOMINATIONS[1];
-      if (rand < 0.85) return DENOMINATIONS[2];
+      if (rand < 0.4) return DENOMINATIONS[0];
+      if (rand < 0.7) return DENOMINATIONS[1];
+      if (rand < 0.9) return DENOMINATIONS[2];
       return DENOMINATIONS[3];
     };
   
     const handleOpenDeck = () => { playCustomClick(); setStep(1); };
-    const handlePickEnvelope = () => { 
-      playCustomClick(); 
-      const money = pickRandomMoney(); 
-      setSelectedMoney(money); 
-      setStep(2); 
-    };
+    const handlePickEnvelope = () => { playCustomClick(); const money = pickRandomMoney(); setSelectedMoney(money); setStep(2); };
     const handleClose = () => { setStep(0); setSelectedMoney(null); };
   
     return (
       <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 100 }}>
         <style>
           {`
-            /* === BACKDROP & GENERAL === */
+            .lucky-btn-container {
+              position: absolute; bottom: 30px; left: 30px; /* Góc trái */
+              pointer-events: auto; cursor: pointer;
+              animation: float 3s ease-in-out infinite; text-align: center;
+            }
+            .mini-envelope {
+              width: 60px; height: 90px; background: #d32f2f;
+              border: 2px solid #ffd700; border-radius: 6px;
+              display: flex; justify-content: center; align-items: center;
+              font-size: 24px; box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+            }
+            .mini-envelope::after { content: '福'; color: #ffd700; font-family: serif; }
+            
             .overlay-backdrop {
               position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-              background: rgba(0,0,0,0.85); backdrop-filter: blur(12px);
+              background: rgba(0,0,0,0.85); backdrop-filter: blur(8px);
               display: flex; flex-direction: column; justify-content: center; align-items: center;
-              pointer-events: auto; animation: fadeInOverlay 0.5s ease;
+              pointer-events: auto; animation: fadeIn 0.3s ease;
             }
-            @keyframes fadeInOverlay { from { opacity: 0; } to { opacity: 1; } }
-
-            /* === BUTTON RÚT LÌ XÌ (GÓC) === */
-            .lucky-btn-container {
-              position: absolute; bottom: 40px; left: 40px;
-              pointer-events: auto; cursor: pointer;
-              animation: bounceFloat 2s infinite ease-in-out;
-              text-align: center;
+            
+            .envelope-deck { display: flex; gap: 20px; perspective: 1000px; }
+            .big-envelope {
+              width: 100px; height: 160px; background: linear-gradient(135deg, #b71c1c, #d32f2f);
+              border: 2px solid #ffd700; border-radius: 8px; cursor: pointer;
+              transition: transform 0.3s; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+              display: flex; justify-content: center; align-items: center;
             }
-            .mini-envelope-icon {
-              font-size: 45px; 
-              filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.6));
-            }
-            @keyframes bounceFloat { 
-              0%, 100% { transform: translateY(0); } 
-              50% { transform: translateY(-15px); } 
-            }
-
-            /* === ANIMATION MỞ BAO LÌ XÌ 3D === */
-            .envelope-wrapper {
-              position: relative; width: 280px; height: 380px;
+            .big-envelope:hover { transform: translateY(-20px) scale(1.05); }
+            .big-envelope span { font-size: 40px; color: #ffd700; }
+            
+            .result-container {
+              position: relative; width: 200px; height: 300px;
               display: flex; justify-content: center; align-items: flex-end;
-              perspective: 1000px;
             }
+            .opened-envelope-body {
+              position: absolute; bottom: 0; width: 100%; height: 60%;
+              background: #d32f2f; border: 2px solid #ffd700; border-top: none;
+              border-radius: 0 0 10px 10px; z-index: 10;
+            }
+            .opened-envelope-flap {
+              position: absolute; bottom: 60%; width: 100%; height: 20%;
+              background: #b71c1c; clip-path: polygon(0 0, 50% 100%, 100% 0); z-index: 5;
+            }
+            .money-note {
+              width: 90%; height: 80%; border-radius: 4px; box-shadow: 0 0 10px rgba(0,0,0,0.2);
+              position: absolute; bottom: 10px; display: flex; flex-direction: column;
+              justify-content: space-between; padding: 10px; box-sizing: border-box;
+              color: white; font-family: sans-serif; font-weight: bold;
+              text-shadow: 0 1px 2px rgba(0,0,0,0.5); z-index: 2; 
+              animation: slideUpMoney 1.5s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+            }
+            .money-value { font-size: 24px; align-self: flex-end; }
+            .money-center { font-size: 32px; align-self: center; opacity: 0.3; }
+            .money-label { font-size: 10px; text-transform: uppercase; }
             
-            /* Thân bao đỏ */
-            .red-envelope-body {
-              position: absolute; bottom: 0; left: 0;
-              width: 100%; height: 100%;
-              background: linear-gradient(135deg, #d00000, #900000);
-              border-radius: 12px;
-              box-shadow: 0 20px 50px rgba(0,0,0,0.6);
-              z-index: 10;
-              overflow: hidden;
-              border: 2px solid #ffd700;
-              display: flex; justify-content: center; align-items: center;
+            @keyframes slideUpMoney {
+              0% { transform: translateY(0); z-index: 8; }
+              100% { transform: translateY(-180px) scale(1.2); z-index: 15; }
             }
-            .red-envelope-body::after {
-                content: '福'; font-size: 80px; color: #ffd700; 
-                font-family: serif; font-weight: bold;
-                text-shadow: 0 2px 10px rgba(0,0,0,0.4);
+            .wish-text {
+              color: #fff; margin-top: 200px; font-family: 'Montserrat', sans-serif;
+              font-size: 1.2rem; text-align: center; max-width: 80%;
+              animation: fadeIn 1s ease 1s forwards; opacity: 0;
             }
-
-            /* Nắp bao (Flap) */
-            .envelope-cap {
-              position: absolute; top: 0; left: 0; width: 100%; height: 35%;
-              background: #b30000;
-              clip-path: polygon(0 0, 100% 0, 50% 100%);
-              transform-origin: top;
-              z-index: 15;
-              transition: transform 0.6s 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-              box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-              border-top: 3px solid #ffd700;
-            }
-            
-            /* Logic mở nắp */
-            .envelope-wrapper.open .envelope-cap {
-              transform: rotateX(180deg);
-              z-index: 1; /* Ra sau tờ tiền */
-            }
-
-            /* Tờ tiền Polymer */
-            .money-card {
-              position: absolute; bottom: 10px; left: 15px; right: 15px; height: 90%;
-              border-radius: 8px;
-              display: flex; flex-direction: column; justify-content: space-between;
-              padding: 15px; box-sizing: border-box;
-              color: #fff;
-              box-shadow: 0 0 20px rgba(0,0,0,0.2);
-              transform: translateY(0) scale(0.9);
-              z-index: 5; /* Nằm trong bao */
-              transition: all 1s 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
-            }
-            /* Pattern tiền */
-            .money-pattern {
-              position: absolute; inset: 0; opacity: 0.15;
-              background-image: repeating-linear-gradient(45deg, transparent, transparent 10px, #fff 10px, #fff 11px);
-              z-index: 0;
-            }
-            
-            /* Logic tiền bay lên */
-            .envelope-wrapper.open .money-card {
-              transform: translateY(-220px) scale(1.1);
-              z-index: 20; /* Bay lên trên bao */
-              box-shadow: 0 30px 60px rgba(0,0,0,0.6);
-            }
-
-            .money-val { font-size: 38px; font-weight: 800; font-family: 'Montserrat', sans-serif; text-shadow: 0 2px 4px rgba(0,0,0,0.3); z-index: 2; }
-            .money-label { font-size: 12px; text-transform: uppercase; letter-spacing: 1px; opacity: 0.9; z-index: 2; }
-            .money-window {
-                width: 60px; height: 60px; border-radius: 50%;
-                border: 2px solid rgba(255,255,255,0.3);
-                background: rgba(255,255,255,0.1);
-                align-self: center; display: flex; align-items: center; justify-content: center;
-                font-size: 10px; color: rgba(255,255,255,0.8); z-index: 2;
-            }
-
-            /* === TEXT LỜI CHÚC & BUTTON === */
-            .wish-text-container {
-              margin-top: 160px; text-align: center; color: #fff;
-              opacity: 0; animation: fadeInText 1s ease 1.6s forwards;
-            }
-            .wish-main { font-family: 'Cinzel', serif; font-size: 1.8rem; color: #ffd700; margin-bottom: 8px; }
-            .wish-sub { font-family: 'Montserrat', sans-serif; font-size: 1.1rem; color: #eee; font-style: italic; max-width: 90%; margin: 0 auto; }
-            
             .close-btn {
-              margin-top: 25px;
-              padding: 12px 40px;
-              background: linear-gradient(90deg, #ffd700, #fdb931);
-              color: #8a0000;
-              font-weight: 800; text-transform: uppercase;
-              border: none; border-radius: 50px;
-              box-shadow: 0 0 20px rgba(255, 215, 0, 0.4);
-              cursor: pointer; transition: transform 0.2s;
+              margin-top: 20px; padding: 10px 30px; background: white; color: #d32f2f;
+              font-weight: bold; border: none; border-radius: 20px; cursor: pointer;
             }
-            .close-btn:hover { transform: scale(1.05); background: #fff; }
-
-            @keyframes fadeInText { to { opacity: 1; margin-top: 60px; } }
-
-            /* === DECK (STEP 1) === */
-            .deck-container { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; }
-            .deck-envelope {
-              width: 100px; height: 160px;
-              background: #d00000;
-              border: 2px solid #ffd700; border-radius: 8px;
-              cursor: pointer; position: relative;
-              box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-              transition: transform 0.3s;
-              display: flex; justify-content: center; align-items: center;
+            @keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+            @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+            @media (max-width: 600px) {
+               .envelope-deck { gap: 10px; transform: scale(0.8); }
+               .big-envelope { width: 70px; height: 110px; }
             }
-            .deck-envelope:hover { transform: translateY(-15px) rotate(2deg); box-shadow: 0 15px 35px rgba(255, 215, 0, 0.3); }
-            .deck-envelope::after { content: '福'; color: #ffd700; font-size: 40px; font-family: serif; border: 2px solid #ffd700; padding: 5px; border-radius: 50%; }
           `}
         </style>
   
         {/* Step 0: Button */}
         {step === 0 && (
           <div className="lucky-btn-container" onClick={handleOpenDeck}>
-            <div className="mini-envelope-icon">🧧</div>
-            <div style={{ color: '#ffd700', marginTop: 5, fontSize: 14, fontWeight: 'bold', textShadow: '0 2px 2px black' }}>RÚT LÌ XÌ</div>
+            <div className="mini-envelope"></div>
+            <div style={{ color: 'white', marginTop: 5, fontSize: 12, fontWeight: 'bold', textShadow: '0 2px 2px black' }}>RÚT LÌ XÌ</div>
           </div>
         )}
   
         {/* Step 1: Chọn bao */}
         {step === 1 && (
           <div className="overlay-backdrop">
-            <h2 style={{ color: '#ffd700', fontFamily: 'Cinzel, serif', marginBottom: 40, fontSize: '2.5rem', textShadow: '0 0 10px #ff0000' }}>CHỌN LỘC ĐẦU NĂM</h2>
-            <div className="deck-container">
+            <h2 style={{ color: '#ffd700', fontFamily: 'serif', marginBottom: 40, fontSize: '2rem' }}>CHỌN LỘC ĐẦU NĂM</h2>
+            <div className="envelope-deck">
               {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="deck-envelope" onClick={handlePickEnvelope}></div>
+                <div key={i} className="big-envelope" onClick={handlePickEnvelope}><span>🧧</span></div>
               ))}
             </div>
           </div>
@@ -410,35 +278,19 @@ function LuckyMoneyFeature() {
         {/* Step 2: Kết quả */}
         {step === 2 && selectedMoney && (
           <div className="overlay-backdrop">
-            {/* Class "open" kích hoạt animation mở nắp và bay tiền */}
-            <div className="envelope-wrapper open">
-                
-                {/* Tờ tiền (Money Card) */}
-                <div className="money-card" style={{ background: selectedMoney.bg }}>
-                   <div className="money-pattern"></div>
-                   <div style={{display:'flex', justifyContent:'space-between', zIndex:2}}>
-                      <div className="money-label">NGÂN HÀNG MAY MẮN</div>
-                      <div className="money-label">{selectedMoney.value}</div>
-                   </div>
-                   <div className="money-window">VN2026</div>
-                   <div style={{textAlign: 'center', zIndex:2}}>
-                      <div className="money-val">{selectedMoney.value}</div>
-                      <div className="money-label">VIETNAM DONG</div>
-                   </div>
-                </div>
-
-                {/* Thân bao lì xì */}
-                <div className="red-envelope-body"></div>
-                
-                {/* Nắp bao */}
-                <div className="envelope-cap"></div>
+            <div className="result-container">
+              <div className="money-note" style={{ background: selectedMoney.color }}>
+                 <div className="money-label">NGÂN HÀNG MAY MẮN</div>
+                 <div className="money-center">VND</div>
+                 <div className="money-value">{selectedMoney.value}</div>
+              </div>
+              <div className="opened-envelope-flap"></div>
+              <div className="opened-envelope-body">
+                  <div style={{textAlign: 'center', color: '#ffd700', marginTop: 20, fontSize: 30}}>福</div>
+              </div>
             </div>
-
-            <div className="wish-text-container">
-               <div className="wish-main">CHÚC MỪNG NĂM MỚI</div>
-               <div className="wish-sub">"{selectedMoney.text}"</div>
-               <button className="close-btn" onClick={handleClose}>Nhận Lộc</button>
-            </div>
+            <div className="wish-text">"{selectedMoney.text}"</div>
+            <button className="close-btn" onClick={handleClose}>Nhận Lộc</button>
           </div>
         )}
       </div>
@@ -452,11 +304,7 @@ function SceneContent({ scene, handleLaunch, soundRef, isPlaying, setIsPlaying }
   useEffect(() => { if (scene === 'fireworks') { camera.position.set(0, 0, 40); camera.lookAt(0, 0, 0) } }, [scene, camera])
   useEffect(() => {
     if (scene === 'fireworks' && !hasAutoPlayed.current && soundRef.current) {
-      setTimeout(() => { 
-        if(soundRef.current && soundRef.current.play) soundRef.current.play(); 
-        setIsPlaying(true); 
-        hasAutoPlayed.current = true 
-      }, 200)
+      setTimeout(() => { soundRef.current.play(); setIsPlaying(true); hasAutoPlayed.current = true }, 200)
     }
   }, [scene, soundRef, setIsPlaying])
 
@@ -507,25 +355,20 @@ export default function App() {
     <div style={{ width: '100vw', height: '100vh', position: 'relative', background: '#000', overflow: 'hidden' }}>
       
       {/* UI LAYER - LUÔN NẰM TRÊN CÙNG */}
-      {/* Các component UI điều khiển âm thanh nếu có */}
-      {/* 
       {isUiVisible && (
         <>
           <CinematicVolume soundRef={soundRef} />
           <CinematicPlayButton soundRef={soundRef} />
         </>
       )}
-      */}
 
       {scene === 'fireworks' && (
         <>
           {/* Controls */}
-          {/* 
           <MusicToggleButton soundRef={soundRef} isPlaying={isPlaying} setIsPlaying={setIsPlaying} />
-          <VolumeControl soundRef={soundRef} volume={volume} setVolume={setVolume} /> 
-          */}
+          <VolumeControl soundRef={soundRef} volume={volume} setVolume={setVolume} />
           
-          {/* Overlay Features (NEW DESIGN) */}
+          {/* Overlay Features */}
           <CinematicTitle2D />
           <LuckyMoneyFeature />
         </>
