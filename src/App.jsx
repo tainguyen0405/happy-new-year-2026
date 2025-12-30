@@ -4,6 +4,7 @@ import { OrbitControls, Text3D, Center, Float, Stars, Environment, PositionalAud
 import { EffectComposer, Bloom } from '@react-three/postprocessing'
 import * as THREE from 'three'
 
+// Giữ nguyên các import component con của bạn
 import CinematicVolume from './CinematicVolume'
 import CinematicPlayButton from './CinematicPlayButton'
 import CircularAudioVisualizer from './CircularAudioVisualizer'
@@ -12,7 +13,7 @@ import VolumeControl from './VolumeControl'
 
 const isTesting = true;
 
-// --- 1. UTILS & AUDIO ---
+// --- 1. UTILS & AUDIO (GIỮ NGUYÊN) ---
 const getParticleTexture = () => {
   const canvas = document.createElement('canvas');
   canvas.width = 32; canvas.height = 32;
@@ -49,7 +50,7 @@ const playCustomClick = () => {
   playPulse(now + 0.05, 900, 0.06);
 };
 
-// --- 2. FIREWORKS & VISUALS (3D) ---
+// --- 2. FIREWORKS & VISUALS (3D - GIỮ NGUYÊN) ---
 function OptimizedFirework({ position, color, texture }) {
   const pointsRef = useRef()
   const count = 80 
@@ -118,49 +119,103 @@ function FireworkManager() {
   return <>{fireworks.map(f => <OptimizedFirework key={f.id} position={f.pos} color={f.color} texture={texture} />)}</>
 }
 
-// --- 3. UI COMPONENTS (MOVED OUTSIDE CANVAS) ---
+// --- 3. UI COMPONENTS (NÂNG CẤP MỚI) ---
 
-// 3.1 Cinematic Title (2D Overlay)
+// 3.1 Cinematic Title 2D - Design Sang Trọng hơn
 function CinematicTitle2D() {
   return (
     <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 10, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
       <style>
         {`
-          @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Montserrat:wght@300;600&display=swap');
-          .cinematic-container {
+          @import url('https://fonts.googleapis.com/css2?family=Great+Vibes&family=Cinzel:wght@400;700&family=Montserrat:wght@300;600&display=swap');
+          
+          .cinematic-wrapper {
             display: flex; flex-direction: column; justify-content: center; align-items: center;
-            width: 100%; height: 100%; color: #ffffff; text-align: center;
-            font-family: 'Cinzel', serif; text-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+            width: 100%; height: 100%; text-align: center;
+            perspective: 1000px;
           }
-          .line-1 { font-family: 'Montserrat', sans-serif; font-size: 2rem; letter-spacing: 0.8rem; color: #ffecd2; animation: fadeUp 3s forwards 0.5s; opacity: 0; }
-          .line-2 { font-size: 10rem; font-weight: 700; background: linear-gradient(to bottom, #fff 30%, #ffd700 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; animation: zoomIn 4s forwards 1.5s; opacity: 0; filter: drop-shadow(0 0 30px rgba(255, 215, 0, 0.4)); }
-          .line-3 { font-family: 'Montserrat', sans-serif; margin-top: 20px; font-size: 1.2rem; letter-spacing: 0.5rem; color: #aaa; animation: fadeIn 3s forwards 4s; opacity: 0; }
-          @keyframes fadeUp { to { opacity: 1; transform: translateY(0); letter-spacing: 1.2rem; } }
-          @keyframes zoomIn { to { opacity: 1; transform: scale(1); letter-spacing: 0px; } }
-          @keyframes fadeIn { to { opacity: 0.8; } }
-          @media (max-width: 768px) { .line-1 { font-size: 1.2rem; } .line-2 { font-size: 5rem; } }
+          
+          .text-glow {
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.3), 0 0 20px rgba(255, 215, 0, 0.2);
+          }
+
+          .line-happy { 
+            font-family: 'Great Vibes', cursive; 
+            font-size: 3.5rem; 
+            color: #ffecd2; 
+            opacity: 0;
+            transform: translateY(20px);
+            animation: elegantFadeUp 2s cubic-bezier(0.2, 0.8, 0.2, 1) forwards 0.5s;
+          }
+          
+          .line-year { 
+            font-family: 'Cinzel', serif; 
+            font-size: 8rem; 
+            font-weight: 800; 
+            line-height: 1;
+            margin: 10px 0;
+            background: linear-gradient(to bottom, #cfc09f 22%, #634f2c 24%, #cfc09f 26%, #cfc09f 27%, #ffecb3 40%, #3a2c0f 78%); 
+            -webkit-background-clip: text; 
+            -webkit-text-fill-color: transparent; 
+            opacity: 0;
+            transform: scale(0.9);
+            filter: drop-shadow(0 0 15px rgba(255, 215, 0, 0.4));
+            animation: zoomInGold 2.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards 1s;
+          }
+          
+          .line-sub { 
+            font-family: 'Montserrat', sans-serif; 
+            margin-top: 15px; 
+            font-size: 1rem; 
+            letter-spacing: 0.8rem; 
+            text-transform: uppercase;
+            color: #ffffff; 
+            opacity: 0;
+            animation: fadeInSub 3s ease forwards 3s; 
+            border-top: 1px solid rgba(255,255,255,0.3);
+            border-bottom: 1px solid rgba(255,255,255,0.3);
+            padding: 10px 20px;
+          }
+
+          @keyframes elegantFadeUp { 
+            to { opacity: 1; transform: translateY(0); } 
+          }
+          @keyframes zoomInGold { 
+            0% { opacity: 0; transform: scale(0.8); }
+            100% { opacity: 1; transform: scale(1); } 
+          }
+          @keyframes fadeInSub { 
+            to { opacity: 0.9; letter-spacing: 1rem; } 
+          }
+          
+          @media (max-width: 768px) { 
+            .line-happy { font-size: 2.5rem; } 
+            .line-year { font-size: 4rem; } 
+            .line-sub { font-size: 0.7rem; letter-spacing: 0.3rem; }
+          }
         `}
       </style>
-      <div className="cinematic-container">
-        <div className="line-1">Happy New Year</div>
-        <div className="line-2">2026</div>
-        <div className="line-3">CHÚC MỪNG NĂM MỚI</div>
+      <div className="cinematic-wrapper">
+        <div className="line-happy text-glow">Happy New Year</div>
+        <div className="line-year">2026</div>
+        <div className="line-sub">Vạn Sự Như Ý - Tỷ Sự Như Mơ</div>
       </div>
     </div>
   )
 }
 
-// 3.2 Lucky Money Feature (2D Overlay)
+// 3.2 Lucky Money Feature - Nâng cấp Visual & Animation
 const DENOMINATIONS = [
-    { value: "50.000", color: "linear-gradient(135deg, #e492b2, #b56585)", text: "Năm mới nhẹ nhàng, tình cảm đong đầy" },
-    { value: "100.000", color: "linear-gradient(135deg, #7da36d, #4e7040)", text: "Lộc biếc mai vàng, khởi đầu suôn sẻ" },
-    { value: "200.000", color: "linear-gradient(135deg, #c9806e, #a34e3c)", text: "May mắn song hành, tài lộc gõ cửa" },
-    { value: "500.000", color: "linear-gradient(135deg, #58aeb1, #2c7a7d)", text: "Đại phú đại quý, tiền vào như nước" }
+    { value: "50.000", color: "#e492b2", bg: "linear-gradient(135deg, #fce4ec, #e91e63)", text: "Năm mới nhẹ nhàng, tình cảm đong đầy" },
+    { value: "100.000", color: "#7da36d", bg: "linear-gradient(135deg, #e8f5e9, #4caf50)", text: "Lộc biếc mai vàng, khởi đầu suôn sẻ" },
+    { value: "200.000", color: "#c9806e", bg: "linear-gradient(135deg, #efebe9, #d84315)", text: "May mắn song hành, tài lộc gõ cửa" },
+    { value: "500.000", color: "#58aeb1", bg: "linear-gradient(135deg, #e0f7fa, #00acc1)", text: "Đại phú đại quý, tiền vào như nước" }
 ];
 
 function LuckyMoneyFeature() {
     const [step, setStep] = useState(0); 
     const [selectedMoney, setSelectedMoney] = useState(null);
+    const [isOpened, setIsOpened] = useState(false); // State trigger animation mở bao
   
     const pickRandomMoney = () => {
       const rand = Math.random();
@@ -171,133 +226,206 @@ function LuckyMoneyFeature() {
     };
   
     const handleOpenDeck = () => { playCustomClick(); setStep(1); };
-    const handlePickEnvelope = () => { playCustomClick(); const money = pickRandomMoney(); setSelectedMoney(money); setStep(2); };
-    const handleClose = () => { setStep(0); setSelectedMoney(null); };
+    
+    const handlePickEnvelope = () => { 
+      playCustomClick(); 
+      const money = pickRandomMoney(); 
+      setSelectedMoney(money); 
+      setStep(2); 
+      // Delay một chút rồi mới kích hoạt animation mở bao
+      setTimeout(() => setIsOpened(true), 500);
+    };
+    
+    const handleClose = () => { setStep(0); setSelectedMoney(null); setIsOpened(false); };
   
     return (
       <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 100 }}>
         <style>
           {`
+            /* Container Nút Rút Lì Xì */
             .lucky-btn-container {
-              position: absolute; bottom: 30px; left: 30px; /* Góc trái */
+              position: absolute; bottom: 40px; left: 40px;
               pointer-events: auto; cursor: pointer;
-              animation: float 3s ease-in-out infinite; text-align: center;
+              animation: floatBtn 3s ease-in-out infinite; 
+              display: flex; flex-direction: column; align-items: center;
+              transition: transform 0.2s;
             }
-            .mini-envelope {
-              width: 60px; height: 90px; background: #d32f2f;
-              border: 2px solid #ffd700; border-radius: 6px;
+            .lucky-btn-container:hover { transform: scale(1.1); }
+            .icon-lixi {
+              width: 50px; height: 80px; 
+              background: linear-gradient(to bottom right, #d00000, #990000);
+              border-radius: 4px; border: 1px solid #ffdb4d;
+              box-shadow: 0 4px 15px rgba(255,0,0,0.4);
               display: flex; justify-content: center; align-items: center;
-              font-size: 24px; box-shadow: 0 5px 15px rgba(0,0,0,0.5);
             }
-            .mini-envelope::after { content: '福'; color: #ffd700; font-family: serif; }
+            .icon-lixi::after { content: '福'; color: #ffdb4d; font-family: 'Cinzel', serif; font-weight: bold; font-size: 24px; }
             
+            /* Overlay chung */
             .overlay-backdrop {
               position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-              background: rgba(0,0,0,0.85); backdrop-filter: blur(8px);
+              background: rgba(0,0,0,0.9); backdrop-filter: blur(10px);
               display: flex; flex-direction: column; justify-content: center; align-items: center;
-              pointer-events: auto; animation: fadeIn 0.3s ease;
+              pointer-events: auto; animation: fadeInOverlay 0.4s ease;
             }
-            
-            .envelope-deck { display: flex; gap: 20px; perspective: 1000px; }
-            .big-envelope {
-              width: 100px; height: 160px; background: linear-gradient(135deg, #b71c1c, #d32f2f);
-              border: 2px solid #ffd700; border-radius: 8px; cursor: pointer;
-              transition: transform 0.3s; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+
+            /* Step 1: Chọn bao */
+            .deck-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+            .lixi-item {
+              width: 120px; height: 180px;
+              background: linear-gradient(135deg, #b30000 0%, #d00000 100%);
+              border: 2px solid #ffdb4d; border-radius: 8px;
+              cursor: pointer; position: relative; overflow: hidden;
+              box-shadow: 0 10px 25px rgba(0,0,0,0.6);
+              transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
               display: flex; justify-content: center; align-items: center;
             }
-            .big-envelope:hover { transform: translateY(-20px) scale(1.05); }
-            .big-envelope span { font-size: 40px; color: #ffd700; }
+            .lixi-item:hover { transform: translateY(-15px) rotate(2deg); box-shadow: 0 15px 35px rgba(215, 0, 0, 0.4); }
+            .lixi-deco { 
+              width: 80px; height: 80px; border: 1px solid rgba(255, 219, 77, 0.5); 
+              border-radius: 50%; display: flex; justify-content: center; align-items: center;
+            }
+            .lixi-text { font-size: 40px; color: #ffdb4d; font-family: serif; }
+
+            /* Step 2: Mở bao (Quan trọng) */
+            .open-scene { position: relative; width: 260px; height: 380px; perspective: 1000px; margin-top: 50px; }
             
-            .result-container {
-              position: relative; width: 200px; height: 300px;
-              display: flex; justify-content: center; align-items: flex-end;
+            .envelope-body {
+              position: absolute; bottom: 0; left: 0; width: 100%; height: 100%;
+              background: #c62828; border-radius: 10px;
+              border: 2px solid #ffd700;
+              box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+              z-index: 10; display: flex; justify-content: center; align-items: flex-end;
+              overflow: hidden;
             }
-            .opened-envelope-body {
-              position: absolute; bottom: 0; width: 100%; height: 60%;
-              background: #d32f2f; border: 2px solid #ffd700; border-top: none;
-              border-radius: 0 0 10px 10px; z-index: 10;
+            .envelope-pattern {
+              position: absolute; width: 100%; height: 100%; opacity: 0.1;
+              background-image: radial-gradient(#ffdb4d 2px, transparent 2px); background-size: 20px 20px;
             }
-            .opened-envelope-flap {
-              position: absolute; bottom: 60%; width: 100%; height: 20%;
-              background: #b71c1c; clip-path: polygon(0 0, 50% 100%, 100% 0); z-index: 5;
+
+            .envelope-flap {
+              position: absolute; top: 0; left: 0; width: 100%; height: 40%;
+              background: #b71c1c; 
+              clip-path: polygon(0 0, 50% 100%, 100% 0);
+              transform-origin: top;
+              transition: transform 0.8s ease-in-out, z-index 0s linear 0.4s;
+              z-index: 20; /* Ban đầu nằm trên tiền */
+              border-top: 2px solid #ffd700;
             }
-            .money-note {
-              width: 90%; height: 80%; border-radius: 4px; box-shadow: 0 0 10px rgba(0,0,0,0.2);
-              position: absolute; bottom: 10px; display: flex; flex-direction: column;
-              justify-content: space-between; padding: 10px; box-sizing: border-box;
-              color: white; font-family: sans-serif; font-weight: bold;
-              text-shadow: 0 1px 2px rgba(0,0,0,0.5); z-index: 2; 
-              animation: slideUpMoney 1.5s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+            .envelope-flap.open {
+              transform: rotateX(180deg);
+              z-index: 5; /* Sau khi mở thì nằm dưới tiền */
             }
-            .money-value { font-size: 24px; align-self: flex-end; }
-            .money-center { font-size: 32px; align-self: center; opacity: 0.3; }
-            .money-label { font-size: 10px; text-transform: uppercase; }
-            
-            @keyframes slideUpMoney {
-              0% { transform: translateY(0); z-index: 8; }
-              100% { transform: translateY(-180px) scale(1.2); z-index: 15; }
+
+            .money-bill {
+              position: absolute; left: 50%; bottom: 10px; 
+              width: 90%; height: 50%;
+              background: white; border-radius: 5px;
+              transform: translateX(-50%);
+              z-index: 15; /* Nằm giữa body và flap khi flap đóng */
+              transition: bottom 1s cubic-bezier(0.5, 0, 0, 1) 0.6s, transform 1s 0.6s;
+              box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+              display: flex; flex-direction: column; overflow: hidden;
             }
-            .wish-text {
-              color: #fff; margin-top: 200px; font-family: 'Montserrat', sans-serif;
-              font-size: 1.2rem; text-align: center; max-width: 80%;
-              animation: fadeIn 1s ease 1s forwards; opacity: 0;
+            .money-bill.revealed {
+              bottom: 180px; /* Trồi lên cao */
+              transform: translateX(-50%) scale(1.1);
             }
+
+            /* Design tờ tiền */
+            .bill-inner { flex: 1; padding: 10px; display: flex; flex-direction: column; justify-content: space-between; position: relative; }
+            .bill-val { font-weight: 900; font-size: 24px; align-self: flex-end; color: #fff; text-shadow: 1px 1px 2px rgba(0,0,0,0.3); }
+            .bill-center { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 14px; color: rgba(255,255,255,0.8); letter-spacing: 2px; }
+            .bill-pattern { position: absolute; inset: 0; opacity: 0.3; background: repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255,255,255,0.2) 10px, rgba(255,255,255,0.2) 20px); }
+
+            .wish-box {
+              margin-top: 20px; color: #ffdb4d; font-family: 'Montserrat', sans-serif;
+              font-size: 1.3rem; text-align: center; max-width: 90%;
+              opacity: 0; transform: translateY(20px);
+              animation: fadeInUp 1s forwards 1.5s;
+            }
+
             .close-btn {
-              margin-top: 20px; padding: 10px 30px; background: white; color: #d32f2f;
-              font-weight: bold; border: none; border-radius: 20px; cursor: pointer;
+              margin-top: 30px; padding: 12px 40px; 
+              background: linear-gradient(to right, #ffdb4d, #ffb300);
+              color: #b71c1c; font-weight: bold; border: none; border-radius: 50px;
+              font-size: 16px; cursor: pointer; box-shadow: 0 0 20px rgba(255, 219, 77, 0.4);
+              transition: transform 0.2s;
             }
-            @keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
-            @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+            .close-btn:hover { transform: scale(1.05); }
+
+            @keyframes floatBtn { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+            @keyframes fadeInOverlay { from { opacity: 0; } to { opacity: 1; } }
+            @keyframes fadeInUp { to { opacity: 1; transform: translateY(0); } }
+
             @media (max-width: 600px) {
-               .envelope-deck { gap: 10px; transform: scale(0.8); }
-               .big-envelope { width: 70px; height: 110px; }
+               .deck-grid { grid-template-columns: repeat(2, 1fr); gap: 15px; }
+               .lixi-item { width: 100px; height: 140px; }
+               .open-scene { transform: scale(0.85); margin-top: 20px; }
             }
           `}
         </style>
   
-        {/* Step 0: Button */}
+        {/* Step 0: Button Góc */}
         {step === 0 && (
           <div className="lucky-btn-container" onClick={handleOpenDeck}>
-            <div className="mini-envelope"></div>
-            <div style={{ color: 'white', marginTop: 5, fontSize: 12, fontWeight: 'bold', textShadow: '0 2px 2px black' }}>RÚT LÌ XÌ</div>
+            <div className="icon-lixi"></div>
+            <div style={{ color: '#ffdb4d', marginTop: 8, fontSize: 13, fontWeight: 'bold', textShadow: '0 2px 4px black', background: 'rgba(0,0,0,0.5)', padding: '2px 8px', borderRadius: 10 }}>RÚT LÌ XÌ</div>
           </div>
         )}
   
         {/* Step 1: Chọn bao */}
         {step === 1 && (
           <div className="overlay-backdrop">
-            <h2 style={{ color: '#ffd700', fontFamily: 'serif', marginBottom: 40, fontSize: '2rem' }}>CHỌN LỘC ĐẦU NĂM</h2>
-            <div className="envelope-deck">
+            <h2 style={{ color: '#ffdb4d', fontFamily: 'Cinzel, serif', marginBottom: 40, fontSize: '2rem', textShadow: '0 0 10px #d00000' }}>HÁI LỘC ĐẦU NĂM</h2>
+            <div className="deck-grid">
               {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="big-envelope" onClick={handlePickEnvelope}><span>🧧</span></div>
+                <div key={i} className="lixi-item" onClick={handlePickEnvelope}>
+                    <div className="lixi-deco">
+                        <span className="lixi-text">福</span>
+                    </div>
+                </div>
               ))}
             </div>
           </div>
         )}
   
-        {/* Step 2: Kết quả */}
+        {/* Step 2: Kết quả & Animation */}
         {step === 2 && selectedMoney && (
           <div className="overlay-backdrop">
-            <div className="result-container">
-              <div className="money-note" style={{ background: selectedMoney.color }}>
-                 <div className="money-label">NGÂN HÀNG MAY MẮN</div>
-                 <div className="money-center">VND</div>
-                 <div className="money-value">{selectedMoney.value}</div>
-              </div>
-              <div className="opened-envelope-flap"></div>
-              <div className="opened-envelope-body">
-                  <div style={{textAlign: 'center', color: '#ffd700', marginTop: 20, fontSize: 30}}>福</div>
-              </div>
+            
+            <div className="open-scene">
+               {/* Tiền (Nằm giữa Flap và Body lúc đầu) */}
+               <div className={`money-bill ${isOpened ? 'revealed' : ''}`} style={{ background: selectedMoney.bg }}>
+                  <div className="bill-pattern"></div>
+                  <div className="bill-inner">
+                      <div style={{fontSize: 10, color: 'white', opacity: 0.8}}>NHNN VIET NAM</div>
+                      <div className="bill-center">LUCKY MONEY</div>
+                      <div className="bill-val">{selectedMoney.value}</div>
+                  </div>
+               </div>
+
+               {/* Nắp bao (Sẽ lật lên) */}
+               <div className={`envelope-flap ${isOpened ? 'open' : ''}`}></div>
+
+               {/* Thân bao (Luôn ở dưới cùng về mặt không gian nhưng z-index cao để che chân tiền) */}
+               <div className="envelope-body">
+                  <div className="envelope-pattern"></div>
+                  <div style={{ marginBottom: 40, color: '#ffdb4d', fontSize: 50, fontFamily: 'serif', zIndex: 20 }}>2026</div>
+               </div>
             </div>
-            <div className="wish-text">"{selectedMoney.text}"</div>
-            <button className="close-btn" onClick={handleClose}>Nhận Lộc</button>
+
+            <div className="wish-box">
+                "{selectedMoney.text}"
+            </div>
+            
+            <button className="close-btn" onClick={handleClose}>Nhận Lộc Ngay</button>
           </div>
         )}
       </div>
     );
 }
 
-// --- 4. SCENE CONTENT (CHỈ CHỨA 3D) ---
+// --- 4. SCENE CONTENT (CHỈ CHỨA 3D - GIỮ NGUYÊN) ---
 function SceneContent({ scene, handleLaunch, soundRef, isPlaying, setIsPlaying }) {
   const { camera } = useThree()
   const hasAutoPlayed = useRef(false)
@@ -331,7 +459,7 @@ function SceneContent({ scene, handleLaunch, soundRef, isPlaying, setIsPlaying }
   )
 }
 
-// --- 5. MAIN APP (UI & CANVAS SONG SONG) ---
+// --- 5. MAIN APP (UI & CANVAS SONG SONG - GIỮ NGUYÊN LOGIC) ---
 export default function App() {
   const soundRef = useRef()
   const [scene, setScene] = useState('countdown')
@@ -368,7 +496,7 @@ export default function App() {
           <MusicToggleButton soundRef={soundRef} isPlaying={isPlaying} setIsPlaying={setIsPlaying} />
           <VolumeControl soundRef={soundRef} volume={volume} setVolume={setVolume} />
           
-          {/* Overlay Features */}
+          {/* Overlay Features - Đã nâng cấp Design */}
           <CinematicTitle2D />
           <LuckyMoneyFeature />
         </>
@@ -395,7 +523,7 @@ export default function App() {
   )
 }
 
-// --- UTILS COMPONENTS (Dust, Countdown...) ---
+// --- UTILS COMPONENTS (Dust, Countdown... GIỮ NGUYÊN) ---
 function InteractiveDust({ count = 4000 }) {
   const mesh = useRef(); const { raycaster, camera } = useThree(); const shockwaveRef = useRef(0)
   const starTexture = useMemo(() => getParticleTexture(), [])
