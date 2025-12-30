@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useMemo, Suspense } from 'react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
-import { OrbitControls, Text3D, Center, Float, Stars, Environment, PositionalAudio, Cylinder, Html, MeshReflectorMaterial } from '@react-three/drei'
+import { OrbitControls, Text3D, Center, Float, Stars, Environment, PositionalAudio, Cylinder, Html } from '@react-three/drei'
 import { EffectComposer, Bloom } from '@react-three/postprocessing'
 import * as THREE from 'three'
 
@@ -10,9 +10,26 @@ import CircularAudioVisualizer from './CircularAudioVisualizer'
 import MusicToggleButton from './MusicToggleButton'
 import VolumeControl from './VolumeControl'
 
-const isTesting = true;
+const isTesting = true; // Set false khi chạy thật
 
-// --- 1. HÀM TẠO ÂM THANH CLICK (GIỮ NGUYÊN) ---
+// --- 1. UTILS: TEXTURE GENERATOR (Tạo đốm sáng mượt mà giúp giảm lag) ---
+const getParticleTexture = () => {
+  const canvas = document.createElement('canvas');
+  canvas.width = 32; canvas.height = 32;
+  const ctx = canvas.getContext('2d');
+  const gradient = ctx.createRadialGradient(16, 16, 0, 16, 16, 16);
+  gradient.addColorStop(0, 'rgba(255,255,255,1)');
+  gradient.addColorStop(0.2, 'rgba(255,255,255,0.8)');
+  gradient.addColorStop(0.5, 'rgba(255,255,255,0.2)');
+  gradient.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, 32, 32);
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.premultiplyAlpha = true;
+  return texture;
+}
+
+// --- 2. HÀM TẠO ÂM THANH CLICK ---
 const playCustomClick = () => {
   const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   const playPulse = (time, freq, dur) => {
@@ -33,226 +50,311 @@ const playCustomClick = () => {
   playPulse(now + 0.05, 900, 0.06);
 };
 
-// --- 2. PHÁO HOA (GIỮ NGUYÊN) ---
-function FireworkTrail({ startPos, endPos, color }) {
-  const trailRef = useRef()
-  const progressRef = useRef(0)
-  const trailLength = 20
+// --- 3. PHÁO HOA TỐI ƯU (CINEMATIC FIREWORKS) ---
+// Sử dụng Texture để 1 hạt trông to và sáng hơn, giảm số lượng hạt cần vẽ
+function OptimizedFirework({ position, color, texture }) {
+  const pointsRef = useRef()
+  const count = 80 // Giảm số lượng hạt nhưng tăng kích thước texture -> Không lag
   
-  const trailPoints = useMemo(() => {
-    const points = []
-    for (let i = 0; i < trailLength; i++) {
-      points.push({ pos: new THREE.Vector3(...startPos), alpha: 1 })
+  // Khởi tạo dữ liệu hạt
+  const [particles] = useState(() => {
+    const data = []
+    for (let i = 0; i < count; i++) {
+      const theta = Math.random() * Math.PI * 2
+      const phi = Math.acos(2 * Math.random() - 1)
+      const speed = 0.5 + Math.random() * 0.8 // Tốc độ nổ nhanh chậm khác nhau
+      data.push({
+        velocity: new THREE.Vector3(
+          Math.sin(phi) * Math.cos(theta) * speed,
+          Math.sin(phi) * Math.sin(theta) * speed,
+          Math.cos(phi) * speed
+        ),
+        life: 1.0 - Math.random() * 0.2 // Tuổi thọ ngẫu nhiên
+      })
     }
-    return points
-  }, [])
+    return data
+  })
+
+  // Buffer Geometry
+  const bufferGeo = useMemo(() => {
+    const geo = new THREE.BufferGeometry()
+    const positions = new Float32Array(count * 3)
+    geo.setAttribute('position', new THREE.BufferAttribute(positions, 3))
+    return geo
+  }, [count])
 
   useFrame((state, delta) => {
-    if (!trailRef.current) return
-    progressRef.current += delta * 1.5
-    if (progressRef.current >= 1) {
-      trailRef.current.material.opacity = Math.max(0, trailRef.current.material.opacity - delta * 2)
-      return
+    if (!pointsRef.current) return
+    
+    const positions = pointsRef.current.geometry.attributes.position.array
+    let aliveCount = 0
+
+    for (let i = 0; i < count; i++) {
+      const p = particles[i]
+      if (p.life > 0) {
+        // Cập nhật vị trí
+        positions[i*3] += p.velocity.x * delta * 15 // Speed multiplier
+        positions[i*3+1] += p.velocity.y * delta * 15
+        positions[i*3+2] += p.velocity.z * delta * 15
+        
+        // Trọng lực & Sức cản
+        p.velocity.y -= 0.02 // Gravity
+        p.velocity.multiplyScalar(0.96) // Air drag
+        
+        p.life -= delta * 0.8
+        aliveCount++
+      } else {
+        // Giấu đi khi chết
+        positions[i*3] = 9999
+      }
     }
-    const currentPos = new THREE.Vector3().lerpVectors(new THREE.Vector3(...startPos), new THREE.Vector3(...endPos), progressRef.current)
-    for (let i = trailLength - 1; i > 0; i--) {
-      trailPoints[i].pos.copy(trailPoints[i - 1].pos)
-      trailPoints[i].alpha = (i / trailLength) * 0.8
+    
+    pointsRef.current.geometry.attributes.position.needsUpdate = true
+    pointsRef.current.material.opacity = Math.max(0, pointsRef.current.material.opacity - delta * 0.3)
+    
+    // Reset pháo hoa nếu tắt hết (để loop - tuỳ chọn)
+    if (aliveCount === 0) {
+        // Logic remove component should be handled by manager, 
+        // here we just fade out completely
     }
-    trailPoints[0].pos.copy(currentPos)
-    const posArr = new Float32Array(trailLength * 3)
-    trailPoints.forEach((p, i) => { posArr.set([p.pos.x, p.pos.y, p.pos.z], i * 3) })
-    trailRef.current.geometry.setAttribute('position', new THREE.BufferAttribute(posArr, 3))
   })
 
   return (
-    <points ref={trailRef}>
-      <bufferGeometry />
-      <pointsMaterial size={0.35} color={color} transparent opacity={1} blending={THREE.AdditiveBlending} depthWrite={false} />
+    <points ref={pointsRef} position={position}>
+      <primitive object={bufferGeo} />
+      <pointsMaterial 
+        size={1.2} // Kích thước hạt to nhờ texture
+        map={texture} 
+        color={color} 
+        transparent 
+        opacity={1} 
+        depthWrite={false} 
+        blending={THREE.AdditiveBlending} 
+      />
     </points>
   )
 }
 
-function Firework({ color, position }) {
-  const meshRef = useRef()
-  const count = 500
-  const burstRef = useRef(false)
-  const launchTimeRef = useRef(1.5)
-  // Bắt đầu từ dưới mặt nước một chút để tạo cảm giác bay lên từ đáy hồ
-  const startPosition = useMemo(() => [position[0], -20, position[2]], [position])
+function FireworkManager() {
+  const [fireworks, setFireworks] = useState([])
+  const texture = useMemo(() => getParticleTexture(), [])
   
-  const particles = useMemo(() => {
-    const p = []
-    for (let i = 0; i < count; i++) {
-      const theta = Math.random() * Math.PI * 2
-      const phi = Math.acos(2 * Math.random() - 1)
-      const speed = 0.3 + Math.random() * 0.5
-      p.push({
-        vel: new THREE.Vector3(Math.sin(phi) * Math.cos(theta) * speed, Math.sin(phi) * Math.sin(theta) * speed, Math.cos(phi) * speed),
-        pos: new THREE.Vector3(0, 0, 0),
-        life: 1.0
-      })
-    }
-    return p
+  useEffect(() => {
+    // Spawn pháo hoa mỗi khoảng thời gian
+    const interval = setInterval(() => {
+      const id = Math.random()
+      const colors = ['#ff0000', '#ffa500', '#ffd700', '#00ffcc', '#ff00ff']
+      const randomColor = colors[Math.floor(Math.random() * colors.length)]
+      
+      const newF = {
+        id,
+        pos: [(Math.random() - 0.5) * 60, 10 + Math.random() * 20, (Math.random() - 0.5) * 30],
+        color: new THREE.Color(randomColor)
+      }
+      
+      setFireworks(prev => [...prev.slice(-10), newF]) // Giới hạn số lượng pháo hoa cùng lúc
+    }, 800) // Tần suất bắn
+    
+    return () => clearInterval(interval)
   }, [])
-
-  useFrame((state, delta) => {
-    if (!meshRef.current) return
-    if (launchTimeRef.current > 0) { launchTimeRef.current -= delta; return }
-    if (!burstRef.current) { burstRef.current = true }
-    const posArr = new Float32Array(count * 3)
-    particles.forEach((p, i) => {
-      p.pos.add(p.vel); p.vel.y -= 0.006; p.vel.multiplyScalar(0.97); p.life -= delta * 0.45;
-      posArr.set([p.pos.x, p.pos.y, p.pos.z], i * 3)
-    })
-    meshRef.current.geometry.setAttribute('position', new THREE.BufferAttribute(posArr, 3))
-    meshRef.current.material.opacity = particles[0].life
-  })
 
   return (
     <>
-      <FireworkTrail startPos={startPosition} endPos={position} color={color} />
-      <points ref={meshRef} position={position}>
-        <bufferGeometry />
-        <pointsMaterial size={0.2} color={color} transparent blending={THREE.AdditiveBlending} depthWrite={false} />
-      </points>
+      {fireworks.map(f => (
+        <OptimizedFirework key={f.id} position={f.pos} color={f.color} texture={texture} />
+      ))}
     </>
   )
 }
 
-function FireworkManager() {
-  const [list, setList] = useState([])
-  useEffect(() => {
-    const interval = setInterval(() => {
-      const newF = {
-        id: Math.random(),
-        // Tạo pháo hoa ở độ cao ngẫu nhiên, nhưng luôn trên mặt nước
-        pos: [(Math.random() - 0.5) * 80, 5 + Math.random() * 25, (Math.random() - 0.5) * 40],
-        color: new THREE.Color().setHSL(Math.random(), 1, 0.6)
-      }
-      setList(prev => [...prev.slice(-15), newF])
-    }, 600)
-    return () => clearInterval(interval)
-  }, [])
-  return <>{list.map(f => <Firework key={f.id} position={f.pos} color={f.color} />)}</>
+// --- 4. FEATURE: LÌ XÌ (LUCKY MONEY) ---
+const WISHES = [
+  "Tiền vào như nước, tiền ra nhỏ giọt!",
+  "Sức khỏe dồi dào, vạn sự như ý!",
+  "Năm mới bình an, tài lộc đầy nhà!",
+  "Sự nghiệp thăng tiến, tình duyên phơi phới!",
+  "Hay ăn chóng lớn, học hành tấn tới!",
+  "Code không bao giờ bug, Deploy phát ăn ngay!",
+  "Năm mới 2026 rực rỡ hơn 2025!"
+];
+
+function LuckyMoneyFeature() {
+  const [isOpen, setIsOpen] = useState(false);
+  const [showResult, setShowResult] = useState(false);
+  const [currentWish, setCurrentWish] = useState("");
+  const [isHovered, setIsHovered] = useState(false);
+
+  const handleOpen = () => {
+    if (isOpen) return;
+    playCustomClick();
+    setIsOpen(true);
+    const randomWish = WISHES[Math.floor(Math.random() * WISHES.length)];
+    setCurrentWish(randomWish);
+    
+    setTimeout(() => {
+      setShowResult(true);
+    }, 600);
+  };
+
+  const handleClose = () => {
+    setIsOpen(false);
+    setShowResult(false);
+  };
+
+  return (
+    <Html fullscreen style={{ pointerEvents: 'none', zIndex: 200 }}>
+       <style>
+        {`
+          .lucky-money-container {
+            position: absolute;
+            bottom: 30px;
+            right: 30px;
+            pointer-events: auto;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+          }
+          
+          .envelope {
+            width: 80px;
+            height: 120px;
+            background: linear-gradient(135deg, #d32f2f, #b71c1c);
+            border: 2px solid #ffd700;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            position: relative;
+            overflow: hidden;
+            animation: float 3s ease-in-out infinite;
+          }
+
+          .envelope:hover {
+            transform: scale(1.1) rotate(-5deg);
+          }
+
+          .envelope::before {
+            content: '🧧';
+            font-size: 40px;
+          }
+          
+          .envelope.open {
+            animation: openAnim 0.5s forwards;
+            opacity: 0;
+            pointer-events: none;
+          }
+
+          .popup-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(0,0,0,0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            pointer-events: auto;
+            backdrop-filter: blur(5px);
+            animation: fadeIn 0.3s ease;
+          }
+
+          .lucky-card {
+            background: #fff;
+            width: 300px;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            border: 4px solid #d32f2f;
+            box-shadow: 0 0 50px rgba(211, 47, 47, 0.6);
+            transform: scale(0.5);
+            animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+            position: relative;
+          }
+
+          .lucky-card h2 {
+            color: #d32f2f;
+            margin: 0 0 10px 0;
+            font-family: 'Arial', sans-serif;
+            font-weight: bold;
+          }
+
+          .lucky-card p {
+            font-size: 1.2rem;
+            color: #333;
+            line-height: 1.5;
+            font-family: 'Times New Roman', serif;
+          }
+          
+          .close-btn {
+            margin-top: 20px;
+            padding: 8px 20px;
+            background: #d32f2f;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.2s;
+          }
+          .close-btn:hover { background: #b71c1c; }
+
+          @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+          @keyframes openAnim { to { transform: scale(1.5) translateY(-50px); opacity: 0; } }
+          @keyframes popIn { to { transform: scale(1); } }
+          @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        `}
+      </style>
+
+      {/* Button Lì Xì ở góc */}
+      {!showResult && (
+        <div className={`lucky-money-container`}>
+             <div className={`envelope ${isOpen ? 'open' : ''}`} onClick={handleOpen} title="Nhận Lì Xì">
+             </div>
+             <div style={{color: 'white', marginTop: '10px', fontSize: '12px', fontWeight: 'bold', textShadow: '0 2px 4px black'}}>LÌ XÌ</div>
+        </div>
+      )}
+
+      {/* Popup Lời Chúc */}
+      {showResult && (
+        <div className="popup-overlay">
+          <div className="lucky-card">
+            <h2>LỘC 2026</h2>
+            <hr style={{borderColor: '#ffd700', margin: '15px 0'}}/>
+            <p>"{currentWish}"</p>
+            <button className="close-btn" onClick={handleClose}>Cảm ơn</button>
+          </div>
+        </div>
+      )}
+    </Html>
+  );
 }
 
-// --- 3. BỤI KHÔNG GIAN (GIỮ NGUYÊN) ---
-function InteractiveDust({ count = 6000 }) {
-  const mesh = useRef(); const { raycaster, camera } = useThree(); const shockwaveRef = useRef(0)
-  const starTexture = useMemo(() => {
-    const canvas = document.createElement('canvas'); canvas.width = 64; canvas.height = 64
-    const ctx = canvas.getContext('2d'); const gradient = ctx.createRadialGradient(32, 32, 0, 32, 32, 32)
-    gradient.addColorStop(0, 'white'); gradient.addColorStop(1, 'transparent'); ctx.fillStyle = gradient; ctx.fillRect(0, 0, 64, 64)
-    return new THREE.CanvasTexture(canvas)
-  }, [])
-  useEffect(() => { const h = () => { shockwaveRef.current = 2.0 }; window.addEventListener('pointerdown', h); return () => window.removeEventListener('pointerdown', h) }, [])
-  const [pos, col, orig, vel] = useMemo(() => {
-    const p = new Float32Array(count * 3), c = new Float32Array(count * 3), o = new Float32Array(count * 3), v = new Float32Array(count * 3)
-    for (let i = 0; i < count; i++) {
-      const x = (Math.random() - 0.5) * 250, y = (Math.random() - 0.5) * 250, z = (Math.random() - 0.5) * 250
-      p.set([x, y, z], i * 3); o.set([x, y, z], i * 3)
-      const color = new THREE.Color().setHSL(Math.random() * 0.1 + 0.6, 0.9, 0.8); c.set([color.r, color.g, color.b], i * 3)
-    }
-    return [p, c, o, v]
-  }, [count])
-  useFrame((state) => {
-    if (!mesh.current) return; shockwaveRef.current *= 0.92; raycaster.setFromCamera(state.mouse, camera)
-    for (let i = 0; i < count; i++) {
-      const i3 = i * 3; const pV = new THREE.Vector3(pos[i3], pos[i3+1], pos[i3+2]); const cp = new THREE.Vector3(); raycaster.ray.closestPointToPoint(pV, cp)
-      const d = pV.distanceTo(cp); const r = 30 + (shockwaveRef.current * 40)
-      if (d < r) {
-        const f = (r - d) / r; const fd = new THREE.Vector3().copy(pV).sub(cp).normalize()
-        vel[i3] += fd.x * f * (2 + shockwaveRef.current * 15); vel[i3+1] += fd.y * f * (2 + shockwaveRef.current * 15); vel[i3+2] += fd.z * f * (2 + shockwaveRef.current * 15)
-      }
-      vel[i3] += (orig[i3] - pos[i3]) * 0.015; vel[i3] *= 0.92; pos[i3] += vel[i3]; vel[i3+1] += (orig[i3+1] - pos[i3+1]) * 0.015; vel[i3+1] *= 0.92; pos[i3+1] += vel[i3+1]; vel[i3+2] += (orig[i3+2] - pos[i3+2]) * 0.015; vel[i3+2] *= 0.92; pos[i3+2] += vel[i3+2]
-    }
-    mesh.current.geometry.attributes.position.needsUpdate = true
-  })
-  return (<points ref={mesh}><bufferGeometry><bufferAttribute attach="attributes-position" count={pos.length/3} array={pos} itemSize={3} /><bufferAttribute attach="attributes-color" count={col.length/3} array={col} itemSize={3} /></bufferGeometry><pointsMaterial size={0.8} vertexColors transparent map={starTexture} blending={THREE.AdditiveBlending} depthWrite={false} /></points>)
-}
-
-// --- 4. 2D CINEMATIC TITLE (GIỮ NGUYÊN) ---
+// --- 5. CINEMATIC 2D TITLE ---
 function CinematicTitle2D() {
   return (
     <Html fullscreen style={{ pointerEvents: 'none', zIndex: 100 }}>
       <style>
         {`
           @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Montserrat:wght@300;600&display=swap');
-          
           .cinematic-container {
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            width: 100%;
-            height: 100%;
-            color: #ffffff;
-            text-align: center;
-            font-family: 'Cinzel', serif;
-            text-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            width: 100%; height: 100%; color: #ffffff; text-align: center;
+            font-family: 'Cinzel', serif; text-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
           }
-
-          .line-1 {
-            font-family: 'Montserrat', sans-serif;
-            font-size: 2rem;
-            font-weight: 300;
-            letter-spacing: 0.8rem;
-            color: #ffecd2;
-            text-transform: uppercase;
-            opacity: 0;
-            transform: translateY(20px);
-            animation: fadeUp 3s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
-            animation-delay: 0.5s;
-          }
-
-          .line-2 {
-            font-size: 10rem;
-            font-weight: 700;
-            background: linear-gradient(to bottom, #fff 30%, #ffd700 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            opacity: 0;
-            transform: scale(0.9);
-            letter-spacing: -5px;
-            animation: zoomIn 4s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
-            animation-delay: 1.5s;
-            filter: drop-shadow(0 0 30px rgba(255, 215, 0, 0.4));
-          }
-          
-          .line-3 {
-             font-family: 'Montserrat', sans-serif;
-             margin-top: 20px;
-             font-size: 1.2rem;
-             letter-spacing: 0.5rem;
-             color: #aaa;
-             opacity: 0;
-             animation: fadeIn 3s ease forwards;
-             animation-delay: 4s;
-          }
-
-          @keyframes fadeUp {
-            to { opacity: 1; transform: translateY(0); letter-spacing: 1.2rem; }
-          }
-          
-          @keyframes zoomIn {
-            to { opacity: 1; transform: scale(1); letter-spacing: 0px; }
-          }
-
-          @keyframes fadeIn {
-            to { opacity: 0.8; }
-          }
-
-          @media (max-width: 768px) {
-            .line-1 { font-size: 1.2rem; letter-spacing: 0.4rem; }
-            .line-2 { font-size: 5rem; letter-spacing: -2px; }
-          }
+          .line-1 { font-family: 'Montserrat', sans-serif; font-size: 2rem; letter-spacing: 0.8rem; color: #ffecd2; animation: fadeUp 3s forwards 0.5s; opacity: 0; }
+          .line-2 { font-size: 10rem; font-weight: 700; background: linear-gradient(to bottom, #fff 30%, #ffd700 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; animation: zoomIn 4s forwards 1.5s; opacity: 0; filter: drop-shadow(0 0 30px rgba(255, 215, 0, 0.4)); }
+          .line-3 { font-family: 'Montserrat', sans-serif; margin-top: 20px; font-size: 1.2rem; letter-spacing: 0.5rem; color: #aaa; animation: fadeIn 3s forwards 4s; opacity: 0; }
+          @keyframes fadeUp { to { opacity: 1; transform: translateY(0); letter-spacing: 1.2rem; } }
+          @keyframes zoomIn { to { opacity: 1; transform: scale(1); letter-spacing: 0px; } }
+          @keyframes fadeIn { to { opacity: 0.8; } }
+          @media (max-width: 768px) { .line-1 { font-size: 1.2rem; } .line-2 { font-size: 5rem; } }
         `}
       </style>
       <div className="cinematic-container">
         <div className="line-1">Happy New Year</div>
         <div className="line-2">2026</div>
-        <div className="line-3">A NEW BEGINNING</div>
+        <div className="line-3">CHÚC MỪNG NĂM MỚI</div>
       </div>
     </Html>
   )
@@ -263,11 +365,9 @@ function SceneContent({ scene, handleLaunch, soundRef, isPlaying, setIsPlaying }
   const { camera } = useThree()
   const hasAutoPlayed = useRef(false)
 
-  // Reset camera khi vào scene fireworks
   useEffect(() => {
     if (scene === 'fireworks') {
-        // Đặt camera thấp hơn một chút để nhìn thấy rõ mặt nước
-        camera.position.set(0, 4, 50)
+        camera.position.set(0, 0, 40) // Góc nhìn chính diện
         camera.lookAt(0, 0, 0)
     }
   }, [scene, camera])
@@ -286,47 +386,28 @@ function SceneContent({ scene, handleLaunch, soundRef, isPlaying, setIsPlaying }
     <>
       {scene === 'countdown' ? (
         <Suspense fallback={null}>
-          <InteractiveDust count={6000} />
-          <Stars radius={250} count={3000} factor={4} fade speed={1} />
+          <InteractiveDust count={4000} /> {/* Giảm count để tối ưu */}
+          <Stars radius={250} count={2000} factor={4} fade speed={1} />
           <ambientLight intensity={0.5} />
           <CountdownDisplay onFinishTransition={handleLaunch} />
-          <CircularAudioVisualizer soundRef={soundRef} radius={18} count={200} />
+          <CircularAudioVisualizer soundRef={soundRef} radius={18} count={150} />
           <PositionalAudio ref={soundRef} url="/happy-new-year-2026/sounds/lofi.mp3" distance={30} loop />
         </Suspense>
       ) : (
         <Suspense fallback={null}>
-          {/* Sương mù để che đường chân trời, tạo cảm giác vô tận */}
-          <fog attach="fog" args={['#050505', 30, 150]} />
+          <Stars radius={150} count={1000} factor={2} fade speed={0.2} />
           
-          <Stars radius={150} count={1200} factor={2} fade speed={0.4} />
-          
+          {/* Pháo hoa mới tối ưu */}
           <FireworkManager />
           
           <PositionalAudio ref={soundRef} url="/happy-new-year-2026/sounds/celebration.mp3" distance={50} loop />
           
           <CinematicTitle2D />
+          
+          {/* Feature Lì Xì */}
+          <LuckyMoneyFeature />
 
-          {/* Ánh sáng ấm vàng để hợp với màu text và phản chiếu đẹp */}
-          <pointLight position={[0, 25, 0]} intensity={5} color="#FFD700" decay={2} />
-          <ambientLight intensity={0.2} color="#000022" />
-
-          {/* --- WATER REFLECTION SURFACE --- */}
-          {/* Đặt ở y = -8 để pháo hoa nổ phía trên */}
-          <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -8, 0]}>
-            <planeGeometry args={[500, 500]} />
-            <MeshReflectorMaterial
-              blur={[400, 100]} // Blur phản chiếu ngang/dọc
-              resolution={1024} // Chất lượng phản chiếu (cao)
-              mixBlur={1}       // Độ mờ
-              mixStrength={80}  // Cường độ phản chiếu mạnh
-              roughness={0.6}   // Độ nhám của nước (càng thấp càng giống gương, 0.6 là sóng nhẹ)
-              depthScale={1.2}
-              minDepthThreshold={0.4}
-              maxDepthThreshold={1.4}
-              color="#080808"   // Màu nước tối
-              metalness={0.6}
-            />
-          </mesh>
+          <ambientLight intensity={0.1} color="#000022" />
         </Suspense>
       )}
     </>
@@ -383,7 +464,7 @@ export default function App() {
 
       <div style={{ position: 'absolute', inset: 0, backgroundColor: 'white', opacity: flash, zIndex: 10, pointerEvents: 'none' }} />
 
-      <Canvas camera={{ position: [0, 8, 35], fov: 50 }}>
+      <Canvas camera={{ position: [0, 8, 35], fov: 50 }} dpr={[1, 1.5]}> {/* Giới hạn DPR để giảm tải GPU */}
         <color attach="background" args={['#050505']} />
         <Environment preset="city" />
         <SceneContent 
@@ -394,8 +475,8 @@ export default function App() {
           setIsPlaying={setIsPlaying}
         />
         <EffectComposer disableNormalPass>
-            {/* Bloom nhẹ hơn một chút để không làm chói mặt nước */}
-            <Bloom luminanceThreshold={0.2} intensity={1.2} mipmapBlur />
+            {/* Bloom nhẹ, hiệu quả cao */}
+            <Bloom luminanceThreshold={0.2} intensity={1.0} mipmapBlur />
         </EffectComposer>
         
         {scene === 'countdown' ? (
@@ -408,23 +489,50 @@ export default function App() {
              enabled={true}
            />
         ) : (
-            // Cho phép xoay nhẹ quanh trục Y nhưng không cho nhìn xuống dưới mặt nước
             <OrbitControls 
                 enablePan={false}
                 enableZoom={false}
                 autoRotate
-                autoRotateSpeed={0.3} // Xoay chậm rãi
-                maxPolarAngle={Math.PI / 2 - 0.1} // Không cho camera chui xuống nước
-                minPolarAngle={Math.PI / 2.5}
+                autoRotateSpeed={0.3} 
+                maxPolarAngle={Math.PI / 1.8}
+                minPolarAngle={Math.PI / 2.2}
             />
         )}
-       
       </Canvas>
     </div>
   )
 }
 
-// --- COUNTDOWN DISPLAY (GIỮ NGUYÊN) ---
+// --- GIỮ NGUYÊN PHẦN COUNTDOWN & DUST CŨ ---
+function InteractiveDust({ count = 4000 }) {
+  const mesh = useRef(); const { raycaster, camera } = useThree(); const shockwaveRef = useRef(0)
+  const starTexture = useMemo(() => getParticleTexture(), [])
+  useEffect(() => { const h = () => { shockwaveRef.current = 2.0 }; window.addEventListener('pointerdown', h); return () => window.removeEventListener('pointerdown', h) }, [])
+  const [pos, col, orig, vel] = useMemo(() => {
+    const p = new Float32Array(count * 3), c = new Float32Array(count * 3), o = new Float32Array(count * 3), v = new Float32Array(count * 3)
+    for (let i = 0; i < count; i++) {
+      const x = (Math.random() - 0.5) * 200, y = (Math.random() - 0.5) * 200, z = (Math.random() - 0.5) * 200
+      p.set([x, y, z], i * 3); o.set([x, y, z], i * 3)
+      const color = new THREE.Color().setHSL(Math.random() * 0.1 + 0.6, 0.9, 0.8); c.set([color.r, color.g, color.b], i * 3)
+    }
+    return [p, c, o, v]
+  }, [count])
+  useFrame((state) => {
+    if (!mesh.current) return; shockwaveRef.current *= 0.92; raycaster.setFromCamera(state.mouse, camera)
+    for (let i = 0; i < count; i++) {
+      const i3 = i * 3; const pV = new THREE.Vector3(pos[i3], pos[i3+1], pos[i3+2]); const cp = new THREE.Vector3(); raycaster.ray.closestPointToPoint(pV, cp)
+      const d = pV.distanceTo(cp); const r = 30 + (shockwaveRef.current * 40)
+      if (d < r) {
+        const f = (r - d) / r; const fd = new THREE.Vector3().copy(pV).sub(cp).normalize()
+        vel[i3] += fd.x * f * (2 + shockwaveRef.current * 15); vel[i3+1] += fd.y * f * (2 + shockwaveRef.current * 15); vel[i3+2] += fd.z * f * (2 + shockwaveRef.current * 15)
+      }
+      vel[i3] += (orig[i3] - pos[i3]) * 0.015; vel[i3] *= 0.92; pos[i3] += vel[i3]; vel[i3+1] += (orig[i3+1] - pos[i3+1]) * 0.015; vel[i3+1] *= 0.92; pos[i3+1] += vel[i3+1]; vel[i3+2] += (orig[i3+2] - pos[i3+2]) * 0.015; vel[i3+2] *= 0.92; pos[i3+2] += vel[i3+2]
+    }
+    mesh.current.geometry.attributes.position.needsUpdate = true
+  })
+  return (<points ref={mesh}><bufferGeometry><bufferAttribute attach="attributes-position" count={pos.length/3} array={pos} itemSize={3} /><bufferAttribute attach="attributes-color" count={col.length/3} array={col} itemSize={3} /></bufferGeometry><pointsMaterial size={0.6} vertexColors transparent map={starTexture} blending={THREE.AdditiveBlending} depthWrite={false} /></points>)
+}
+
 function CountdownDisplay({ onFinishTransition }) {
     const [timeLeft, setTimeLeft] = useState({ d: 0, h: 0, m: 0, s: 0, total: 999 })
     const fontUrl = '/happy-new-year-2026/fonts/Orbitron_Regular.json'
@@ -444,15 +552,7 @@ function CountdownDisplay({ onFinishTransition }) {
         ) : (
           <Float speed={2} rotationIntensity={0.1} floatIntensity={0.4}>
               <group>
-                  <ArcText 
-                    text="COUNTDOWN 2026" 
-                    radius={15}
-                    startAngle={Math.PI * 0.7}
-                    endAngle={Math.PI * 0.3}
-                    fontSize={0.8}
-                    textHeight={0.3}
-                    verticalOffset={-3}
-                  />
+                  <ArcText text="COUNTDOWN 2026" radius={15} startAngle={Math.PI * 0.7} endAngle={Math.PI * 0.3} fontSize={0.8} textHeight={0.3} verticalOffset={-3} />
                   <Center top position={[-0.5, 2, 0]}><Text3D font={fontUrl} size={5} height={1.5} bevelEnabled>{timeLeft.d}<RainbowMaterial /></Text3D></Center>
                   <Center position={[-0.2, -1, 0]}><Text3D font={fontUrl} size={1} height={0.5}>DAYS TO 2026<meshStandardMaterial color="#888" /></Text3D></Center>
                   <Center bottom position={[-1.5, -4, 0]}><Text3D font={fontUrl} size={1.2} height={0.4}>{`${timeLeft.h}h  ${timeLeft.m}m  ${timeLeft.s}s`}<RainbowMaterial /></Text3D></Center>
@@ -468,50 +568,27 @@ function ArcText({ text, radius = 15, startAngle = Math.PI * 0.7, endAngle = Mat
     const characters = text.split('')
     const totalAngle = startAngle - endAngle
     const angleStep = totalAngle / (characters.length - 1)
-    
     return (
       <group position={[0, verticalOffset, 0]}>
         {characters.map((char, i) => {
-          const angle = startAngle - (angleStep * i)
-          const x = Math.cos(angle) * radius
-          const y = Math.sin(angle) * radius
-          
-          return (
-            <group key={i} position={[x, y, 0]} rotation={[0, 0, angle - Math.PI / 2]}>
-              <Center>
-                <Text3D font={fontUrl} size={fontSize} height={textHeight} bevelEnabled curveSegments={8}>
-                  {char}
-                  <RainbowMaterial />
-                </Text3D>
-              </Center>
-            </group>
-          )
+          const angle = startAngle - (angleStep * i); const x = Math.cos(angle) * radius; const y = Math.sin(angle) * radius
+          return (<group key={i} position={[x, y, 0]} rotation={[0, 0, angle - Math.PI / 2]}><Center><Text3D font={fontUrl} size={fontSize} height={textHeight} bevelEnabled curveSegments={8}>{char}<RainbowMaterial /></Text3D></Center></group>)
         })}
       </group>
     )
-  }
+}
 
 function MechanicalButton({ onActivate }) {
-  const [hovered, setHover] = useState(false); const [pressed, setPressed] = useState(false)
-  const outerGroupRef = useRef(); const buttonCoreRef = useRef()
+  const [hovered, setHover] = useState(false); const [pressed, setPressed] = useState(false); const outerGroupRef = useRef(); const buttonCoreRef = useRef()
   useFrame((state) => {
     if (outerGroupRef.current) outerGroupRef.current.lookAt(state.camera.position)
-    if (buttonCoreRef.current) {
-      const targetZ = pressed ? -0.8 : 0 
-      buttonCoreRef.current.position.z = THREE.MathUtils.lerp(buttonCoreRef.current.position.z, targetZ, 0.4)
-    }
+    if (buttonCoreRef.current) { const targetZ = pressed ? -0.8 : 0; buttonCoreRef.current.position.z = THREE.MathUtils.lerp(buttonCoreRef.current.position.z, targetZ, 0.4) }
   })
   return (
     <group ref={outerGroupRef}>
-      <Cylinder args={[3, 3.2, 0.5, 64]} rotation={[Math.PI / 2, 0, 0]} position={[0, 0, -0.4]}>
-        <meshStandardMaterial color="#050505" metalness={1} roughness={0.2} />
-      </Cylinder>
-      <group onPointerOver={() => setHover(true)} onPointerOut={() => (setHover(false), setPressed(false))}
-        onPointerDown={() => { setPressed(true); playCustomClick(); }} 
-        onPointerUp={() => { setPressed(false); onActivate() }} ref={buttonCoreRef}>
-        <Cylinder args={[2, 2.1, 0.8, 64]} rotation={[Math.PI / 2, 0, 0]}>
-          <meshStandardMaterial color={hovered ? "#ff0033" : "#220000"} metalness={1} emissive="#ff0000" emissiveIntensity={hovered ? 1.2 : 0.1}/>
-        </Cylinder>
+      <Cylinder args={[3, 3.2, 0.5, 64]} rotation={[Math.PI / 2, 0, 0]} position={[0, 0, -0.4]}><meshStandardMaterial color="#050505" metalness={1} roughness={0.2} /></Cylinder>
+      <group onPointerOver={() => setHover(true)} onPointerOut={() => (setHover(false), setPressed(false))} onPointerDown={() => { setPressed(true); playCustomClick(); }} onPointerUp={() => { setPressed(false); onActivate() }} ref={buttonCoreRef}>
+        <Cylinder args={[2, 2.1, 0.8, 64]} rotation={[Math.PI / 2, 0, 0]}><meshStandardMaterial color={hovered ? "#ff0033" : "#220000"} metalness={1} emissive="#ff0000" emissiveIntensity={hovered ? 1.2 : 0.1}/></Cylinder>
       </group>
       <Center position={[0, -4.8, 0]}><Text3D font="/happy-new-year-2026/fonts/Orbitron_Regular.json" size={0.5} height={0.1}>LAUNCH 2026<meshStandardMaterial color="white" /></Text3D></Center>
     </group>
@@ -519,7 +596,6 @@ function MechanicalButton({ onActivate }) {
 }
 
 function RainbowMaterial() {
-    const matRef = useRef()
-    useFrame((state) => { if (matRef.current) { const hue = (state.clock.getElapsedTime() * 0.1) % 1; matRef.current.color.setHSL(hue, 1, 0.5); matRef.current.emissive.setHSL(hue, 1, 0.2); } })
+    const matRef = useRef(); useFrame((state) => { if (matRef.current) { const hue = (state.clock.getElapsedTime() * 0.1) % 1; matRef.current.color.setHSL(hue, 1, 0.5); matRef.current.emissive.setHSL(hue, 1, 0.2); } })
     return <meshPhysicalMaterial ref={matRef} metalness={1} roughness={0.1} emissiveIntensity={0.5} />
 }
