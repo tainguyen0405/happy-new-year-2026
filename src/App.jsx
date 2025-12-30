@@ -205,6 +205,7 @@ function CinematicTitle2D() {
 }
 
 // 3.2 Lucky Money Feature - Nâng cấp Visual & Animation
+// 3.2 Lucky Money Feature (Đã Fix lỗi đè layer & Animation thực tế)
 const DENOMINATIONS = [
     { value: "50.000", color: "#e492b2", bg: "linear-gradient(135deg, #fce4ec, #e91e63)", text: "Năm mới nhẹ nhàng, tình cảm đong đầy" },
     { value: "100.000", color: "#7da36d", bg: "linear-gradient(135deg, #e8f5e9, #4caf50)", text: "Lộc biếc mai vàng, khởi đầu suôn sẻ" },
@@ -215,8 +216,9 @@ const DENOMINATIONS = [
 function LuckyMoneyFeature() {
     const [step, setStep] = useState(0); 
     const [selectedMoney, setSelectedMoney] = useState(null);
-    const [isOpened, setIsOpened] = useState(false); // State trigger animation mở bao
-  
+    const [flapOpen, setFlapOpen] = useState(false); // State mở nắp
+    const [moneyRise, setMoneyRise] = useState(false); // State tiền trồi lên
+
     const pickRandomMoney = () => {
       const rand = Math.random();
       if (rand < 0.4) return DENOMINATIONS[0];
@@ -232,17 +234,29 @@ function LuckyMoneyFeature() {
       const money = pickRandomMoney(); 
       setSelectedMoney(money); 
       setStep(2); 
-      // Delay một chút rồi mới kích hoạt animation mở bao
-      setTimeout(() => setIsOpened(true), 500);
+      
+      // Sequence Animation:
+      // 1. Chờ 0.5s cho render xong
+      // 2. Mở nắp (0.5s)
+      // 3. Tiền trồi lên (sau khi nắp mở xong)
+      setTimeout(() => {
+          setFlapOpen(true);
+          setTimeout(() => {
+              setMoneyRise(true);
+          }, 600); // Đợi nắp mở xong mới đẩy tiền lên
+      }, 300);
     };
     
-    const handleClose = () => { setStep(0); setSelectedMoney(null); setIsOpened(false); };
+    const handleClose = () => { 
+        setStep(0); setSelectedMoney(null); 
+        setFlapOpen(false); setMoneyRise(false); 
+    };
   
     return (
       <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 100 }}>
         <style>
           {`
-            /* Container Nút Rút Lì Xì */
+            /* Container Nút Rút */
             .lucky-btn-container {
               position: absolute; bottom: 40px; left: 40px;
               pointer-events: auto; cursor: pointer;
@@ -253,172 +267,180 @@ function LuckyMoneyFeature() {
             .lucky-btn-container:hover { transform: scale(1.1); }
             .icon-lixi {
               width: 50px; height: 80px; 
-              background: linear-gradient(to bottom right, #d00000, #990000);
-              border-radius: 4px; border: 1px solid #ffdb4d;
-              box-shadow: 0 4px 15px rgba(255,0,0,0.4);
-              display: flex; justify-content: center; align-items: center;
+              background: #d00000; border: 2px solid #ffdb4d;
+              border-radius: 6px; display: flex; justify-content: center; align-items: center;
+              box-shadow: 0 5px 15px rgba(0,0,0,0.5);
             }
-            .icon-lixi::after { content: '福'; color: #ffdb4d; font-family: 'Cinzel', serif; font-weight: bold; font-size: 24px; }
+            .icon-lixi::after { content: '福'; color: #ffdb4d; font-family: serif; font-size: 24px; }
             
-            /* Overlay chung */
+            /* Overlay */
             .overlay-backdrop {
               position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-              background: rgba(0,0,0,0.9); backdrop-filter: blur(10px);
+              background: rgba(0,0,0,0.85); backdrop-filter: blur(12px);
               display: flex; flex-direction: column; justify-content: center; align-items: center;
               pointer-events: auto; animation: fadeInOverlay 0.4s ease;
             }
 
-            /* Step 1: Chọn bao */
-            .deck-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
-            .lixi-item {
-              width: 120px; height: 180px;
-              background: linear-gradient(135deg, #b30000 0%, #d00000 100%);
+            /* Grid Lì Xì */
+            .deck-grid { display: flex; gap: 30px; perspective: 1000px; }
+            .lixi-card {
+              width: 100px; height: 160px;
+              background: linear-gradient(135deg, #b30000, #e60000);
               border: 2px solid #ffdb4d; border-radius: 8px;
-              cursor: pointer; position: relative; overflow: hidden;
-              box-shadow: 0 10px 25px rgba(0,0,0,0.6);
-              transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-              display: flex; justify-content: center; align-items: center;
+              cursor: pointer; display: flex; justify-content: center; align-items: center;
+              box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+              transition: transform 0.3s;
             }
-            .lixi-item:hover { transform: translateY(-15px) rotate(2deg); box-shadow: 0 15px 35px rgba(215, 0, 0, 0.4); }
-            .lixi-deco { 
-              width: 80px; height: 80px; border: 1px solid rgba(255, 219, 77, 0.5); 
-              border-radius: 50%; display: flex; justify-content: center; align-items: center;
-            }
-            .lixi-text { font-size: 40px; color: #ffdb4d; font-family: serif; }
+            .lixi-card:hover { transform: translateY(-20px); }
+            .lixi-card span { font-size: 40px; color: #ffdb4d; }
 
-            /* Step 2: Mở bao (Quan trọng) */
-            .open-scene { position: relative; width: 260px; height: 380px; perspective: 1000px; margin-top: 50px; }
-            
-            .envelope-body {
-              position: absolute; bottom: 0; left: 0; width: 100%; height: 100%;
-              background: #c62828; border-radius: 10px;
-              border: 2px solid #ffd700;
-              box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-              z-index: 10; display: flex; justify-content: center; align-items: flex-end;
-              overflow: hidden;
-            }
-            .envelope-pattern {
-              position: absolute; width: 100%; height: 100%; opacity: 0.1;
-              background-image: radial-gradient(#ffdb4d 2px, transparent 2px); background-size: 20px 20px;
+            /* --- CẤU TRÚC BAO LÌ XÌ 3 LỚP (REALISTIC) --- */
+            .envelope-container {
+                position: relative; width: 260px; height: 360px;
+                margin-top: 20px;
             }
 
-            .envelope-flap {
-              position: absolute; top: 0; left: 0; width: 100%; height: 40%;
-              background: #b71c1c; 
-              clip-path: polygon(0 0, 50% 100%, 100% 0);
-              transform-origin: top;
-              transition: transform 0.8s ease-in-out, z-index 0s linear 0.4s;
-              z-index: 20; /* Ban đầu nằm trên tiền */
-              border-top: 2px solid #ffd700;
-            }
-            .envelope-flap.open {
-              transform: rotateX(180deg);
-              z-index: 5; /* Sau khi mở thì nằm dưới tiền */
+            /* Layer 1: Lưng bao (Nằm dưới cùng) */
+            .env-back {
+                position: absolute; bottom: 0; width: 100%; height: 100%;
+                background: #8e0000; border-radius: 10px;
+                box-shadow: 0 15px 35px rgba(0,0,0,0.6);
+                z-index: 1;
             }
 
-            .money-bill {
-              position: absolute; left: 50%; bottom: 10px; 
-              width: 90%; height: 50%;
-              background: white; border-radius: 5px;
-              transform: translateX(-50%);
-              z-index: 15; /* Nằm giữa body và flap khi flap đóng */
-              transition: bottom 1s cubic-bezier(0.5, 0, 0, 1) 0.6s, transform 1s 0.6s;
-              box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-              display: flex; flex-direction: column; overflow: hidden;
+            /* Layer 2: Tiền (Nằm giữa Lưng và Túi) */
+            .env-money {
+                position: absolute; left: 50%; bottom: 10px;
+                width: 90%; height: 55%; 
+                transform: translateX(-50%);
+                z-index: 5; /* Cao hơn lưng, thấp hơn túi */
+                transition: transform 1s cubic-bezier(0.34, 1.56, 0.64, 1), bottom 1s ease;
+                border-radius: 4px; overflow: hidden;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+                display: flex; flex-direction: column;
             }
-            .money-bill.revealed {
-              bottom: 180px; /* Trồi lên cao */
-              transform: translateX(-50%) scale(1.1);
+            /* Khi tiền trồi lên */
+            .env-money.rise {
+                bottom: 120px; /* Trồi cao lên */
+                transform: translateX(-50%) scale(1.1) rotate(-2deg);
+                z-index: 25; /* Sau khi trồi hẳn lên thì đè lên túi để rõ ràng */
+            }
+
+            /* Layer 3: Túi bao (Pocket - Mặt trước phía dưới) */
+            .env-pocket {
+                position: absolute; bottom: 0; left: 0; width: 100%; height: 75%; /* Chỉ cao 75% để chừa chỗ cho tiền chui ra */
+                background: #c62828; 
+                border-radius: 0 0 10px 10px;
+                border: 2px solid #ffdb4d; border-top: none;
+                z-index: 10; /* Đè lên tiền lúc chưa trồi */
+                display: flex; justify-content: center; align-items: center;
+                box-shadow: inset 0 10px 20px rgba(0,0,0,0.2); /* Tạo chiều sâu miệng túi */
+            }
+            .env-pocket-text { font-family: 'Cinzel', serif; color: #ffdb4d; font-size: 60px; margin-top: 30px; text-shadow: 0 2px 4px rgba(0,0,0,0.3); }
+
+            /* Layer 4: Nắp bao (Flap - Mặt trước phía trên) */
+            .env-flap {
+                position: absolute; top: 0; left: 0; width: 100%; height: 25%;
+                background: #b71c1c;
+                border-radius: 10px 10px 0 0;
+                border: 2px solid #ffdb4d; border-bottom: none;
+                transform-origin: bottom; /* Xoay từ cạnh dưới của nắp */
+                z-index: 15; /* Cao nhất ban đầu */
+                transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1), z-index 0.2s 0.3s;
+                /* Tạo hình tam giác cho nắp */
+                clip-path: polygon(0 0, 100% 0, 100% 60%, 50% 100%, 0 60%);
+                height: 40%; /* Kéo dài nắp xuống đè lên túi một chút */
+            }
+            .env-flap.open {
+                transform: rotateX(180deg);
+                z-index: 0; /* Sau khi mở thì tụt xuống dưới cùng */
+                opacity: 0.8;
             }
 
             /* Design tờ tiền */
-            .bill-inner { flex: 1; padding: 10px; display: flex; flex-direction: column; justify-content: space-between; position: relative; }
-            .bill-val { font-weight: 900; font-size: 24px; align-self: flex-end; color: #fff; text-shadow: 1px 1px 2px rgba(0,0,0,0.3); }
-            .bill-center { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 14px; color: rgba(255,255,255,0.8); letter-spacing: 2px; }
-            .bill-pattern { position: absolute; inset: 0; opacity: 0.3; background: repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255,255,255,0.2) 10px, rgba(255,255,255,0.2) 20px); }
+            .bill-layout { flex: 1; padding: 15px; display: flex; flex-direction: column; justify-content: space-between; position: relative; }
+            .bill-val { font-weight: 900; font-size: 28px; color: #fff; text-align: right; text-shadow: 1px 1px 2px rgba(0,0,0,0.3); }
+            .bill-center { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); border: 2px solid rgba(255,255,255,0.5); padding: 5px 20px; color: white; font-weight: bold; border-radius: 20px; }
 
             .wish-box {
-              margin-top: 20px; color: #ffdb4d; font-family: 'Montserrat', sans-serif;
-              font-size: 1.3rem; text-align: center; max-width: 90%;
-              opacity: 0; transform: translateY(20px);
-              animation: fadeInUp 1s forwards 1.5s;
+               margin-top: 30px; color: #ffdb4d; font-family: 'Montserrat', sans-serif;
+               font-size: 1.4rem; font-weight: 600; text-align: center; max-width: 90%;
+               opacity: 0; transform: translateY(20px);
+               animation: fadeInMsg 1s forwards 1s;
+               text-shadow: 0 2px 4px rgba(0,0,0,0.8);
             }
-
-            .close-btn {
-              margin-top: 30px; padding: 12px 40px; 
-              background: linear-gradient(to right, #ffdb4d, #ffb300);
-              color: #b71c1c; font-weight: bold; border: none; border-radius: 50px;
-              font-size: 16px; cursor: pointer; box-shadow: 0 0 20px rgba(255, 219, 77, 0.4);
-              transition: transform 0.2s;
+            
+            .btn-nhan-loc {
+                margin-top: 25px; padding: 12px 40px; border-radius: 30px;
+                border: none; background: #ffdb4d; color: #b71c1c; font-weight: bold; font-size: 1.2rem;
+                cursor: pointer; box-shadow: 0 0 15px #ffdb4d;
+                transition: transform 0.2s;
             }
-            .close-btn:hover { transform: scale(1.05); }
+            .btn-nhan-loc:hover { transform: scale(1.1); }
 
-            @keyframes floatBtn { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+            @keyframes floatBtn { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
             @keyframes fadeInOverlay { from { opacity: 0; } to { opacity: 1; } }
-            @keyframes fadeInUp { to { opacity: 1; transform: translateY(0); } }
-
+            @keyframes fadeInMsg { to { opacity: 1; transform: translateY(0); } }
             @media (max-width: 600px) {
-               .deck-grid { grid-template-columns: repeat(2, 1fr); gap: 15px; }
-               .lixi-item { width: 100px; height: 140px; }
-               .open-scene { transform: scale(0.85); margin-top: 20px; }
+               .deck-grid { gap: 10px; transform: scale(0.9); }
+               .envelope-container { transform: scale(0.85); margin-top: 10px; }
             }
           `}
         </style>
   
-        {/* Step 0: Button Góc */}
+        {/* Step 0: Button */}
         {step === 0 && (
           <div className="lucky-btn-container" onClick={handleOpenDeck}>
             <div className="icon-lixi"></div>
-            <div style={{ color: '#ffdb4d', marginTop: 8, fontSize: 13, fontWeight: 'bold', textShadow: '0 2px 4px black', background: 'rgba(0,0,0,0.5)', padding: '2px 8px', borderRadius: 10 }}>RÚT LÌ XÌ</div>
+            <div style={{ color: '#ffdb4d', marginTop: 5, fontSize: 12, fontWeight: 'bold', background: 'rgba(0,0,0,0.6)', padding: '2px 6px', borderRadius: 4 }}>RÚT LÌ XÌ</div>
           </div>
         )}
   
         {/* Step 1: Chọn bao */}
         {step === 1 && (
           <div className="overlay-backdrop">
-            <h2 style={{ color: '#ffdb4d', fontFamily: 'Cinzel, serif', marginBottom: 40, fontSize: '2rem', textShadow: '0 0 10px #d00000' }}>HÁI LỘC ĐẦU NĂM</h2>
+            <h2 style={{ color: '#ffdb4d', fontFamily: 'Cinzel, serif', marginBottom: 30, fontSize: '2rem' }}>CHỌN LỘC ĐẦU NĂM</h2>
             <div className="deck-grid">
               {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="lixi-item" onClick={handlePickEnvelope}>
-                    <div className="lixi-deco">
-                        <span className="lixi-text">福</span>
-                    </div>
-                </div>
+                <div key={i} className="lixi-card" onClick={handlePickEnvelope}><span>🧧</span></div>
               ))}
             </div>
           </div>
         )}
   
-        {/* Step 2: Kết quả & Animation */}
+        {/* Step 2: Mở bao (Animation Fix) */}
         {step === 2 && selectedMoney && (
           <div className="overlay-backdrop">
             
-            <div className="open-scene">
-               {/* Tiền (Nằm giữa Flap và Body lúc đầu) */}
-               <div className={`money-bill ${isOpened ? 'revealed' : ''}`} style={{ background: selectedMoney.bg }}>
-                  <div className="bill-pattern"></div>
-                  <div className="bill-inner">
-                      <div style={{fontSize: 10, color: 'white', opacity: 0.8}}>NHNN VIET NAM</div>
-                      <div className="bill-center">LUCKY MONEY</div>
-                      <div className="bill-val">{selectedMoney.value}</div>
-                  </div>
-               </div>
+            <div className="envelope-container">
+                {/* 1. Nắp bao (Mở lên trên cùng) */}
+                <div className={`env-flap ${flapOpen ? 'open' : ''}`}></div>
 
-               {/* Nắp bao (Sẽ lật lên) */}
-               <div className={`envelope-flap ${isOpened ? 'open' : ''}`}></div>
+                {/* 2. Túi bao (Mặt trước, che phần dưới tiền) */}
+                <div className="env-pocket">
+                    <div className="env-pocket-text">福</div>
+                </div>
 
-               {/* Thân bao (Luôn ở dưới cùng về mặt không gian nhưng z-index cao để che chân tiền) */}
-               <div className="envelope-body">
-                  <div className="envelope-pattern"></div>
-                  <div style={{ marginBottom: 40, color: '#ffdb4d', fontSize: 50, fontFamily: 'serif', zIndex: 20 }}>2026</div>
-               </div>
+                {/* 3. Tiền (Nằm giữa Túi và Lưng) */}
+                <div className={`env-money ${moneyRise ? 'rise' : ''}`} style={{ background: selectedMoney.bg }}>
+                     <div className="bill-layout">
+                        <div style={{color: 'white', opacity: 0.8, fontSize: 10}}>LUCKY MONEY 2026</div>
+                        <div className="bill-center">VND</div>
+                        <div className="bill-val">{selectedMoney.value}</div>
+                     </div>
+                </div>
+
+                {/* 4. Lưng bao (Dưới cùng) */}
+                <div className="env-back"></div>
             </div>
 
             <div className="wish-box">
                 "{selectedMoney.text}"
             </div>
             
-            <button className="close-btn" onClick={handleClose}>Nhận Lộc Ngay</button>
+            {moneyRise && (
+                <button className="btn-nhan-loc" onClick={handleClose}>Nhận Lộc</button>
+            )}
           </div>
         )}
       </div>
