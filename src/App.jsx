@@ -168,6 +168,7 @@ function FireworkManager() {
 }
 
 // --- 4. FEATURE: LÌ XÌ (RÚT TIỀN THẬT) ---
+// --- 4. FEATURE: LÌ XÌ (ĐÃ FIX VỊ TRÍ SANG TRÁI) ---
 const DENOMINATIONS = [
   { value: "50.000", color: "linear-gradient(135deg, #e492b2, #b56585)", text: "Năm mới nhẹ nhàng, tình cảm đong đầy" },
   { value: "100.000", color: "linear-gradient(135deg, #7da36d, #4e7040)", text: "Lộc biếc mai vàng, khởi đầu suôn sẻ" },
@@ -176,13 +177,11 @@ const DENOMINATIONS = [
 ];
 
 function LuckyMoneyFeature() {
-  const [step, setStep] = useState(0); // 0: Icon, 1: Chọn bao, 2: Mở bao
+  const [step, setStep] = useState(0); 
   const [selectedMoney, setSelectedMoney] = useState(null);
 
-  // Hàm chọn ngẫu nhiên mệnh giá (có tỉ lệ)
   const pickRandomMoney = () => {
     const rand = Math.random();
-    // Tỉ lệ: 40% ra 50k, 30% ra 100k, 20% ra 200k, 10% ra 500k
     if (rand < 0.4) return DENOMINATIONS[0];
     if (rand < 0.7) return DENOMINATIONS[1];
     if (rand < 0.9) return DENOMINATIONS[2];
@@ -210,13 +209,18 @@ function LuckyMoneyFeature() {
     <Html fullscreen style={{ pointerEvents: 'none', zIndex: 9999 }}>
       <style>
         {`
-          /* Nút Lì xì góc màn hình */
+          /* --- SỬA VỊ TRÍ TẠI ĐÂY --- */
+          /* Chuyển từ right: 30px sang left: 30px để không đè lên volume */
           .lucky-btn-container {
-            position: absolute; bottom: 30px; right: 30px;
-            pointer-events: auto; cursor: pointer;
+            position: absolute; 
+            bottom: 30px; 
+            left: 30px; /* Vị trí mới: Góc trái */
+            pointer-events: auto; 
+            cursor: pointer;
             animation: float 3s ease-in-out infinite;
             text-align: center;
           }
+
           .mini-envelope {
             width: 60px; height: 90px;
             background: #d32f2f;
@@ -227,7 +231,6 @@ function LuckyMoneyFeature() {
           }
           .mini-envelope::after { content: '福'; color: #ffd700; font-family: serif; }
 
-          /* Overlay màn hình đen mờ */
           .overlay-backdrop {
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
             background: rgba(0,0,0,0.85);
@@ -238,7 +241,6 @@ function LuckyMoneyFeature() {
             animation: fadeIn 0.3s ease;
           }
 
-          /* Bộ bài Lì xì */
           .envelope-deck {
             display: flex; gap: 20px;
             perspective: 1000px;
@@ -256,14 +258,12 @@ function LuckyMoneyFeature() {
           .big-envelope:hover { transform: translateY(-20px) scale(1.05); }
           .big-envelope span { font-size: 40px; color: #ffd700; }
 
-          /* Animation Rút tiền */
           .result-container {
             position: relative;
             width: 200px; height: 300px;
             display: flex; justify-content: center; align-items: flex-end;
           }
           
-          /* Cái bao lì xì đang mở */
           .opened-envelope-body {
             position: absolute; bottom: 0; width: 100%; height: 60%;
             background: #d32f2f;
@@ -279,7 +279,6 @@ function LuckyMoneyFeature() {
             z-index: 5;
           }
 
-          /* Tờ tiền */
           .money-note {
             width: 90%; height: 80%;
             border-radius: 4px;
@@ -290,7 +289,7 @@ function LuckyMoneyFeature() {
             box-sizing: border-box;
             color: white; font-family: sans-serif; font-weight: bold;
             text-shadow: 0 1px 2px rgba(0,0,0,0.5);
-            z-index: 2; /* Nằm giữa nắp và thân bao lúc đầu, sau đó trồi lên */
+            z-index: 2; 
             animation: slideUpMoney 1.5s cubic-bezier(0.25, 1, 0.5, 1) forwards;
           }
 
@@ -325,7 +324,7 @@ function LuckyMoneyFeature() {
         `}
       </style>
 
-      {/* STEP 0: Nút Lì Xì */}
+      {/* STEP 0: Nút Lì Xì (Góc trái) */}
       {step === 0 && (
         <div className="lucky-btn-container" onClick={handleOpenDeck}>
           <div className="mini-envelope"></div>
@@ -347,28 +346,21 @@ function LuckyMoneyFeature() {
         </div>
       )}
 
-      {/* STEP 2: Animation Rút Tiền */}
+      {/* STEP 2: Kết quả */}
       {step === 2 && selectedMoney && (
         <div className="overlay-backdrop">
           <div className="result-container">
-            {/* Tờ tiền trượt lên */}
             <div className="money-note" style={{ background: selectedMoney.color }}>
                <div className="money-label">NGÂN HÀNG MAY MẮN</div>
                <div className="money-center">VND</div>
                <div className="money-value">{selectedMoney.value}</div>
             </div>
-            
-            {/* Hình ảnh bao lì xì bên dưới */}
             <div className="opened-envelope-flap"></div>
             <div className="opened-envelope-body">
                 <div style={{textAlign: 'center', color: '#ffd700', marginTop: 20, fontSize: 30}}>福</div>
             </div>
           </div>
-
-          <div className="wish-text">
-            "{selectedMoney.text}"
-          </div>
-          
+          <div className="wish-text">"{selectedMoney.text}"</div>
           <button className="close-btn" onClick={handleClose}>Nhận Lộc</button>
         </div>
       )}
