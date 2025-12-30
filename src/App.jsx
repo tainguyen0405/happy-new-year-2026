@@ -1,18 +1,17 @@
-import React, { useState, useEffect, useRef, useMemo, Suspense } from 'react'
+import { useState, useEffect, useRef, useMemo, Suspense } from 'react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { OrbitControls, Text3D, Center, Float, Stars, Environment, PositionalAudio, Cylinder } from '@react-three/drei'
 import { EffectComposer, Bloom } from '@react-three/postprocessing'
 import * as THREE from 'three'
 
-// LƯU Ý: Nếu bạn không có các file component con này, hãy comment dòng import lại.
-// Code dưới đây vẫn chạy tốt mà không cần các nút bấm âm thanh phụ trợ.
-// import CinematicVolume from './CinematicVolume'
-// import CinematicPlayButton from './CinematicPlayButton'
-// import CircularAudioVisualizer from './CircularAudioVisualizer'
-// import MusicToggleButton from './MusicToggleButton'
-// import VolumeControl from './VolumeControl'
 
-const isTesting = true; // Chế độ test: countdown 15s. Đổi thành false để chạy ngày thật.
+import CinematicVolume from './CinematicVolume'
+import CinematicPlayButton from './CinematicPlayButton'
+import CircularAudioVisualizer from './CircularAudioVisualizer'
+import MusicToggleButton from './MusicToggleButton'
+import VolumeControl from './VolumeControl'
+
+const isTesting = true;
 
 // --- 1. UTILS & AUDIO ---
 const getParticleTexture = () => {
@@ -120,9 +119,11 @@ function FireworkManager() {
   return <>{fireworks.map(f => <OptimizedFirework key={f.id} position={f.pos} color={f.color} texture={texture} />)}</>
 }
 
-// --- 3. UI COMPONENTS (REDESIGNED) ---
+// --- 3. UI COMPONENTS (MOVED OUTSIDE CANVAS) ---
 
-// 3.1 Cinematic Title (NEW DESIGN - GOLD TEXT)
+// ==========================================
+// 3.1 Cinematic Title (DESIGN UPGRADE: GOLD EFFECT)
+// ==========================================
 function CinematicTitle2D() {
   return (
     <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 10, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
@@ -137,7 +138,7 @@ function CinematicTitle2D() {
           }
 
           /* Hiệu ứng chữ vàng kim loại */
-          .gold-text {
+          .gold-text-gradient {
             background: linear-gradient(to bottom, #cfc09f 22%, #634f2c 24%, #cfc09f 26%, #cfc09f 27%, #ffecb3 40%, #3a2c0f 78%); 
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
@@ -153,7 +154,7 @@ function CinematicTitle2D() {
             text-transform: uppercase;
             animation: fadeDown 2s ease-out forwards 0.5s; 
             opacity: 0; 
-            margin-bottom: -10px;
+            margin-bottom: -15px;
           }
           
           .line-2 { 
@@ -172,7 +173,7 @@ function CinematicTitle2D() {
 
           .line-3 { 
             font-family: 'Great Vibes', cursive; 
-            font-size: 3.5rem; 
+            font-size: 4rem; 
             color: #ffecd2; 
             margin-top: 10px;
             text-shadow: 0 0 10px rgba(255,0,0,0.8);
@@ -196,12 +197,12 @@ function CinematicTitle2D() {
           @media (max-width: 768px) { 
             .line-1 { font-size: 1.2rem; letter-spacing: 0.5rem; } 
             .line-2 { font-size: 6rem; } 
-            .line-3 { font-size: 2rem; }
+            .line-3 { font-size: 2.5rem; }
           }
         `}
       </style>
       <div className="cinematic-container">
-        <div className="line-1 gold-text">Happy New Year</div>
+        <div className="line-1 gold-text-gradient">Happy New Year</div>
         <div className="line-2">2026</div>
         <div className="line-3">Cung Chúc Tân Xuân</div>
       </div>
@@ -209,271 +210,250 @@ function CinematicTitle2D() {
   )
 }
 
-// 3.2 Lucky Money Feature (NEW DESIGN - 3D ENVELOPE)
+// ==========================================
+// 3.2 Lucky Money Feature (DESIGN UPGRADE: 3D ENVELOPE & POLYMER MONEY)
+// ==========================================
 const DENOMINATIONS = [
-  { value: "50.000", bg: "linear-gradient(135deg, #e492b2 0%, #b56585 100%)", text: "Tình duyên phơi phới" },
-  { value: "100.000", bg: "linear-gradient(135deg, #95c783 0%, #4e7040 100%)", text: "Sức khỏe dồi dào" },
-  { value: "200.000", bg: "linear-gradient(135deg, #e09f8d 0%, #a34e3c 100%)", text: "Phát tài phát lộc" },
-  { value: "500.000", bg: "linear-gradient(135deg, #74dadd 0%, #2c7a7d 100%)", text: "Vạn sự như ý" }
+    { value: "50.000", bg: "linear-gradient(135deg, #e492b2 0%, #b56585 100%)", text: "Tình duyên phơi phới, hạnh phúc đong đầy" },
+    { value: "100.000", bg: "linear-gradient(135deg, #95c783 0%, #4e7040 100%)", text: "Sức khỏe dồi dào, tâm trí an yên" },
+    { value: "200.000", bg: "linear-gradient(135deg, #e09f8d 0%, #a34e3c 100%)", text: "Phát tài phát lộc, vạn sự hanh thông" },
+    { value: "500.000", bg: "linear-gradient(135deg, #74dadd 0%, #2c7a7d 100%)", text: "Đại phú đại quý, tiền vào như nước" }
 ];
 
 function LuckyMoneyFeature() {
-  const [step, setStep] = useState(0);
-  const [selectedMoney, setSelectedMoney] = useState(null);
+    const [step, setStep] = useState(0); 
+    const [selectedMoney, setSelectedMoney] = useState(null);
+  
+    const pickRandomMoney = () => {
+      const rand = Math.random();
+      if (rand < 0.3) return DENOMINATIONS[0];
+      if (rand < 0.6) return DENOMINATIONS[1];
+      if (rand < 0.85) return DENOMINATIONS[2];
+      return DENOMINATIONS[3];
+    };
+  
+    const handleOpenDeck = () => { playCustomClick(); setStep(1); };
+    const handlePickEnvelope = () => { 
+      playCustomClick(); 
+      const money = pickRandomMoney(); 
+      setSelectedMoney(money); 
+      setStep(2); 
+    };
+    const handleClose = () => { setStep(0); setSelectedMoney(null); };
+  
+    return (
+      <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 100 }}>
+        <style>
+          {`
+            /* === BACKDROP & GENERAL === */
+            .overlay-backdrop {
+              position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+              background: rgba(0,0,0,0.85); backdrop-filter: blur(12px);
+              display: flex; flex-direction: column; justify-content: center; align-items: center;
+              pointer-events: auto; animation: fadeInOverlay 0.5s ease;
+            }
+            @keyframes fadeInOverlay { from { opacity: 0; } to { opacity: 1; } }
 
-  const pickRandomMoney = () => {
-    const rand = Math.random();
-    if (rand < 0.3) return DENOMINATIONS[0];
-    if (rand < 0.6) return DENOMINATIONS[1];
-    if (rand < 0.85) return DENOMINATIONS[2];
-    return DENOMINATIONS[3];
-  };
+            /* === BUTTON RÚT LÌ XÌ (GÓC) === */
+            .lucky-btn-container {
+              position: absolute; bottom: 40px; left: 40px;
+              pointer-events: auto; cursor: pointer;
+              animation: bounceFloat 2s infinite ease-in-out;
+              text-align: center;
+            }
+            .mini-envelope-icon {
+              font-size: 45px; 
+              filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.6));
+            }
+            @keyframes bounceFloat { 
+              0%, 100% { transform: translateY(0); } 
+              50% { transform: translateY(-15px); } 
+            }
 
-  const handleOpenDeck = () => { playCustomClick(); setStep(1); };
-  const handlePickEnvelope = () => { 
-    playCustomClick(); 
-    const money = pickRandomMoney(); 
-    setSelectedMoney(money); 
-    setStep(2); 
-  };
-  const handleClose = () => { setStep(0); setSelectedMoney(null); };
-
-  return (
-    <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 100 }}>
-      <style>
-        {`
-          /* === BACKDROP & GENERAL === */
-          .overlay-backdrop {
-            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-            background: rgba(0,0,0,0.9); backdrop-filter: blur(10px);
-            display: flex; flex-direction: column; justify-content: center; align-items: center;
-            pointer-events: auto; animation: fadeInOverlay 0.5s ease;
-          }
-          @keyframes fadeInOverlay { from { opacity: 0; } to { opacity: 1; } }
-
-          /* === BUTTON NHỎ GÓC MÀN HÌNH === */
-          .lucky-btn-container {
-            position: absolute; bottom: 40px; left: 40px;
-            pointer-events: auto; cursor: pointer;
-            animation: bounceFloat 2s infinite ease-in-out;
-            filter: drop-shadow(0 0 15px rgba(255,0,0,0.6));
-          }
-          .mini-icon {
-            font-size: 50px; 
-            background: radial-gradient(circle, #ffeb3b, #fbc02d);
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-          }
-          @keyframes bounceFloat { 
-            0%, 100% { transform: translateY(0) rotate(-5deg); } 
-            50% { transform: translateY(-15px) rotate(5deg); } 
-          }
-
-          /* === ANIMATION MỞ BAO LÌ XÌ === */
-          .envelope-wrapper {
-            position: relative; width: 280px; height: 380px;
-            display: flex; justify-content: center; align-items: flex-end;
-          }
-          
-          /* Phong bao đỏ */
-          .red-envelope-body {
-            position: absolute; bottom: 0; left: 0;
-            width: 100%; height: 100%;
-            background: linear-gradient(135deg, #d00000, #8a0000);
-            border-radius: 12px;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-            z-index: 10;
-            overflow: hidden;
-            border: 2px solid #ffd700;
-          }
-          /* Hoa văn trên bao */
-          .red-envelope-body::before {
-            content: ''; position: absolute; inset: 10px;
-            border: 1px dashed rgba(255, 215, 0, 0.3); border-radius: 8px;
-          }
-          .center-char {
-            position: absolute; top: 55%; left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 80px; color: #ffd700;
-            font-family: serif; font-weight: bold;
-            text-shadow: 0 2px 10px rgba(0,0,0,0.3);
-            z-index: 11;
-          }
-
-          /* Nắp bao (Flap) */
-          .envelope-cap {
-            position: absolute; top: 0; left: 0; width: 100%; height: 35%;
-            background: #b30000;
-            clip-path: polygon(0 0, 100% 0, 50% 100%);
-            transform-origin: top;
-            z-index: 15;
-            transition: transform 0.6s 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-            border-top: 4px solid #ffd700;
-          }
-          /* Khi mở, nắp lật lên */
-          .envelope-wrapper.open .envelope-cap {
-            transform: rotateX(180deg);
-            z-index: 1; /* Ra sau tờ tiền */
-          }
-
-          /* Tờ tiền */
-          .money-card {
-            position: absolute; bottom: 10px; left: 15px; right: 15px; height: 90%;
-            border-radius: 8px;
-            display: flex; flex-direction: column; justify-content: space-between;
-            padding: 15px; box-sizing: border-box;
-            color: #fff;
-            box-shadow: 0 0 20px rgba(0,0,0,0.2);
-            transform: translateY(0) scale(0.9);
-            z-index: 5; /* Nằm trong bao */
-            transition: all 1s 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
-          }
-          /* Họa tiết tiền Polymer */
-          .money-pattern {
-            position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-            opacity: 0.1;
-            background-image: repeating-linear-gradient(45deg, transparent, transparent 10px, #fff 10px, #fff 11px);
-            z-index: 0;
-          }
-          .money-content { position: relative; z-index: 1; height: 100%; display: flex; flex-direction: column; justify-content: space-between; }
-          
-          /* Khi mở, tiền bay lên */
-          .envelope-wrapper.open .money-card {
-            transform: translateY(-200px) scale(1.1);
-            z-index: 20; /* Bay lên trên bao */
-            box-shadow: 0 30px 60px rgba(0,0,0,0.6);
-          }
-
-          .money-val { font-size: 36px; font-weight: 800; font-family: 'Montserrat', sans-serif; text-shadow: 0 2px 4px rgba(0,0,0,0.3); }
-          .money-label { font-size: 14px; text-transform: uppercase; letter-spacing: 2px; opacity: 0.8; }
-          .money-circle { 
-            width: 80px; height: 80px; border-radius: 50%; 
-            border: 2px solid rgba(255,255,255,0.4); 
-            align-self: center; display: flex; align-items: center; justify-content: center;
-            font-size: 10px; color: rgba(255,255,255,0.7);
-          }
-
-          /* === TEXT LỜI CHÚC & NÚT === */
-          .wish-text-container {
-            margin-top: 150px; text-align: center; color: #fff;
-            opacity: 0; animation: fadeInText 1s ease 1.5s forwards;
-          }
-          .wish-main { font-family: 'Cinzel', serif; font-size: 1.8rem; color: #ffd700; margin-bottom: 10px; }
-          .wish-sub { font-family: 'Montserrat', sans-serif; font-size: 1rem; color: #ddd; font-style: italic; }
-
-          .close-btn {
-            margin-top: 30px;
-            padding: 12px 40px;
-            background: linear-gradient(90deg, #ffd700, #fdb931);
-            color: #8a0000;
-            font-weight: 800; text-transform: uppercase; letter-spacing: 1px;
-            border: none; border-radius: 50px;
-            box-shadow: 0 0 20px rgba(255, 215, 0, 0.4);
-            cursor: pointer;
-            transition: transform 0.2s;
-          }
-          .close-btn:hover { transform: scale(1.05); background: #fff; }
-
-          /* === STEP 1: CHỌN BAO === */
-          .deck-container { display: flex; gap: 30px; perspective: 1000px; flex-wrap: wrap; justify-content: center; }
-          .deck-envelope {
-            width: 100px; height: 160px;
-            background: #d00000;
-            border: 2px solid #ffd700; border-radius: 8px;
-            cursor: pointer;
-            position: relative;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-            transition: transform 0.3s;
-            display: flex; justify-content: center; align-items: center;
-          }
-          .deck-envelope:hover { transform: translateY(-20px) rotate(2deg); box-shadow: 0 15px 35px rgba(255, 215, 0, 0.3); }
-          .deck-envelope::after { content: '福'; color: #ffd700; font-size: 40px; font-family: serif; border: 2px solid #ffd700; padding: 5px; border-radius: 50%; }
-
-          @keyframes fadeInText { to { opacity: 1; margin-top: 80px; } }
-          
-          @media (max-width: 600px) {
-             .envelope-wrapper { transform: scale(0.8); }
-             .money-val { font-size: 28px; }
-             .deck-container { gap: 15px; }
-             .deck-envelope { width: 80px; height: 130px; }
-          }
-        `}
-      </style>
-
-      {/* Step 0: Nút mở ban đầu */}
-      {step === 0 && (
-        <div className="lucky-btn-container" onClick={handleOpenDeck}>
-          <div style={{ textAlign: 'center' }}>
-            <div className="mini-icon">🧧</div>
-            <div style={{ color: '#ffd700', fontWeight: 'bold', textShadow: '0 2px 4px #000', marginTop: 5 }}>RÚT LÌ XÌ</div>
-          </div>
-        </div>
-      )}
-
-      {/* Step 1: Chọn bao lì xì */}
-      {step === 1 && (
-        <div className="overlay-backdrop">
-          <h2 style={{ color: '#ffd700', fontFamily: 'Cinzel, serif', fontSize: '2rem', marginBottom: 50, textShadow: '0 0 10px #ff0000' }}>
-            CHỌN LỘC ĐẦU NĂM
-          </h2>
-          <div className="deck-container">
-            {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="deck-envelope" onClick={handlePickEnvelope}></div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Step 2: Mở bao & Kết quả */}
-      {step === 2 && selectedMoney && (
-        <div className="overlay-backdrop">
-          {/* Wrapper bao lì xì với class 'open' để kích hoạt animation */}
-          <div className="envelope-wrapper open">
+            /* === ANIMATION MỞ BAO LÌ XÌ 3D === */
+            .envelope-wrapper {
+              position: relative; width: 280px; height: 380px;
+              display: flex; justify-content: center; align-items: flex-end;
+              perspective: 1000px;
+            }
             
-            {/* Tờ tiền */}
-            <div className="money-card" style={{ background: selectedMoney.bg }}>
-              <div className="money-pattern"></div>
-              <div className="money-content">
-                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <div className="money-label">VN STATE BANK</div>
-                    <div className="money-label">{selectedMoney.value}</div>
-                 </div>
-                 <div className="money-circle">VN2026</div>
-                 <div className="money-val" style={{ textAlign: 'center' }}>{selectedMoney.value} <span style={{fontSize: 20}}>VND</span></div>
-              </div>
+            /* Thân bao đỏ */
+            .red-envelope-body {
+              position: absolute; bottom: 0; left: 0;
+              width: 100%; height: 100%;
+              background: linear-gradient(135deg, #d00000, #900000);
+              border-radius: 12px;
+              box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+              z-index: 10;
+              overflow: hidden;
+              border: 2px solid #ffd700;
+              display: flex; justify-content: center; align-items: center;
+            }
+            .red-envelope-body::after {
+                content: '福'; font-size: 80px; color: #ffd700; 
+                font-family: serif; font-weight: bold;
+                text-shadow: 0 2px 10px rgba(0,0,0,0.4);
+            }
+
+            /* Nắp bao (Flap) */
+            .envelope-cap {
+              position: absolute; top: 0; left: 0; width: 100%; height: 35%;
+              background: #b30000;
+              clip-path: polygon(0 0, 100% 0, 50% 100%);
+              transform-origin: top;
+              z-index: 15;
+              transition: transform 0.6s 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+              box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+              border-top: 3px solid #ffd700;
+            }
+            
+            /* Logic mở nắp */
+            .envelope-wrapper.open .envelope-cap {
+              transform: rotateX(180deg);
+              z-index: 1; /* Ra sau tờ tiền */
+            }
+
+            /* Tờ tiền Polymer */
+            .money-card {
+              position: absolute; bottom: 10px; left: 15px; right: 15px; height: 90%;
+              border-radius: 8px;
+              display: flex; flex-direction: column; justify-content: space-between;
+              padding: 15px; box-sizing: border-box;
+              color: #fff;
+              box-shadow: 0 0 20px rgba(0,0,0,0.2);
+              transform: translateY(0) scale(0.9);
+              z-index: 5; /* Nằm trong bao */
+              transition: all 1s 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+            }
+            /* Pattern tiền */
+            .money-pattern {
+              position: absolute; inset: 0; opacity: 0.15;
+              background-image: repeating-linear-gradient(45deg, transparent, transparent 10px, #fff 10px, #fff 11px);
+              z-index: 0;
+            }
+            
+            /* Logic tiền bay lên */
+            .envelope-wrapper.open .money-card {
+              transform: translateY(-220px) scale(1.1);
+              z-index: 20; /* Bay lên trên bao */
+              box-shadow: 0 30px 60px rgba(0,0,0,0.6);
+            }
+
+            .money-val { font-size: 38px; font-weight: 800; font-family: 'Montserrat', sans-serif; text-shadow: 0 2px 4px rgba(0,0,0,0.3); z-index: 2; }
+            .money-label { font-size: 12px; text-transform: uppercase; letter-spacing: 1px; opacity: 0.9; z-index: 2; }
+            .money-window {
+                width: 60px; height: 60px; border-radius: 50%;
+                border: 2px solid rgba(255,255,255,0.3);
+                background: rgba(255,255,255,0.1);
+                align-self: center; display: flex; align-items: center; justify-content: center;
+                font-size: 10px; color: rgba(255,255,255,0.8); z-index: 2;
+            }
+
+            /* === TEXT LỜI CHÚC & BUTTON === */
+            .wish-text-container {
+              margin-top: 160px; text-align: center; color: #fff;
+              opacity: 0; animation: fadeInText 1s ease 1.6s forwards;
+            }
+            .wish-main { font-family: 'Cinzel', serif; font-size: 1.8rem; color: #ffd700; margin-bottom: 8px; }
+            .wish-sub { font-family: 'Montserrat', sans-serif; font-size: 1.1rem; color: #eee; font-style: italic; max-width: 90%; margin: 0 auto; }
+            
+            .close-btn {
+              margin-top: 25px;
+              padding: 12px 40px;
+              background: linear-gradient(90deg, #ffd700, #fdb931);
+              color: #8a0000;
+              font-weight: 800; text-transform: uppercase;
+              border: none; border-radius: 50px;
+              box-shadow: 0 0 20px rgba(255, 215, 0, 0.4);
+              cursor: pointer; transition: transform 0.2s;
+            }
+            .close-btn:hover { transform: scale(1.05); background: #fff; }
+
+            @keyframes fadeInText { to { opacity: 1; margin-top: 60px; } }
+
+            /* === DECK (STEP 1) === */
+            .deck-container { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; }
+            .deck-envelope {
+              width: 100px; height: 160px;
+              background: #d00000;
+              border: 2px solid #ffd700; border-radius: 8px;
+              cursor: pointer; position: relative;
+              box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+              transition: transform 0.3s;
+              display: flex; justify-content: center; align-items: center;
+            }
+            .deck-envelope:hover { transform: translateY(-15px) rotate(2deg); box-shadow: 0 15px 35px rgba(255, 215, 0, 0.3); }
+            .deck-envelope::after { content: '福'; color: #ffd700; font-size: 40px; font-family: serif; border: 2px solid #ffd700; padding: 5px; border-radius: 50%; }
+          `}
+        </style>
+  
+        {/* Step 0: Button */}
+        {step === 0 && (
+          <div className="lucky-btn-container" onClick={handleOpenDeck}>
+            <div className="mini-envelope-icon">🧧</div>
+            <div style={{ color: '#ffd700', marginTop: 5, fontSize: 14, fontWeight: 'bold', textShadow: '0 2px 2px black' }}>RÚT LÌ XÌ</div>
+          </div>
+        )}
+  
+        {/* Step 1: Chọn bao */}
+        {step === 1 && (
+          <div className="overlay-backdrop">
+            <h2 style={{ color: '#ffd700', fontFamily: 'Cinzel, serif', marginBottom: 40, fontSize: '2.5rem', textShadow: '0 0 10px #ff0000' }}>CHỌN LỘC ĐẦU NĂM</h2>
+            <div className="deck-container">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="deck-envelope" onClick={handlePickEnvelope}></div>
+              ))}
+            </div>
+          </div>
+        )}
+  
+        {/* Step 2: Kết quả */}
+        {step === 2 && selectedMoney && (
+          <div className="overlay-backdrop">
+            {/* Class "open" kích hoạt animation mở nắp và bay tiền */}
+            <div className="envelope-wrapper open">
+                
+                {/* Tờ tiền (Money Card) */}
+                <div className="money-card" style={{ background: selectedMoney.bg }}>
+                   <div className="money-pattern"></div>
+                   <div style={{display:'flex', justifyContent:'space-between', zIndex:2}}>
+                      <div className="money-label">NGÂN HÀNG MAY MẮN</div>
+                      <div className="money-label">{selectedMoney.value}</div>
+                   </div>
+                   <div className="money-window">VN2026</div>
+                   <div style={{textAlign: 'center', zIndex:2}}>
+                      <div className="money-val">{selectedMoney.value}</div>
+                      <div className="money-label">VIETNAM DONG</div>
+                   </div>
+                </div>
+
+                {/* Thân bao lì xì */}
+                <div className="red-envelope-body"></div>
+                
+                {/* Nắp bao */}
+                <div className="envelope-cap"></div>
             </div>
 
-            {/* Thân bao đỏ (đè lên phần dưới tiền khi chưa bay lên) */}
-            <div className="red-envelope-body">
-              <div className="center-char">福</div>
+            <div className="wish-text-container">
+               <div className="wish-main">CHÚC MỪNG NĂM MỚI</div>
+               <div className="wish-sub">"{selectedMoney.text}"</div>
+               <button className="close-btn" onClick={handleClose}>Nhận Lộc</button>
             </div>
-            
-            {/* Nắp bao (lật lên) */}
-            <div className="envelope-cap"></div>
           </div>
-
-          <div className="wish-text-container">
-            <div className="wish-main">CHÚC MỪNG NĂM MỚI</div>
-            <div className="wish-sub">"{selectedMoney.text}"</div>
-            <button className="close-btn" onClick={handleClose}>Nhận Lộc</button>
-          </div>
-        </div>
-      )}
-    </div>
-  );
+        )}
+      </div>
+    );
 }
 
-// --- 4. SCENE CONTENT (3D) ---
+// --- 4. SCENE CONTENT (CHỈ CHỨA 3D) ---
 function SceneContent({ scene, handleLaunch, soundRef, isPlaying, setIsPlaying }) {
   const { camera } = useThree()
   const hasAutoPlayed = useRef(false)
   useEffect(() => { if (scene === 'fireworks') { camera.position.set(0, 0, 40); camera.lookAt(0, 0, 0) } }, [scene, camera])
-  
-  // Auto play logic
   useEffect(() => {
     if (scene === 'fireworks' && !hasAutoPlayed.current && soundRef.current) {
       setTimeout(() => { 
-        if (soundRef.current && soundRef.current.play) soundRef.current.play(); 
+        if(soundRef.current && soundRef.current.play) soundRef.current.play(); 
         setIsPlaying(true); 
         hasAutoPlayed.current = true 
       }, 200)
@@ -487,10 +467,8 @@ function SceneContent({ scene, handleLaunch, soundRef, isPlaying, setIsPlaying }
           <InteractiveDust count={4000} />
           <Stars radius={250} count={2000} factor={4} fade speed={1} />
           <ambientLight intensity={0.5} />
-          {/* COUNTDOWN & BUTTON (GIỮ NGUYÊN) */}
           <CountdownDisplay onFinishTransition={handleLaunch} />
-          {/* Audio Visualizer nếu có */}
-          {/* <CircularAudioVisualizer soundRef={soundRef} radius={18} count={150} /> */}
+          <CircularAudioVisualizer soundRef={soundRef} radius={18} count={150} />
           <PositionalAudio ref={soundRef} url="/happy-new-year-2026/sounds/lofi.mp3" distance={30} loop />
         </Suspense>
       ) : (
@@ -505,7 +483,7 @@ function SceneContent({ scene, handleLaunch, soundRef, isPlaying, setIsPlaying }
   )
 }
 
-// --- 5. MAIN APP ---
+// --- 5. MAIN APP (UI & CANVAS SONG SONG) ---
 export default function App() {
   const soundRef = useRef()
   const [scene, setScene] = useState('countdown')
@@ -515,8 +493,8 @@ export default function App() {
   const [volume, setVolume] = useState(2.0)
 
   const handleLaunch = () => {
-    setUiVisible(false) // Ẩn nút launch
-    setFlash(1) // Hiệu ứng flash
+    setUiVisible(false)
+    setFlash(1)
     setTimeout(() => {
       setScene('fireworks')
       const fade = setInterval(() => {
@@ -528,21 +506,26 @@ export default function App() {
   return (
     <div style={{ width: '100vw', height: '100vh', position: 'relative', background: '#000', overflow: 'hidden' }}>
       
-      {/* CÁC COMPONENT PHỤ (Nếu có file import thì bỏ comment) */}
-      {/* {isUiVisible && (
+      {/* UI LAYER - LUÔN NẰM TRÊN CÙNG */}
+      {/* Các component UI điều khiển âm thanh nếu có */}
+      {/* 
+      {isUiVisible && (
         <>
           <CinematicVolume soundRef={soundRef} />
           <CinematicPlayButton soundRef={soundRef} />
         </>
-      )} */}
+      )}
+      */}
 
       {scene === 'fireworks' && (
         <>
-          {/* UI ĐIỀU KHIỂN NHẠC (Nếu có file import) */}
-          {/* <MusicToggleButton soundRef={soundRef} isPlaying={isPlaying} setIsPlaying={setIsPlaying} />
-          <VolumeControl soundRef={soundRef} volume={volume} setVolume={setVolume} /> */}
+          {/* Controls */}
+          {/* 
+          <MusicToggleButton soundRef={soundRef} isPlaying={isPlaying} setIsPlaying={setIsPlaying} />
+          <VolumeControl soundRef={soundRef} volume={volume} setVolume={setVolume} /> 
+          */}
           
-          {/* === CÁC PHẦN ĐÃ ĐƯỢC REDESIGN === */}
+          {/* Overlay Features (NEW DESIGN) */}
           <CinematicTitle2D />
           <LuckyMoneyFeature />
         </>
@@ -555,19 +538,10 @@ export default function App() {
       <Canvas camera={{ position: [0, 8, 35], fov: 50 }} dpr={[1, 1.5]}>
         <color attach="background" args={['#050505']} />
         <Environment preset="city" />
-        
-        <SceneContent 
-            scene={scene} 
-            handleLaunch={handleLaunch} 
-            soundRef={soundRef} 
-            isPlaying={isPlaying} 
-            setIsPlaying={setIsPlaying} 
-        />
-        
+        <SceneContent scene={scene} handleLaunch={handleLaunch} soundRef={soundRef} isPlaying={isPlaying} setIsPlaying={setIsPlaying} />
         <EffectComposer disableNormalPass>
             <Bloom luminanceThreshold={0.2} intensity={1.0} mipmapBlur />
         </EffectComposer>
-        
         {scene === 'countdown' ? (
              <OrbitControls enablePan={false} minDistance={20} maxDistance={100} maxPolarAngle={Math.PI / 2} minPolarAngle={0} enabled={true} />
         ) : (
@@ -578,8 +552,7 @@ export default function App() {
   )
 }
 
-// --- UTILS COMPONENTS (KEPT ORIGINAL) ---
-
+// --- UTILS COMPONENTS (Dust, Countdown...) ---
 function InteractiveDust({ count = 4000 }) {
   const mesh = useRef(); const { raycaster, camera } = useThree(); const shockwaveRef = useRef(0)
   const starTexture = useMemo(() => getParticleTexture(), [])
@@ -613,7 +586,6 @@ function CountdownDisplay({ onFinishTransition }) {
     const [timeLeft, setTimeLeft] = useState({ d: 0, h: 0, m: 0, s: 0, total: 999 })
     const fontUrl = '/happy-new-year-2026/fonts/Orbitron_Regular.json'
     useEffect(() => {
-      // Giữ nguyên logic time countdown như yêu cầu
       const targetTime = isTesting ? new Date().getTime() + 15000 : new Date("Jan 1, 2026 00:00:00").getTime();
       const timer = setInterval(() => {
         const dist = targetTime - new Date().getTime()
