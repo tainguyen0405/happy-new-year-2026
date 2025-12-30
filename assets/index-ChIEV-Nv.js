@@ -4416,8 +4416,8 @@ return orthographicDepthToViewZ(depth,cameraNear,cameraFar);
             .line-year { font-size: 4rem; } 
             .line-sub { font-size: 0.7rem; letter-spacing: 0.3rem; }
           }
-        `}),_e.jsxs("div",{className:"cinematic-wrapper",children:[_e.jsx("div",{className:"line-happy text-glow",children:"Happy New Year"}),_e.jsx("div",{className:"line-year",children:"2026"}),_e.jsx("div",{className:"line-sub",children:"Vạn Sự Như Ý - Tỷ Sự Như Mơ"})]})]})}const By=[{value:"50.000",color:"#e492b2",bg:"linear-gradient(135deg, #fce4ec, #e91e63)",text:"Năm mới nhẹ nhàng, tình cảm đong đầy"},{value:"100.000",color:"#7da36d",bg:"linear-gradient(135deg, #e8f5e9, #4caf50)",text:"Lộc biếc mai vàng, khởi đầu suôn sẻ"},{value:"200.000",color:"#c9806e",bg:"linear-gradient(135deg, #efebe9, #d84315)",text:"May mắn song hành, tài lộc gõ cửa"},{value:"500.000",color:"#58aeb1",bg:"linear-gradient(135deg, #e0f7fa, #00acc1)",text:"Đại phú đại quý, tiền vào như nước"}];function Jk(){const[n,e]=ne.useState(0),[t,i]=ne.useState(null),[a,o]=ne.useState(!1),l=()=>{const g=Math.random();return g<.4?By[0]:g<.7?By[1]:g<.9?By[2]:By[3]},f=()=>{Yb(),e(1)},d=()=>{Yb();const g=l();i(g),e(2),setTimeout(()=>o(!0),500)},p=()=>{e(0),i(null),o(!1)};return _e.jsxs("div",{style:{position:"absolute",inset:0,pointerEvents:"none",zIndex:100},children:[_e.jsx("style",{children:`
-            /* Container Nút Rút Lì Xì */
+        `}),_e.jsxs("div",{className:"cinematic-wrapper",children:[_e.jsx("div",{className:"line-happy text-glow",children:"Happy New Year"}),_e.jsx("div",{className:"line-year",children:"2026"}),_e.jsx("div",{className:"line-sub",children:"Vạn Sự Như Ý - Tỷ Sự Như Mơ"})]})]})}const By=[{value:"50.000",color:"#e492b2",bg:"linear-gradient(135deg, #fce4ec, #e91e63)",text:"Năm mới nhẹ nhàng, tình cảm đong đầy"},{value:"100.000",color:"#7da36d",bg:"linear-gradient(135deg, #e8f5e9, #4caf50)",text:"Lộc biếc mai vàng, khởi đầu suôn sẻ"},{value:"200.000",color:"#c9806e",bg:"linear-gradient(135deg, #efebe9, #d84315)",text:"May mắn song hành, tài lộc gõ cửa"},{value:"500.000",color:"#58aeb1",bg:"linear-gradient(135deg, #e0f7fa, #00acc1)",text:"Đại phú đại quý, tiền vào như nước"}];function Jk(){const[n,e]=ne.useState(0),[t,i]=ne.useState(null),[a,o]=ne.useState(!1),[l,f]=ne.useState(!1),d=()=>{const x=Math.random();return x<.4?By[0]:x<.7?By[1]:x<.9?By[2]:By[3]},p=()=>{Yb(),e(1)},g=()=>{Yb();const x=d();i(x),e(2),setTimeout(()=>{o(!0),setTimeout(()=>{f(!0)},600)},300)},y=()=>{e(0),i(null),o(!1),f(!1)};return _e.jsxs("div",{style:{position:"absolute",inset:0,pointerEvents:"none",zIndex:100},children:[_e.jsx("style",{children:`
+            /* Container Nút Rút */
             .lucky-btn-container {
               position: absolute; bottom: 40px; left: 40px;
               pointer-events: auto; cursor: pointer;
@@ -4428,113 +4428,122 @@ return orthographicDepthToViewZ(depth,cameraNear,cameraFar);
             .lucky-btn-container:hover { transform: scale(1.1); }
             .icon-lixi {
               width: 50px; height: 80px; 
-              background: linear-gradient(to bottom right, #d00000, #990000);
-              border-radius: 4px; border: 1px solid #ffdb4d;
-              box-shadow: 0 4px 15px rgba(255,0,0,0.4);
-              display: flex; justify-content: center; align-items: center;
+              background: #d00000; border: 2px solid #ffdb4d;
+              border-radius: 6px; display: flex; justify-content: center; align-items: center;
+              box-shadow: 0 5px 15px rgba(0,0,0,0.5);
             }
-            .icon-lixi::after { content: '福'; color: #ffdb4d; font-family: 'Cinzel', serif; font-weight: bold; font-size: 24px; }
+            .icon-lixi::after { content: '福'; color: #ffdb4d; font-family: serif; font-size: 24px; }
             
-            /* Overlay chung */
+            /* Overlay */
             .overlay-backdrop {
               position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-              background: rgba(0,0,0,0.9); backdrop-filter: blur(10px);
+              background: rgba(0,0,0,0.85); backdrop-filter: blur(12px);
               display: flex; flex-direction: column; justify-content: center; align-items: center;
               pointer-events: auto; animation: fadeInOverlay 0.4s ease;
             }
 
-            /* Step 1: Chọn bao */
-            .deck-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
-            .lixi-item {
-              width: 120px; height: 180px;
-              background: linear-gradient(135deg, #b30000 0%, #d00000 100%);
+            /* Grid Lì Xì */
+            .deck-grid { display: flex; gap: 30px; perspective: 1000px; }
+            .lixi-card {
+              width: 100px; height: 160px;
+              background: linear-gradient(135deg, #b30000, #e60000);
               border: 2px solid #ffdb4d; border-radius: 8px;
-              cursor: pointer; position: relative; overflow: hidden;
-              box-shadow: 0 10px 25px rgba(0,0,0,0.6);
-              transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-              display: flex; justify-content: center; align-items: center;
+              cursor: pointer; display: flex; justify-content: center; align-items: center;
+              box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+              transition: transform 0.3s;
             }
-            .lixi-item:hover { transform: translateY(-15px) rotate(2deg); box-shadow: 0 15px 35px rgba(215, 0, 0, 0.4); }
-            .lixi-deco { 
-              width: 80px; height: 80px; border: 1px solid rgba(255, 219, 77, 0.5); 
-              border-radius: 50%; display: flex; justify-content: center; align-items: center;
-            }
-            .lixi-text { font-size: 40px; color: #ffdb4d; font-family: serif; }
+            .lixi-card:hover { transform: translateY(-20px); }
+            .lixi-card span { font-size: 40px; color: #ffdb4d; }
 
-            /* Step 2: Mở bao (Quan trọng) */
-            .open-scene { position: relative; width: 260px; height: 380px; perspective: 1000px; margin-top: 50px; }
-            
-            .envelope-body {
-              position: absolute; bottom: 0; left: 0; width: 100%; height: 100%;
-              background: #c62828; border-radius: 10px;
-              border: 2px solid #ffd700;
-              box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-              z-index: 10; display: flex; justify-content: center; align-items: flex-end;
-              overflow: hidden;
-            }
-            .envelope-pattern {
-              position: absolute; width: 100%; height: 100%; opacity: 0.1;
-              background-image: radial-gradient(#ffdb4d 2px, transparent 2px); background-size: 20px 20px;
+            /* --- CẤU TRÚC BAO LÌ XÌ 3 LỚP (REALISTIC) --- */
+            .envelope-container {
+                position: relative; width: 260px; height: 360px;
+                margin-top: 20px;
             }
 
-            .envelope-flap {
-              position: absolute; top: 0; left: 0; width: 100%; height: 40%;
-              background: #b71c1c; 
-              clip-path: polygon(0 0, 50% 100%, 100% 0);
-              transform-origin: top;
-              transition: transform 0.8s ease-in-out, z-index 0s linear 0.4s;
-              z-index: 20; /* Ban đầu nằm trên tiền */
-              border-top: 2px solid #ffd700;
-            }
-            .envelope-flap.open {
-              transform: rotateX(180deg);
-              z-index: 5; /* Sau khi mở thì nằm dưới tiền */
+            /* Layer 1: Lưng bao (Nằm dưới cùng) */
+            .env-back {
+                position: absolute; bottom: 0; width: 100%; height: 100%;
+                background: #8e0000; border-radius: 10px;
+                box-shadow: 0 15px 35px rgba(0,0,0,0.6);
+                z-index: 1;
             }
 
-            .money-bill {
-              position: absolute; left: 50%; bottom: 10px; 
-              width: 90%; height: 50%;
-              background: white; border-radius: 5px;
-              transform: translateX(-50%);
-              z-index: 15; /* Nằm giữa body và flap khi flap đóng */
-              transition: bottom 1s cubic-bezier(0.5, 0, 0, 1) 0.6s, transform 1s 0.6s;
-              box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-              display: flex; flex-direction: column; overflow: hidden;
+            /* Layer 2: Tiền (Nằm giữa Lưng và Túi) */
+            .env-money {
+                position: absolute; left: 50%; bottom: 10px;
+                width: 90%; height: 55%; 
+                transform: translateX(-50%);
+                z-index: 5; /* Cao hơn lưng, thấp hơn túi */
+                transition: transform 1s cubic-bezier(0.34, 1.56, 0.64, 1), bottom 1s ease;
+                border-radius: 4px; overflow: hidden;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+                display: flex; flex-direction: column;
             }
-            .money-bill.revealed {
-              bottom: 180px; /* Trồi lên cao */
-              transform: translateX(-50%) scale(1.1);
+            /* Khi tiền trồi lên */
+            .env-money.rise {
+                bottom: 120px; /* Trồi cao lên */
+                transform: translateX(-50%) scale(1.1) rotate(-2deg);
+                z-index: 25; /* Sau khi trồi hẳn lên thì đè lên túi để rõ ràng */
+            }
+
+            /* Layer 3: Túi bao (Pocket - Mặt trước phía dưới) */
+            .env-pocket {
+                position: absolute; bottom: 0; left: 0; width: 100%; height: 75%; /* Chỉ cao 75% để chừa chỗ cho tiền chui ra */
+                background: #c62828; 
+                border-radius: 0 0 10px 10px;
+                border: 2px solid #ffdb4d; border-top: none;
+                z-index: 10; /* Đè lên tiền lúc chưa trồi */
+                display: flex; justify-content: center; align-items: center;
+                box-shadow: inset 0 10px 20px rgba(0,0,0,0.2); /* Tạo chiều sâu miệng túi */
+            }
+            .env-pocket-text { font-family: 'Cinzel', serif; color: #ffdb4d; font-size: 60px; margin-top: 30px; text-shadow: 0 2px 4px rgba(0,0,0,0.3); }
+
+            /* Layer 4: Nắp bao (Flap - Mặt trước phía trên) */
+            .env-flap {
+                position: absolute; top: 0; left: 0; width: 100%; height: 25%;
+                background: #b71c1c;
+                border-radius: 10px 10px 0 0;
+                border: 2px solid #ffdb4d; border-bottom: none;
+                transform-origin: bottom; /* Xoay từ cạnh dưới của nắp */
+                z-index: 15; /* Cao nhất ban đầu */
+                transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1), z-index 0.2s 0.3s;
+                /* Tạo hình tam giác cho nắp */
+                clip-path: polygon(0 0, 100% 0, 100% 60%, 50% 100%, 0 60%);
+                height: 40%; /* Kéo dài nắp xuống đè lên túi một chút */
+            }
+            .env-flap.open {
+                transform: rotateX(180deg);
+                z-index: 0; /* Sau khi mở thì tụt xuống dưới cùng */
+                opacity: 0.8;
             }
 
             /* Design tờ tiền */
-            .bill-inner { flex: 1; padding: 10px; display: flex; flex-direction: column; justify-content: space-between; position: relative; }
-            .bill-val { font-weight: 900; font-size: 24px; align-self: flex-end; color: #fff; text-shadow: 1px 1px 2px rgba(0,0,0,0.3); }
-            .bill-center { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 14px; color: rgba(255,255,255,0.8); letter-spacing: 2px; }
-            .bill-pattern { position: absolute; inset: 0; opacity: 0.3; background: repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255,255,255,0.2) 10px, rgba(255,255,255,0.2) 20px); }
+            .bill-layout { flex: 1; padding: 15px; display: flex; flex-direction: column; justify-content: space-between; position: relative; }
+            .bill-val { font-weight: 900; font-size: 28px; color: #fff; text-align: right; text-shadow: 1px 1px 2px rgba(0,0,0,0.3); }
+            .bill-center { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); border: 2px solid rgba(255,255,255,0.5); padding: 5px 20px; color: white; font-weight: bold; border-radius: 20px; }
 
             .wish-box {
-              margin-top: 20px; color: #ffdb4d; font-family: 'Montserrat', sans-serif;
-              font-size: 1.3rem; text-align: center; max-width: 90%;
-              opacity: 0; transform: translateY(20px);
-              animation: fadeInUp 1s forwards 1.5s;
+               margin-top: 30px; color: #ffdb4d; font-family: 'Montserrat', sans-serif;
+               font-size: 1.4rem; font-weight: 600; text-align: center; max-width: 90%;
+               opacity: 0; transform: translateY(20px);
+               animation: fadeInMsg 1s forwards 1s;
+               text-shadow: 0 2px 4px rgba(0,0,0,0.8);
             }
-
-            .close-btn {
-              margin-top: 30px; padding: 12px 40px; 
-              background: linear-gradient(to right, #ffdb4d, #ffb300);
-              color: #b71c1c; font-weight: bold; border: none; border-radius: 50px;
-              font-size: 16px; cursor: pointer; box-shadow: 0 0 20px rgba(255, 219, 77, 0.4);
-              transition: transform 0.2s;
+            
+            .btn-nhan-loc {
+                margin-top: 25px; padding: 12px 40px; border-radius: 30px;
+                border: none; background: #ffdb4d; color: #b71c1c; font-weight: bold; font-size: 1.2rem;
+                cursor: pointer; box-shadow: 0 0 15px #ffdb4d;
+                transition: transform 0.2s;
             }
-            .close-btn:hover { transform: scale(1.05); }
+            .btn-nhan-loc:hover { transform: scale(1.1); }
 
-            @keyframes floatBtn { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+            @keyframes floatBtn { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
             @keyframes fadeInOverlay { from { opacity: 0; } to { opacity: 1; } }
-            @keyframes fadeInUp { to { opacity: 1; transform: translateY(0); } }
-
+            @keyframes fadeInMsg { to { opacity: 1; transform: translateY(0); } }
             @media (max-width: 600px) {
-               .deck-grid { grid-template-columns: repeat(2, 1fr); gap: 15px; }
-               .lixi-item { width: 100px; height: 140px; }
-               .open-scene { transform: scale(0.85); margin-top: 20px; }
+               .deck-grid { gap: 10px; transform: scale(0.9); }
+               .envelope-container { transform: scale(0.85); margin-top: 10px; }
             }
-          `}),n===0&&_e.jsxs("div",{className:"lucky-btn-container",onClick:f,children:[_e.jsx("div",{className:"icon-lixi"}),_e.jsx("div",{style:{color:"#ffdb4d",marginTop:8,fontSize:13,fontWeight:"bold",textShadow:"0 2px 4px black",background:"rgba(0,0,0,0.5)",padding:"2px 8px",borderRadius:10},children:"RÚT LÌ XÌ"})]}),n===1&&_e.jsxs("div",{className:"overlay-backdrop",children:[_e.jsx("h2",{style:{color:"#ffdb4d",fontFamily:"Cinzel, serif",marginBottom:40,fontSize:"2rem",textShadow:"0 0 10px #d00000"},children:"HÁI LỘC ĐẦU NĂM"}),_e.jsx("div",{className:"deck-grid",children:[1,2,3,4].map(g=>_e.jsx("div",{className:"lixi-item",onClick:d,children:_e.jsx("div",{className:"lixi-deco",children:_e.jsx("span",{className:"lixi-text",children:"福"})})},g))})]}),n===2&&t&&_e.jsxs("div",{className:"overlay-backdrop",children:[_e.jsxs("div",{className:"open-scene",children:[_e.jsxs("div",{className:`money-bill ${a?"revealed":""}`,style:{background:t.bg},children:[_e.jsx("div",{className:"bill-pattern"}),_e.jsxs("div",{className:"bill-inner",children:[_e.jsx("div",{style:{fontSize:10,color:"white",opacity:.8},children:"NHNN VIET NAM"}),_e.jsx("div",{className:"bill-center",children:"LUCKY MONEY"}),_e.jsx("div",{className:"bill-val",children:t.value})]})]}),_e.jsx("div",{className:`envelope-flap ${a?"open":""}`}),_e.jsxs("div",{className:"envelope-body",children:[_e.jsx("div",{className:"envelope-pattern"}),_e.jsx("div",{style:{marginBottom:40,color:"#ffdb4d",fontSize:50,fontFamily:"serif",zIndex:20},children:"2026"})]})]}),_e.jsxs("div",{className:"wish-box",children:['"',t.text,'"']}),_e.jsx("button",{className:"close-btn",onClick:p,children:"Nhận Lộc Ngay"})]})]})}function $k({scene:n,handleLaunch:e,soundRef:t,isPlaying:i,setIsPlaying:a}){const{camera:o}=Fa(),l=ne.useRef(!1);return ne.useEffect(()=>{n==="fireworks"&&(o.position.set(0,0,40),o.lookAt(0,0,0))},[n,o]),ne.useEffect(()=>{n==="fireworks"&&!l.current&&t.current&&setTimeout(()=>{t.current.play(),a(!0),l.current=!0},200)},[n,t,a]),_e.jsx(_e.Fragment,{children:n==="countdown"?_e.jsxs(ne.Suspense,{fallback:null,children:[_e.jsx(tX,{count:4e3}),_e.jsx(H2,{radius:250,count:2e3,factor:4,fade:!0,speed:1}),_e.jsx("ambientLight",{intensity:.5}),_e.jsx(nX,{onFinishTransition:e}),_e.jsx(qk,{soundRef:t,radius:18,count:150}),_e.jsx(P2,{ref:t,url:"/happy-new-year-2026/sounds/lofi.mp3",distance:30,loop:!0})]}):_e.jsxs(ne.Suspense,{fallback:null,children:[_e.jsx(H2,{radius:150,count:1e3,factor:2,fade:!0,speed:.2}),_e.jsx(Kk,{}),_e.jsx(P2,{ref:t,url:"/happy-new-year-2026/sounds/celebration.mp3",distance:50,loop:!0}),_e.jsx("ambientLight",{intensity:.1,color:"#000022"})]})})}function eX(){const n=ne.useRef(),[e,t]=ne.useState("countdown"),[i,a]=ne.useState(0),[o,l]=ne.useState(!0),[f,d]=ne.useState(!1),[p,g]=ne.useState(2),y=()=>{l(!1),a(1),setTimeout(()=>{t("fireworks");const x=setInterval(()=>{a(_=>_<=0?(clearInterval(x),0):_-.05)},30)},600)};return _e.jsxs("div",{style:{width:"100vw",height:"100vh",position:"relative",background:"#000",overflow:"hidden"},children:[o&&_e.jsxs(_e.Fragment,{children:[_e.jsx(kk,{soundRef:n}),_e.jsx(Xk,{soundRef:n})]}),e==="fireworks"&&_e.jsxs(_e.Fragment,{children:[_e.jsx(Yk,{soundRef:n,isPlaying:f,setIsPlaying:d}),_e.jsx(Wk,{soundRef:n,volume:p,setVolume:g}),_e.jsx(Qk,{}),_e.jsx(Jk,{})]}),_e.jsx("div",{style:{position:"absolute",inset:0,backgroundColor:"white",opacity:i,zIndex:50,pointerEvents:"none"}}),_e.jsxs(gV,{camera:{position:[0,8,35],fov:50},dpr:[1,1.5],children:[_e.jsx("color",{attach:"background",args:["#050505"]}),_e.jsx(_6,{preset:"city"}),_e.jsx($k,{scene:e,handleLaunch:y,soundRef:n,isPlaying:f,setIsPlaying:d}),_e.jsx(XH,{disableNormalPass:!0,children:_e.jsx(YH,{luminanceThreshold:.2,intensity:1,mipmapBlur:!0})}),e==="countdown"?_e.jsx(I2,{enablePan:!1,minDistance:20,maxDistance:100,maxPolarAngle:Math.PI/2,minPolarAngle:0,enabled:!0}):_e.jsx(I2,{enablePan:!1,enableZoom:!1,autoRotate:!0,autoRotateSpeed:.3,maxPolarAngle:Math.PI/1.8,minPolarAngle:Math.PI/2.2})]})]})}function tX({count:n=4e3}){const e=ne.useRef(),{raycaster:t,camera:i}=Fa(),a=ne.useRef(0),o=ne.useMemo(()=>CU(),[]);ne.useEffect(()=>{const g=()=>{a.current=2};return window.addEventListener("pointerdown",g),()=>window.removeEventListener("pointerdown",g)},[]);const[l,f,d,p]=ne.useMemo(()=>{const g=new Float32Array(n*3),y=new Float32Array(n*3),x=new Float32Array(n*3),_=new Float32Array(n*3);for(let E=0;E<n;E++){const C=(Math.random()-.5)*200,A=(Math.random()-.5)*200,M=(Math.random()-.5)*200;g.set([C,A,M],E*3),x.set([C,A,M],E*3);const R=new Ut().setHSL(Math.random()*.1+.6,.9,.8);y.set([R.r,R.g,R.b],E*3)}return[g,y,x,_]},[n]);return Tl(g=>{if(e.current){a.current*=.92,t.setFromCamera(g.mouse,i);for(let y=0;y<n;y++){const x=y*3,_=new Q(l[x],l[x+1],l[x+2]),E=new Q;t.ray.closestPointToPoint(_,E);const C=_.distanceTo(E),A=30+a.current*40;if(C<A){const M=(A-C)/A,R=new Q().copy(_).sub(E).normalize();p[x]+=R.x*M*(2+a.current*15),p[x+1]+=R.y*M*(2+a.current*15),p[x+2]+=R.z*M*(2+a.current*15)}p[x]+=(d[x]-l[x])*.015,p[x]*=.92,l[x]+=p[x],p[x+1]+=(d[x+1]-l[x+1])*.015,p[x+1]*=.92,l[x+1]+=p[x+1],p[x+2]+=(d[x+2]-l[x+2])*.015,p[x+2]*=.92,l[x+2]+=p[x+2]}e.current.geometry.attributes.position.needsUpdate=!0}}),_e.jsxs("points",{ref:e,children:[_e.jsxs("bufferGeometry",{children:[_e.jsx("bufferAttribute",{attach:"attributes-position",count:l.length/3,array:l,itemSize:3}),_e.jsx("bufferAttribute",{attach:"attributes-color",count:f.length/3,array:f,itemSize:3})]}),_e.jsx("pointsMaterial",{size:.6,vertexColors:!0,transparent:!0,map:o,blending:ep,depthWrite:!1})]})}function nX({onFinishTransition:n}){const[e,t]=ne.useState({d:0,h:0,m:0,s:0,total:999}),i="/happy-new-year-2026/fonts/Orbitron_Regular.json";return ne.useEffect(()=>{const a=new Date().getTime()+15e3,o=setInterval(()=>{const l=a-new Date().getTime();if(l<=0){t({total:0}),clearInterval(o);return}t({d:Math.floor(l/864e5),h:Math.floor(l%864e5/36e5),m:Math.floor(l%36e5/6e4),s:Math.floor(l%6e4/1e3),total:Math.floor(l/1e3)})},1e3);return()=>clearInterval(o)},[]),e.total<=0?_e.jsx(aX,{onActivate:n}):_e.jsx("group",{children:e.total<=10?_e.jsx(Xd,{children:_e.jsxs(kd,{font:i,size:8,height:2.5,bevelEnabled:!0,children:[e.total,_e.jsx("meshPhysicalMaterial",{metalness:1,roughness:.1,color:"white"})]})}):_e.jsx(i6,{speed:2,rotationIntensity:.1,floatIntensity:.4,children:_e.jsxs("group",{children:[_e.jsx(iX,{text:"COUNTDOWN 2026",radius:15,startAngle:Math.PI*.7,endAngle:Math.PI*.3,fontSize:.8,textHeight:.3,verticalOffset:-3}),_e.jsx(Xd,{top:!0,position:[-.5,2,0],children:_e.jsxs(kd,{font:i,size:5,height:1.5,bevelEnabled:!0,children:[e.d,_e.jsx(Wb,{})]})}),_e.jsx(Xd,{position:[-.2,-1,0],children:_e.jsxs(kd,{font:i,size:1,height:.5,children:["DAYS TO 2026",_e.jsx("meshStandardMaterial",{color:"#888"})]})}),_e.jsx(Xd,{bottom:!0,position:[-1.5,-4,0],children:_e.jsxs(kd,{font:i,size:1.2,height:.4,children:[`${e.h}h  ${e.m}m  ${e.s}s`,_e.jsx(Wb,{})]})})]})})})}function iX({text:n,radius:e=15,startAngle:t=Math.PI*.7,endAngle:i=Math.PI*.3,fontSize:a=.8,textHeight:o=.3,verticalOffset:l=0}){const f="/happy-new-year-2026/fonts/Orbitron_Regular.json",d=n.split(""),g=(t-i)/(d.length-1);return _e.jsx("group",{position:[0,l,0],children:d.map((y,x)=>{const _=t-g*x,E=Math.cos(_)*e,C=Math.sin(_)*e;return _e.jsx("group",{position:[E,C,0],rotation:[0,0,_-Math.PI/2],children:_e.jsx(Xd,{children:_e.jsxs(kd,{font:f,size:a,height:o,bevelEnabled:!0,curveSegments:8,children:[y,_e.jsx(Wb,{})]})})},x)})})}function aX({onActivate:n}){const[e,t]=ne.useState(!1),[i,a]=ne.useState(!1),o=ne.useRef(),l=ne.useRef();return Tl(f=>{if(o.current&&o.current.lookAt(f.camera.position),l.current){const d=i?-.8:0;l.current.position.z=uM.lerp(l.current.position.z,d,.4)}}),_e.jsxs("group",{ref:o,children:[_e.jsx(F2,{args:[3,3.2,.5,64],rotation:[Math.PI/2,0,0],position:[0,0,-.4],children:_e.jsx("meshStandardMaterial",{color:"#050505",metalness:1,roughness:.2})}),_e.jsx("group",{onPointerOver:()=>t(!0),onPointerOut:()=>(t(!1),a(!1)),onPointerDown:()=>{a(!0),Yb()},onPointerUp:()=>{a(!1),n()},ref:l,children:_e.jsx(F2,{args:[2,2.1,.8,64],rotation:[Math.PI/2,0,0],children:_e.jsx("meshStandardMaterial",{color:e?"#ff0033":"#220000",metalness:1,emissive:"#ff0000",emissiveIntensity:e?1.2:.1})})}),_e.jsx(Xd,{position:[0,-4.8,0],children:_e.jsxs(kd,{font:"/happy-new-year-2026/fonts/Orbitron_Regular.json",size:.5,height:.1,children:["LAUNCH 2026",_e.jsx("meshStandardMaterial",{color:"white"})]})})]})}function Wb(){const n=ne.useRef();return Tl(e=>{if(n.current){const t=e.clock.getElapsedTime()*.1%1;n.current.color.setHSL(t,1,.5),n.current.emissive.setHSL(t,1,.2)}}),_e.jsx("meshPhysicalMaterial",{ref:n,metalness:1,roughness:.1,emissiveIntensity:.5})}const sX={position:"fixed",top:0,left:0,width:"100%",height:"100%",background:"#000000",overflow:"hidden",margin:0,padding:0};RN.createRoot(document.getElementById("root")).render(_e.jsx(Zb.StrictMode,{children:_e.jsx("div",{style:sX,children:_e.jsx(eX,{})})}));
+          `}),n===0&&_e.jsxs("div",{className:"lucky-btn-container",onClick:p,children:[_e.jsx("div",{className:"icon-lixi"}),_e.jsx("div",{style:{color:"#ffdb4d",marginTop:5,fontSize:12,fontWeight:"bold",background:"rgba(0,0,0,0.6)",padding:"2px 6px",borderRadius:4},children:"RÚT LÌ XÌ"})]}),n===1&&_e.jsxs("div",{className:"overlay-backdrop",children:[_e.jsx("h2",{style:{color:"#ffdb4d",fontFamily:"Cinzel, serif",marginBottom:30,fontSize:"2rem"},children:"CHỌN LỘC ĐẦU NĂM"}),_e.jsx("div",{className:"deck-grid",children:[1,2,3,4].map(x=>_e.jsx("div",{className:"lixi-card",onClick:g,children:_e.jsx("span",{children:"🧧"})},x))})]}),n===2&&t&&_e.jsxs("div",{className:"overlay-backdrop",children:[_e.jsxs("div",{className:"envelope-container",children:[_e.jsx("div",{className:`env-flap ${a?"open":""}`}),_e.jsx("div",{className:"env-pocket",children:_e.jsx("div",{className:"env-pocket-text",children:"福"})}),_e.jsx("div",{className:`env-money ${l?"rise":""}`,style:{background:t.bg},children:_e.jsxs("div",{className:"bill-layout",children:[_e.jsx("div",{style:{color:"white",opacity:.8,fontSize:10},children:"LUCKY MONEY 2026"}),_e.jsx("div",{className:"bill-center",children:"VND"}),_e.jsx("div",{className:"bill-val",children:t.value})]})}),_e.jsx("div",{className:"env-back"})]}),_e.jsxs("div",{className:"wish-box",children:['"',t.text,'"']}),l&&_e.jsx("button",{className:"btn-nhan-loc",onClick:y,children:"Nhận Lộc"})]})]})}function $k({scene:n,handleLaunch:e,soundRef:t,isPlaying:i,setIsPlaying:a}){const{camera:o}=Fa(),l=ne.useRef(!1);return ne.useEffect(()=>{n==="fireworks"&&(o.position.set(0,0,40),o.lookAt(0,0,0))},[n,o]),ne.useEffect(()=>{n==="fireworks"&&!l.current&&t.current&&setTimeout(()=>{t.current.play(),a(!0),l.current=!0},200)},[n,t,a]),_e.jsx(_e.Fragment,{children:n==="countdown"?_e.jsxs(ne.Suspense,{fallback:null,children:[_e.jsx(tX,{count:4e3}),_e.jsx(H2,{radius:250,count:2e3,factor:4,fade:!0,speed:1}),_e.jsx("ambientLight",{intensity:.5}),_e.jsx(nX,{onFinishTransition:e}),_e.jsx(qk,{soundRef:t,radius:18,count:150}),_e.jsx(P2,{ref:t,url:"/happy-new-year-2026/sounds/lofi.mp3",distance:30,loop:!0})]}):_e.jsxs(ne.Suspense,{fallback:null,children:[_e.jsx(H2,{radius:150,count:1e3,factor:2,fade:!0,speed:.2}),_e.jsx(Kk,{}),_e.jsx(P2,{ref:t,url:"/happy-new-year-2026/sounds/celebration.mp3",distance:50,loop:!0}),_e.jsx("ambientLight",{intensity:.1,color:"#000022"})]})})}function eX(){const n=ne.useRef(),[e,t]=ne.useState("countdown"),[i,a]=ne.useState(0),[o,l]=ne.useState(!0),[f,d]=ne.useState(!1),[p,g]=ne.useState(2),y=()=>{l(!1),a(1),setTimeout(()=>{t("fireworks");const x=setInterval(()=>{a(_=>_<=0?(clearInterval(x),0):_-.05)},30)},600)};return _e.jsxs("div",{style:{width:"100vw",height:"100vh",position:"relative",background:"#000",overflow:"hidden"},children:[o&&_e.jsxs(_e.Fragment,{children:[_e.jsx(kk,{soundRef:n}),_e.jsx(Xk,{soundRef:n})]}),e==="fireworks"&&_e.jsxs(_e.Fragment,{children:[_e.jsx(Yk,{soundRef:n,isPlaying:f,setIsPlaying:d}),_e.jsx(Wk,{soundRef:n,volume:p,setVolume:g}),_e.jsx(Qk,{}),_e.jsx(Jk,{})]}),_e.jsx("div",{style:{position:"absolute",inset:0,backgroundColor:"white",opacity:i,zIndex:50,pointerEvents:"none"}}),_e.jsxs(gV,{camera:{position:[0,8,35],fov:50},dpr:[1,1.5],children:[_e.jsx("color",{attach:"background",args:["#050505"]}),_e.jsx(_6,{preset:"city"}),_e.jsx($k,{scene:e,handleLaunch:y,soundRef:n,isPlaying:f,setIsPlaying:d}),_e.jsx(XH,{disableNormalPass:!0,children:_e.jsx(YH,{luminanceThreshold:.2,intensity:1,mipmapBlur:!0})}),e==="countdown"?_e.jsx(I2,{enablePan:!1,minDistance:20,maxDistance:100,maxPolarAngle:Math.PI/2,minPolarAngle:0,enabled:!0}):_e.jsx(I2,{enablePan:!1,enableZoom:!1,autoRotate:!0,autoRotateSpeed:.3,maxPolarAngle:Math.PI/1.8,minPolarAngle:Math.PI/2.2})]})]})}function tX({count:n=4e3}){const e=ne.useRef(),{raycaster:t,camera:i}=Fa(),a=ne.useRef(0),o=ne.useMemo(()=>CU(),[]);ne.useEffect(()=>{const g=()=>{a.current=2};return window.addEventListener("pointerdown",g),()=>window.removeEventListener("pointerdown",g)},[]);const[l,f,d,p]=ne.useMemo(()=>{const g=new Float32Array(n*3),y=new Float32Array(n*3),x=new Float32Array(n*3),_=new Float32Array(n*3);for(let E=0;E<n;E++){const C=(Math.random()-.5)*200,A=(Math.random()-.5)*200,M=(Math.random()-.5)*200;g.set([C,A,M],E*3),x.set([C,A,M],E*3);const R=new Ut().setHSL(Math.random()*.1+.6,.9,.8);y.set([R.r,R.g,R.b],E*3)}return[g,y,x,_]},[n]);return Tl(g=>{if(e.current){a.current*=.92,t.setFromCamera(g.mouse,i);for(let y=0;y<n;y++){const x=y*3,_=new Q(l[x],l[x+1],l[x+2]),E=new Q;t.ray.closestPointToPoint(_,E);const C=_.distanceTo(E),A=30+a.current*40;if(C<A){const M=(A-C)/A,R=new Q().copy(_).sub(E).normalize();p[x]+=R.x*M*(2+a.current*15),p[x+1]+=R.y*M*(2+a.current*15),p[x+2]+=R.z*M*(2+a.current*15)}p[x]+=(d[x]-l[x])*.015,p[x]*=.92,l[x]+=p[x],p[x+1]+=(d[x+1]-l[x+1])*.015,p[x+1]*=.92,l[x+1]+=p[x+1],p[x+2]+=(d[x+2]-l[x+2])*.015,p[x+2]*=.92,l[x+2]+=p[x+2]}e.current.geometry.attributes.position.needsUpdate=!0}}),_e.jsxs("points",{ref:e,children:[_e.jsxs("bufferGeometry",{children:[_e.jsx("bufferAttribute",{attach:"attributes-position",count:l.length/3,array:l,itemSize:3}),_e.jsx("bufferAttribute",{attach:"attributes-color",count:f.length/3,array:f,itemSize:3})]}),_e.jsx("pointsMaterial",{size:.6,vertexColors:!0,transparent:!0,map:o,blending:ep,depthWrite:!1})]})}function nX({onFinishTransition:n}){const[e,t]=ne.useState({d:0,h:0,m:0,s:0,total:999}),i="/happy-new-year-2026/fonts/Orbitron_Regular.json";return ne.useEffect(()=>{const a=new Date().getTime()+15e3,o=setInterval(()=>{const l=a-new Date().getTime();if(l<=0){t({total:0}),clearInterval(o);return}t({d:Math.floor(l/864e5),h:Math.floor(l%864e5/36e5),m:Math.floor(l%36e5/6e4),s:Math.floor(l%6e4/1e3),total:Math.floor(l/1e3)})},1e3);return()=>clearInterval(o)},[]),e.total<=0?_e.jsx(aX,{onActivate:n}):_e.jsx("group",{children:e.total<=10?_e.jsx(Xd,{children:_e.jsxs(kd,{font:i,size:8,height:2.5,bevelEnabled:!0,children:[e.total,_e.jsx("meshPhysicalMaterial",{metalness:1,roughness:.1,color:"white"})]})}):_e.jsx(i6,{speed:2,rotationIntensity:.1,floatIntensity:.4,children:_e.jsxs("group",{children:[_e.jsx(iX,{text:"COUNTDOWN 2026",radius:15,startAngle:Math.PI*.7,endAngle:Math.PI*.3,fontSize:.8,textHeight:.3,verticalOffset:-3}),_e.jsx(Xd,{top:!0,position:[-.5,2,0],children:_e.jsxs(kd,{font:i,size:5,height:1.5,bevelEnabled:!0,children:[e.d,_e.jsx(Wb,{})]})}),_e.jsx(Xd,{position:[-.2,-1,0],children:_e.jsxs(kd,{font:i,size:1,height:.5,children:["DAYS TO 2026",_e.jsx("meshStandardMaterial",{color:"#888"})]})}),_e.jsx(Xd,{bottom:!0,position:[-1.5,-4,0],children:_e.jsxs(kd,{font:i,size:1.2,height:.4,children:[`${e.h}h  ${e.m}m  ${e.s}s`,_e.jsx(Wb,{})]})})]})})})}function iX({text:n,radius:e=15,startAngle:t=Math.PI*.7,endAngle:i=Math.PI*.3,fontSize:a=.8,textHeight:o=.3,verticalOffset:l=0}){const f="/happy-new-year-2026/fonts/Orbitron_Regular.json",d=n.split(""),g=(t-i)/(d.length-1);return _e.jsx("group",{position:[0,l,0],children:d.map((y,x)=>{const _=t-g*x,E=Math.cos(_)*e,C=Math.sin(_)*e;return _e.jsx("group",{position:[E,C,0],rotation:[0,0,_-Math.PI/2],children:_e.jsx(Xd,{children:_e.jsxs(kd,{font:f,size:a,height:o,bevelEnabled:!0,curveSegments:8,children:[y,_e.jsx(Wb,{})]})})},x)})})}function aX({onActivate:n}){const[e,t]=ne.useState(!1),[i,a]=ne.useState(!1),o=ne.useRef(),l=ne.useRef();return Tl(f=>{if(o.current&&o.current.lookAt(f.camera.position),l.current){const d=i?-.8:0;l.current.position.z=uM.lerp(l.current.position.z,d,.4)}}),_e.jsxs("group",{ref:o,children:[_e.jsx(F2,{args:[3,3.2,.5,64],rotation:[Math.PI/2,0,0],position:[0,0,-.4],children:_e.jsx("meshStandardMaterial",{color:"#050505",metalness:1,roughness:.2})}),_e.jsx("group",{onPointerOver:()=>t(!0),onPointerOut:()=>(t(!1),a(!1)),onPointerDown:()=>{a(!0),Yb()},onPointerUp:()=>{a(!1),n()},ref:l,children:_e.jsx(F2,{args:[2,2.1,.8,64],rotation:[Math.PI/2,0,0],children:_e.jsx("meshStandardMaterial",{color:e?"#ff0033":"#220000",metalness:1,emissive:"#ff0000",emissiveIntensity:e?1.2:.1})})}),_e.jsx(Xd,{position:[0,-4.8,0],children:_e.jsxs(kd,{font:"/happy-new-year-2026/fonts/Orbitron_Regular.json",size:.5,height:.1,children:["LAUNCH 2026",_e.jsx("meshStandardMaterial",{color:"white"})]})})]})}function Wb(){const n=ne.useRef();return Tl(e=>{if(n.current){const t=e.clock.getElapsedTime()*.1%1;n.current.color.setHSL(t,1,.5),n.current.emissive.setHSL(t,1,.2)}}),_e.jsx("meshPhysicalMaterial",{ref:n,metalness:1,roughness:.1,emissiveIntensity:.5})}const sX={position:"fixed",top:0,left:0,width:"100%",height:"100%",background:"#000000",overflow:"hidden",margin:0,padding:0};RN.createRoot(document.getElementById("root")).render(_e.jsx(Zb.StrictMode,{children:_e.jsx("div",{style:sX,children:_e.jsx(eX,{})})}));
