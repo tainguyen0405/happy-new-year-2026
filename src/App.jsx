@@ -4,13 +4,13 @@ import { OrbitControls, Text3D, Center, Float, Stars, Environment, PositionalAud
 import { EffectComposer, Bloom } from '@react-three/postprocessing'
 import * as THREE from 'three'
 
-// --- IMPORT COMPONENT CON (Đã khôi phục CinematicPlayButton) ---
+// --- CÁC COMPONENT CON ---
 import CinematicVolume from './CinematicVolume'
-import CinematicPlayButton from './CinematicPlayButton' // <-- KHÔI PHỤC LẠI
 import CircularAudioVisualizer from './CircularAudioVisualizer'
 import VolumeControl from './VolumeControl'
+// Chúng ta sẽ viết lại CinematicPlayButton ngay trong file này để fix lỗi logic
 
-const isTesting = true; // Sửa thành false khi chạy thật
+const isTesting = true; // Sửa thành false khi chạy thật (đếm đúng ngày)
 
 // --- 1. UTILS (GIỮ NGUYÊN) ---
 const getParticleTexture = () => {
@@ -49,7 +49,60 @@ const playCustomClick = () => {
   playPulse(now + 0.05, 900, 0.06);
 };
 
-// --- 2. FIREWORKS & VISUALS (GIỮ NGUYÊN) ---
+// --- 2. LOGIC NÚT PLAY ĐÃ SỬA (FIX LỖI 2 CLICK) ---
+function CinematicPlayButton({ soundRef, isPlaying, setIsPlaying }) {
+  const toggleMusic = () => {
+    if (!soundRef.current) return;
+    
+    // 1. Luôn đảm bảo AudioContext được kích hoạt (Resume) trước tiên
+    if (soundRef.current.context.state === 'suspended') {
+      soundRef.current.context.resume();
+    }
+
+    // 2. Kiểm tra trạng thái thực tế của bài nhạc
+    if (isPlaying) {
+      soundRef.current.pause();
+      setIsPlaying(false);
+    } else {
+      soundRef.current.play();
+      setIsPlaying(true);
+    }
+  };
+
+  return (
+    <div 
+      onClick={toggleMusic}
+      style={{
+        position: 'absolute', bottom: '50px', right: '50px', zIndex: 100,
+        width: '60px', height: '60px', borderRadius: '50%',
+        background: 'rgba(255, 255, 255, 0.1)', backdropFilter: 'blur(10px)',
+        border: '1px solid rgba(255, 255, 255, 0.3)',
+        display: 'flex', justifyContent: 'center', alignItems: 'center',
+        cursor: 'pointer', transition: 'all 0.3s ease',
+        boxShadow: '0 0 20px rgba(0, 0, 0, 0.3)'
+      }}
+      onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.1)'; e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)'; }}
+      onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)'; }}
+    >
+      {isPlaying ? (
+        // Icon Pause
+        <div style={{ display: 'flex', gap: '6px' }}>
+          <div style={{ width: '4px', height: '20px', background: '#fff', borderRadius: '2px' }}></div>
+          <div style={{ width: '4px', height: '20px', background: '#fff', borderRadius: '2px' }}></div>
+        </div>
+      ) : (
+        // Icon Play
+        <div style={{ 
+          width: '0', height: '0', 
+          borderTop: '10px solid transparent', borderBottom: '10px solid transparent', 
+          borderLeft: '16px solid #fff', marginLeft: '4px' 
+        }}></div>
+      )}
+    </div>
+  )
+}
+
+// --- 3. FIREWORKS & VISUALS (GIỮ NGUYÊN) ---
 function OptimizedFirework({ position, color, texture }) {
   const pointsRef = useRef()
   const count = 80 
@@ -118,7 +171,7 @@ function FireworkManager() {
   return <>{fireworks.map(f => <OptimizedFirework key={f.id} position={f.pos} color={f.color} texture={texture} />)}</>
 }
 
-// --- 3. UI COMPONENTS (TITLE & LIXI) ---
+// --- 4. UI 2D TITLE & LIXI (GIỮ NGUYÊN) ---
 function CinematicTitle2D() {
   return (
     <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 10, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
@@ -157,7 +210,6 @@ function LuckyMoneyFeature() {
     const [selectedMoney, setSelectedMoney] = useState(null);
     const [flapOpen, setFlapOpen] = useState(false); 
     const [moneyRise, setMoneyRise] = useState(false); 
-
     const pickRandomMoney = () => {
       const rand = Math.random();
       if (rand < 0.4) return DENOMINATIONS[0];
@@ -174,7 +226,6 @@ function LuckyMoneyFeature() {
       setTimeout(() => { setFlapOpen(true); setTimeout(() => { setMoneyRise(true); }, 600); }, 300);
     };
     const handleClose = () => { setStep(0); setSelectedMoney(null); setFlapOpen(false); setMoneyRise(false); };
-  
     return (
       <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 100 }}>
         <style>
@@ -248,7 +299,7 @@ function LuckyMoneyFeature() {
     );
 }
 
-// --- 4. SCENE CONTENT (ĐÃ SỬA: FIX AUTOPLAY MUSIC) ---
+// --- 5. SCENE CONTENT ---
 function SceneContent({ scene, handleLaunch, soundRef, isPlaying, setIsPlaying }) {
   const { camera } = useThree()
   
@@ -259,15 +310,13 @@ function SceneContent({ scene, handleLaunch, soundRef, isPlaying, setIsPlaying }
     } 
   }, [scene, camera])
 
-  // --- Logic Fix Autoplay cho scene fireworks ---
+  // Logic Autoplay cho scene fireworks
   useEffect(() => {
     if (scene === 'fireworks' && soundRef.current) {
-        // Đảm bảo AudioContext đã resume
         if (soundRef.current.context.state === 'suspended') {
             soundRef.current.context.resume();
         }
         setIsPlaying(true);
-        // Lưu ý: PositionalAudio sẽ tự autoplay nhờ prop 'autoplay' bên dưới
     }
   }, [scene, soundRef, setIsPlaying])
 
@@ -280,21 +329,15 @@ function SceneContent({ scene, handleLaunch, soundRef, isPlaying, setIsPlaying }
           <ambientLight intensity={0.5} />
           <CountdownDisplay onFinishTransition={handleLaunch} />
           <CircularAudioVisualizer soundRef={soundRef} radius={18} count={150} />
-          {/* Nhạc Countdown: Lofi */}
-          <PositionalAudio ref={soundRef} url="/happy-new-year-2026/sounds/lofi.mp3" distance={30} loop autoplay />
+          {/* QUAN TRỌNG: ĐÃ XÓA AUTOPLAY ĐỂ NÚT BẤM HOẠT ĐỘNG CHUẨN (1 CLICK) */}
+          <PositionalAudio ref={soundRef} url="/happy-new-year-2026/sounds/lofi.mp3" distance={30} loop />
         </Suspense>
       ) : (
         <Suspense fallback={null}>
           <Stars radius={150} count={1000} factor={2} fade speed={0.2} />
           <FireworkManager />
-          {/* Nhạc Fireworks: Celebration - THÊM AUTOPLAY VÀ TĂNG VOLUME */}
-          <PositionalAudio 
-            ref={soundRef} 
-            url="/happy-new-year-2026/sounds/celebration.mp3" 
-            distance={50} 
-            loop 
-            autoplay={true} // <-- QUAN TRỌNG: Tự phát khi mount
-          />
+          {/* Phần Fireworks thì cần Autoplay */}
+          <PositionalAudio ref={soundRef} url="/happy-new-year-2026/sounds/celebration.mp3" distance={50} loop autoplay={true} />
           <ambientLight intensity={0.1} color="#000022" />
         </Suspense>
       )}
@@ -302,7 +345,7 @@ function SceneContent({ scene, handleLaunch, soundRef, isPlaying, setIsPlaying }
   )
 }
 
-// --- 5. MAIN APP ---
+// --- 6. MAIN APP ---
 export default function App() {
   const soundRef = useRef()
   const [scene, setScene] = useState('countdown')
@@ -311,19 +354,14 @@ export default function App() {
   const [isPlaying, setIsPlaying] = useState(false)
   const [volume, setVolume] = useState(2.0)
 
-  // Hàm xử lý khi bấm nút LAUNCH
   const handleLaunch = () => {
-    // 1. KÍCH HOẠT AUDIO CONTEXT NGAY LẬP TỨC (QUAN TRỌNG ĐỂ AUTO PLAY HOẠT ĐỘNG SAU ĐÓ)
     if (soundRef.current && soundRef.current.context) {
-        soundRef.current.context.resume().then(() => {
-            console.log("Audio Context Resumed via User Interaction");
-        });
+        soundRef.current.context.resume();
     }
-
     setUiVisible(false)
     setFlash(1)
     setTimeout(() => {
-      setScene('fireworks') // Chuyển cảnh --> PositionalAudio mới sẽ mount và autoplay
+      setScene('fireworks') 
       const fade = setInterval(() => {
         setFlash(prev => { if (prev <= 0) { clearInterval(fade); return 0; } return prev - 0.05 })
       }, 30)
@@ -333,30 +371,23 @@ export default function App() {
   return (
     <div style={{ width: '100vw', height: '100vh', position: 'relative', background: '#000', overflow: 'hidden' }}>
       
-      {/* UI LAYER: CHỈ HIỆN BUTTON Ở SCENE COUNTDOWN */}
       {scene === 'countdown' && (
         <>
             <CinematicVolume soundRef={soundRef} />
-            {/* KHÔI PHỤC BUTTON PHÁT NHẠC TẠI ĐÂY */}
             <CinematicPlayButton soundRef={soundRef} isPlaying={isPlaying} setIsPlaying={setIsPlaying} />
         </>
       )}
 
       {scene === 'fireworks' && (
         <>
-          {/* Chỉ hiển thị Volume, KHÔNG hiển thị nút Play/Pause nữa */}
           <VolumeControl soundRef={soundRef} volume={volume} setVolume={setVolume} />
-          
-          {/* Overlay Features */}
           <CinematicTitle2D />
           <LuckyMoneyFeature />
         </>
       )}
       
-      {/* Flash Effect Layer */}
       <div style={{ position: 'absolute', inset: 0, backgroundColor: 'white', opacity: flash, zIndex: 50, pointerEvents: 'none' }} />
 
-      {/* 3D CANVAS LAYER */}
       <Canvas camera={{ position: [0, 8, 35], fov: 50 }} dpr={[1, 1.5]}>
         <color attach="background" args={['#050505']} />
         <Environment preset="city" />
@@ -374,7 +405,7 @@ export default function App() {
   )
 }
 
-// --- UTILS COMPONENTS (GIỮ NGUYÊN) ---
+// --- UTILS COMPONENTS (Dust, Text...) ---
 function InteractiveDust({ count = 4000 }) {
   const mesh = useRef(); const { raycaster, camera } = useThree(); const shockwaveRef = useRef(0)
   const starTexture = useMemo(() => getParticleTexture(), [])
