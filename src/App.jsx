@@ -6,10 +6,10 @@ import * as THREE from 'three'
 
 // --- CÁC COMPONENT CON ---
 import CinematicVolume from './CinematicVolume'
-import CinematicPlayButton from './CinematicPlayButton'
+// ĐÃ XÓA DÒNG IMPORT CinematicPlayButton ĐỂ TRÁNH LỖI DUPLICATE
 import CircularAudioVisualizer from './CircularAudioVisualizer'
 
-const isTesting = true; // Sửa thành false khi chạy thật
+const isTesting = false; // Đã set false để chạy thật cho năm mới
 
 // --- 1. UTILS (GIỮ NGUYÊN) ---
 const getParticleTexture = () => {
@@ -48,7 +48,7 @@ const playCustomClick = () => {
   playPulse(now + 0.05, 900, 0.06);
 };
 
-// --- 2. HỆ THỐNG PHÁO HOA NÂNG CẤP (NEW CODE) ---
+// --- 2. HỆ THỐNG PHÁO HOA NÂNG CẤP (ROCKET + EXPLOSION) ---
 
 // 2.1 Component Tên Lửa (Bay từ dưới lên)
 function Rocket({ position, targetHeight, color, onExplode }) {
@@ -92,29 +92,26 @@ const createFireworkParticles = (count, type, color) => {
         if (type === 'heart') {
             // Công thức hình trái tim 3D
             const t = Math.random() * Math.PI * 2
-            // Tạo trái tim 2D trên mặt phẳng XY
             const x = 16 * Math.pow(Math.sin(t), 3)
             const y = 13 * Math.cos(t) - 5 * Math.cos(2*t) - 2 * Math.cos(3*t) - Math.cos(4*t)
-            const z = (Math.random() - 0.5) * 2 // Độ dày nhỏ
+            const z = (Math.random() - 0.5) * 2 
             velocity.set(x, y, z).normalize().multiplyScalar(baseSpeed * 0.8)
-            // Xoay ngẫu nhiên để trái tim không chỉ nhìn về 1 hướng
             const euler = new THREE.Euler(Math.random()*0.5, Math.random()*Math.PI, 0)
             velocity.applyEuler(euler)
 
         } else if (type === 'star') {
             // Hình ngôi sao 5 cánh
-            const angle = (i / count) * Math.PI * 2 * 5 // 5 vòng để tạo cánh
-            const radius = (i % 2 === 0) ? 1 : 0.4 // Xen kẽ bán kính lớn nhỏ
+            const angle = (i / count) * Math.PI * 2 * 5 
+            const radius = (i % 2 === 0) ? 1 : 0.4 
             const x = Math.cos(angle) * radius
             const y = Math.sin(angle) * radius
             const z = (Math.random() - 0.5) * 0.5
             velocity.set(x, y, z).normalize().multiplyScalar(baseSpeed)
-             // Xoay ngẫu nhiên
              const euler = new THREE.Euler(Math.random()*Math.PI, Math.random()*Math.PI, 0)
              velocity.applyEuler(euler)
 
         } else {
-            // Sphere & Willow & Multi (Mặc định nổ tròn)
+            // Sphere & Willow & Multi
             const theta = Math.random() * Math.PI * 2
             const phi = Math.acos(2 * Math.random() - 1)
             velocity.set(
@@ -126,7 +123,7 @@ const createFireworkParticles = (count, type, color) => {
 
         data.push({
             velocity,
-            life: 1.0 + Math.random() * 0.3, // Thời gian sống
+            life: 1.0 + Math.random() * 0.3,
             color: new THREE.Color(color)
         })
     }
@@ -138,10 +135,8 @@ function Explosion({ position, color, type, texture, onFinish }) {
     const pointsRef = useRef()
     const count = type === 'willow' ? 60 : (type === 'heart' || type === 'star' ? 100 : 120)
     
-    // Khởi tạo particles 1 lần
     const [particles] = useState(() => createFireworkParticles(count, type, color))
 
-    // Buffer Geometry
     const bufferGeo = useMemo(() => {
         const geo = new THREE.BufferGeometry()
         const positions = new Float32Array(count * 3)
@@ -159,33 +154,27 @@ function Explosion({ position, color, type, texture, onFinish }) {
             const p = particles[i]
             if (p.life > 0) {
                 aliveCount++
-                
-                // Di chuyển
                 positions[i*3]   += p.velocity.x * delta * 15
                 positions[i*3+1] += p.velocity.y * delta * 15
                 positions[i*3+2] += p.velocity.z * delta * 15
 
-                // Vật lý (Trọng lực & Lực cản)
                 if (type === 'willow') {
-                    p.velocity.y -= 0.03 // Rơi nhanh hơn (Liễu rủ)
-                    p.velocity.multiplyScalar(0.92) // Cản không khí nhiều (đứng lại nhanh để rủ xuống)
-                    p.life -= delta * 0.4 // Sống lâu hơn
+                    p.velocity.y -= 0.03 
+                    p.velocity.multiplyScalar(0.92) 
+                    p.life -= delta * 0.4 
                 } else {
-                    p.velocity.y -= 0.015 // Trọng lực thường
-                    p.velocity.multiplyScalar(0.96) // Cản thường
+                    p.velocity.y -= 0.015 
+                    p.velocity.multiplyScalar(0.96) 
                     p.life -= delta * 0.8
                 }
             } else {
-                // Giấu đi khi chết
                 positions[i*3] = 99999 
             }
         }
         
         pointsRef.current.geometry.attributes.position.needsUpdate = true
         
-        // Fade out opacity
         if (type === 'willow') {
-             // Liễu rủ nhấp nháy chút
              pointsRef.current.material.opacity = Math.max(0, pointsRef.current.material.opacity - delta * 0.2)
         } else {
              pointsRef.current.material.opacity = Math.max(0, pointsRef.current.material.opacity - delta * 0.5)
@@ -225,7 +214,6 @@ function FireworkManager() {
         if (timerRef.current > 0.8 + Math.random() * 0.7) {
             timerRef.current = 0
             
-            // Random loại pháo hoa
             const rand = Math.random()
             let type = 'sphere'
             if (rand > 0.85) type = 'heart'
@@ -241,23 +229,19 @@ function FireworkManager() {
             const z = (Math.random() - 0.5) * 30
             const targetH = 15 + Math.random() * 15
 
-            // Thêm Rocket mới
             setRockets(prev => [...prev, { id, position: [x, -10, z], targetHeight: targetH, color, type }])
         }
     })
 
     const handleExplode = (rocketId, pos, color, type) => {
-        // Xóa Rocket
         setRockets(prev => prev.filter(r => r.id !== rocketId))
 
-        // Tạo Explosion
         if (type === 'multi') {
-            // Nổ đa lớp: 1 lớp to, 1 lớp nhỏ màu khác
-            const color2 = '#ffffff' // Lớp trong màu trắng
+            const color2 = '#ffffff' 
             setExplosions(prev => [
                 ...prev,
                 { id: Math.random(), position: pos, color: color, type: 'sphere', texture },
-                { id: Math.random(), position: pos, color: color2, type: 'sphere_small', texture } // Cần handle logic speed nhỏ hơn nếu muốn kỹ
+                { id: Math.random(), position: pos, color: color2, type: 'sphere_small', texture } 
             ])
         } else {
             setExplosions(prev => [...prev, { id: Math.random(), position: pos, color, type, texture }])
@@ -293,15 +277,18 @@ function FireworkManager() {
     )
 }
 
-// --- 3. UI COMPONENTS (GIỮ NGUYÊN CODE CŨ) ---
-// (CinematicTitle2D, LuckyMoneyFeature, PlayButton... Đã có ở trên, tôi giữ nguyên logic hiển thị)
+// --- 3. UI COMPONENTS ---
 
+// 3.1 Nút Play/Pause (Được định nghĩa trực tiếp ở đây)
 function CinematicPlayButton({ soundRef, isPlaying, setIsPlaying }) {
   const toggleMusic = () => {
     if (!soundRef.current) return;
+    
+    // Đảm bảo Context luôn Resume trước
     if (soundRef.current.context.state === 'suspended') {
       soundRef.current.context.resume();
     }
+
     if (isPlaying) {
       soundRef.current.pause();
       setIsPlaying(false);
@@ -310,6 +297,7 @@ function CinematicPlayButton({ soundRef, isPlaying, setIsPlaying }) {
       setIsPlaying(true);
     }
   };
+
   return (
     <div 
       onClick={toggleMusic}
@@ -337,6 +325,7 @@ function CinematicPlayButton({ soundRef, isPlaying, setIsPlaying }) {
   )
 }
 
+// 3.2 Title & Lì Xì (Giữ nguyên)
 function CinematicTitle2D() {
   return (
     <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 10, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
@@ -508,7 +497,7 @@ function SceneContent({ scene, handleLaunch, soundRef, isPlaying, setIsPlaying }
   )
 }
 
-// --- 6. MAIN APP (GIỮ NGUYÊN) ---
+// --- 6. MAIN APP ---
 export default function App() {
   const soundRef = useRef()
   const [scene, setScene] = useState('countdown')
@@ -566,7 +555,7 @@ export default function App() {
   )
 }
 
-// --- UTILS COMPONENTS KHÁC (Dust, Countdown, Text... GIỮ NGUYÊN) ---
+// --- UTILS COMPONENTS KHÁC (Dust, Countdown, Text...) ---
 function InteractiveDust({ count = 4000 }) {
   const mesh = useRef(); const { raycaster, camera } = useThree(); const shockwaveRef = useRef(0)
   const starTexture = useMemo(() => getParticleTexture(), [])
