@@ -4,14 +4,14 @@ import { OrbitControls, Text3D, Center, Float, Stars, Environment, PositionalAud
 import { EffectComposer, Bloom } from '@react-three/postprocessing'
 import * as THREE from 'three'
 
-// Giữ nguyên các import component con của bạn
+// --- CÁC COMPONENT CON (Giữ nguyên import nếu bạn đã có file, hoặc comment lại nếu chưa dùng) ---
 import CinematicVolume from './CinematicVolume'
-import CinematicPlayButton from './CinematicPlayButton'
+// Đã bỏ import CinematicPlayButton vì không dùng nữa
 import CircularAudioVisualizer from './CircularAudioVisualizer'
-import MusicToggleButton from './MusicToggleButton'
+// Đã bỏ import MusicToggleButton vì không dùng nữa
 import VolumeControl from './VolumeControl'
 
-const isTesting = true;
+const isTesting = true; // Chuyển thành false khi chạy thật
 
 // --- 1. UTILS & AUDIO (GIỮ NGUYÊN) ---
 const getParticleTexture = () => {
@@ -50,7 +50,7 @@ const playCustomClick = () => {
   playPulse(now + 0.05, 900, 0.06);
 };
 
-// --- 2. FIREWORKS & VISUALS (3D - GIỮ NGUYÊN) ---
+// --- 2. FIREWORKS & VISUALS (GIỮ NGUYÊN) ---
 function OptimizedFirework({ position, color, texture }) {
   const pointsRef = useRef()
   const count = 80 
@@ -119,9 +119,9 @@ function FireworkManager() {
   return <>{fireworks.map(f => <OptimizedFirework key={f.id} position={f.pos} color={f.color} texture={texture} />)}</>
 }
 
-// --- 3. UI COMPONENTS (NÂNG CẤP MỚI) ---
+// --- 3. UI COMPONENTS (GIỮ NGUYÊN) ---
 
-// 3.1 Cinematic Title 2D - Design Sang Trọng hơn
+// 3.1 Cinematic Title 2D
 function CinematicTitle2D() {
   return (
     <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 10, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
@@ -204,8 +204,7 @@ function CinematicTitle2D() {
   )
 }
 
-// 3.2 Lucky Money Feature - Nâng cấp Visual & Animation
-// 3.2 Lucky Money Feature (Đã Fix lỗi đè layer & Animation thực tế)
+// 3.2 Lucky Money Feature
 const DENOMINATIONS = [
     { value: "50.000", color: "#e492b2", bg: "linear-gradient(135deg, #fce4ec, #e91e63)", text: "Năm mới nhẹ nhàng, tình cảm đong đầy" },
     { value: "100.000", color: "#7da36d", bg: "linear-gradient(135deg, #e8f5e9, #4caf50)", text: "Lộc biếc mai vàng, khởi đầu suôn sẻ" },
@@ -216,8 +215,8 @@ const DENOMINATIONS = [
 function LuckyMoneyFeature() {
     const [step, setStep] = useState(0); 
     const [selectedMoney, setSelectedMoney] = useState(null);
-    const [flapOpen, setFlapOpen] = useState(false); // State mở nắp
-    const [moneyRise, setMoneyRise] = useState(false); // State tiền trồi lên
+    const [flapOpen, setFlapOpen] = useState(false); 
+    const [moneyRise, setMoneyRise] = useState(false); 
 
     const pickRandomMoney = () => {
       const rand = Math.random();
@@ -234,16 +233,11 @@ function LuckyMoneyFeature() {
       const money = pickRandomMoney(); 
       setSelectedMoney(money); 
       setStep(2); 
-      
-      // Sequence Animation:
-      // 1. Chờ 0.5s cho render xong
-      // 2. Mở nắp (0.5s)
-      // 3. Tiền trồi lên (sau khi nắp mở xong)
       setTimeout(() => {
           setFlapOpen(true);
           setTimeout(() => {
               setMoneyRise(true);
-          }, 600); // Đợi nắp mở xong mới đẩy tiền lên
+          }, 600); 
       }, 300);
     };
     
@@ -256,7 +250,6 @@ function LuckyMoneyFeature() {
       <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 100 }}>
         <style>
           {`
-            /* Container Nút Rút */
             .lucky-btn-container {
               position: absolute; bottom: 40px; left: 40px;
               pointer-events: auto; cursor: pointer;
@@ -272,16 +265,12 @@ function LuckyMoneyFeature() {
               box-shadow: 0 5px 15px rgba(0,0,0,0.5);
             }
             .icon-lixi::after { content: '福'; color: #ffdb4d; font-family: serif; font-size: 24px; }
-            
-            /* Overlay */
             .overlay-backdrop {
               position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
               background: rgba(0,0,0,0.85); backdrop-filter: blur(12px);
               display: flex; flex-direction: column; justify-content: center; align-items: center;
               pointer-events: auto; animation: fadeInOverlay 0.4s ease;
             }
-
-            /* Grid Lì Xì */
             .deck-grid { display: flex; gap: 30px; perspective: 1000px; }
             .lixi-card {
               width: 100px; height: 160px;
@@ -293,75 +282,60 @@ function LuckyMoneyFeature() {
             }
             .lixi-card:hover { transform: translateY(-20px); }
             .lixi-card span { font-size: 40px; color: #ffdb4d; }
-
-            /* --- CẤU TRÚC BAO LÌ XÌ 3 LỚP (REALISTIC) --- */
             .envelope-container {
                 position: relative; width: 260px; height: 360px;
                 margin-top: 20px;
             }
-
-            /* Layer 1: Lưng bao (Nằm dưới cùng) */
             .env-back {
                 position: absolute; bottom: 0; width: 100%; height: 100%;
                 background: #8e0000; border-radius: 10px;
                 box-shadow: 0 15px 35px rgba(0,0,0,0.6);
                 z-index: 1;
             }
-
-            /* Layer 2: Tiền (Nằm giữa Lưng và Túi) */
             .env-money {
                 position: absolute; left: 50%; bottom: 10px;
                 width: 90%; height: 55%; 
                 transform: translateX(-50%);
-                z-index: 5; /* Cao hơn lưng, thấp hơn túi */
+                z-index: 5; 
                 transition: transform 1s cubic-bezier(0.34, 1.56, 0.64, 1), bottom 1s ease;
                 border-radius: 4px; overflow: hidden;
                 box-shadow: 0 2px 10px rgba(0,0,0,0.2);
                 display: flex; flex-direction: column;
             }
-            /* Khi tiền trồi lên */
             .env-money.rise {
-                bottom: 120px; /* Trồi cao lên */
+                bottom: 120px; 
                 transform: translateX(-50%) scale(1.1) rotate(-2deg);
-                z-index: 25; /* Sau khi trồi hẳn lên thì đè lên túi để rõ ràng */
+                z-index: 25; 
             }
-
-            /* Layer 3: Túi bao (Pocket - Mặt trước phía dưới) */
             .env-pocket {
-                position: absolute; bottom: 0; left: 0; width: 100%; height: 75%; /* Chỉ cao 75% để chừa chỗ cho tiền chui ra */
+                position: absolute; bottom: 0; left: 0; width: 100%; height: 75%; 
                 background: #c62828; 
                 border-radius: 0 0 10px 10px;
                 border: 2px solid #ffdb4d; border-top: none;
-                z-index: 10; /* Đè lên tiền lúc chưa trồi */
+                z-index: 10; 
                 display: flex; justify-content: center; align-items: center;
-                box-shadow: inset 0 10px 20px rgba(0,0,0,0.2); /* Tạo chiều sâu miệng túi */
+                box-shadow: inset 0 10px 20px rgba(0,0,0,0.2); 
             }
             .env-pocket-text { font-family: 'Cinzel', serif; color: #ffdb4d; font-size: 60px; margin-top: 30px; text-shadow: 0 2px 4px rgba(0,0,0,0.3); }
-
-            /* Layer 4: Nắp bao (Flap - Mặt trước phía trên) */
             .env-flap {
                 position: absolute; top: 0; left: 0; width: 100%; height: 25%;
                 background: #b71c1c;
                 border-radius: 10px 10px 0 0;
                 border: 2px solid #ffdb4d; border-bottom: none;
-                transform-origin: bottom; /* Xoay từ cạnh dưới của nắp */
-                z-index: 15; /* Cao nhất ban đầu */
+                transform-origin: bottom; 
+                z-index: 15; 
                 transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1), z-index 0.2s 0.3s;
-                /* Tạo hình tam giác cho nắp */
                 clip-path: polygon(0 0, 100% 0, 100% 60%, 50% 100%, 0 60%);
-                height: 40%; /* Kéo dài nắp xuống đè lên túi một chút */
+                height: 40%; 
             }
             .env-flap.open {
                 transform: rotateX(180deg);
-                z-index: 0; /* Sau khi mở thì tụt xuống dưới cùng */
+                z-index: 0; 
                 opacity: 0.8;
             }
-
-            /* Design tờ tiền */
             .bill-layout { flex: 1; padding: 15px; display: flex; flex-direction: column; justify-content: space-between; position: relative; }
             .bill-val { font-weight: 900; font-size: 28px; color: #fff; text-align: right; text-shadow: 1px 1px 2px rgba(0,0,0,0.3); }
             .bill-center { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); border: 2px solid rgba(255,255,255,0.5); padding: 5px 20px; color: white; font-weight: bold; border-radius: 20px; }
-
             .wish-box {
                margin-top: 30px; color: #ffdb4d; font-family: 'Montserrat', sans-serif;
                font-size: 1.4rem; font-weight: 600; text-align: center; max-width: 90%;
@@ -369,7 +343,6 @@ function LuckyMoneyFeature() {
                animation: fadeInMsg 1s forwards 1s;
                text-shadow: 0 2px 4px rgba(0,0,0,0.8);
             }
-            
             .btn-nhan-loc {
                 margin-top: 25px; padding: 12px 40px; border-radius: 30px;
                 border: none; background: #ffdb4d; color: #b71c1c; font-weight: bold; font-size: 1.2rem;
@@ -387,16 +360,12 @@ function LuckyMoneyFeature() {
             }
           `}
         </style>
-  
-        {/* Step 0: Button */}
         {step === 0 && (
           <div className="lucky-btn-container" onClick={handleOpenDeck}>
             <div className="icon-lixi"></div>
             <div style={{ color: '#ffdb4d', marginTop: 5, fontSize: 12, fontWeight: 'bold', background: 'rgba(0,0,0,0.6)', padding: '2px 6px', borderRadius: 4 }}>RÚT LÌ XÌ</div>
           </div>
         )}
-  
-        {/* Step 1: Chọn bao */}
         {step === 1 && (
           <div className="overlay-backdrop">
             <h2 style={{ color: '#ffdb4d', fontFamily: 'Cinzel, serif', marginBottom: 30, fontSize: '2rem' }}>CHỌN LỘC ĐẦU NĂM</h2>
@@ -407,21 +376,13 @@ function LuckyMoneyFeature() {
             </div>
           </div>
         )}
-  
-        {/* Step 2: Mở bao (Animation Fix) */}
         {step === 2 && selectedMoney && (
           <div className="overlay-backdrop">
-            
             <div className="envelope-container">
-                {/* 1. Nắp bao (Mở lên trên cùng) */}
                 <div className={`env-flap ${flapOpen ? 'open' : ''}`}></div>
-
-                {/* 2. Túi bao (Mặt trước, che phần dưới tiền) */}
                 <div className="env-pocket">
                     <div className="env-pocket-text">福</div>
                 </div>
-
-                {/* 3. Tiền (Nằm giữa Túi và Lưng) */}
                 <div className={`env-money ${moneyRise ? 'rise' : ''}`} style={{ background: selectedMoney.bg }}>
                      <div className="bill-layout">
                         <div style={{color: 'white', opacity: 0.8, fontSize: 10}}>LUCKY MONEY 2026</div>
@@ -429,15 +390,11 @@ function LuckyMoneyFeature() {
                         <div className="bill-val">{selectedMoney.value}</div>
                      </div>
                 </div>
-
-                {/* 4. Lưng bao (Dưới cùng) */}
                 <div className="env-back"></div>
             </div>
-
             <div className="wish-box">
                 "{selectedMoney.text}"
             </div>
-            
             {moneyRise && (
                 <button className="btn-nhan-loc" onClick={handleClose}>Nhận Lộc</button>
             )}
@@ -447,14 +404,33 @@ function LuckyMoneyFeature() {
     );
 }
 
-// --- 4. SCENE CONTENT (CHỈ CHỨA 3D - GIỮ NGUYÊN) ---
+// --- 4. SCENE CONTENT (ĐÃ SỬA: AUTOPLAY LOGIC) ---
 function SceneContent({ scene, handleLaunch, soundRef, isPlaying, setIsPlaying }) {
   const { camera } = useThree()
   const hasAutoPlayed = useRef(false)
-  useEffect(() => { if (scene === 'fireworks') { camera.position.set(0, 0, 40); camera.lookAt(0, 0, 0) } }, [scene, camera])
+  
+  useEffect(() => { 
+    if (scene === 'fireworks') { 
+        camera.position.set(0, 0, 40); 
+        camera.lookAt(0, 0, 0) 
+    } 
+  }, [scene, camera])
+
+  // Logic Autoplay khi chuyển sang scene fireworks
   useEffect(() => {
     if (scene === 'fireworks' && !hasAutoPlayed.current && soundRef.current) {
-      setTimeout(() => { soundRef.current.play(); setIsPlaying(true); hasAutoPlayed.current = true }, 200)
+        // Đảm bảo context đã chạy (do click nút countdown trước đó)
+        if (soundRef.current.context.state === 'suspended') {
+            soundRef.current.context.resume();
+        }
+
+        // Tự động phát sau 200ms
+        setTimeout(() => { 
+            soundRef.current.play(); 
+            soundRef.current.setVolume(2.0); // Set volume mặc định
+            setIsPlaying(true); 
+            hasAutoPlayed.current = true;
+        }, 200);
     }
   }, [scene, soundRef, setIsPlaying])
 
@@ -473,6 +449,7 @@ function SceneContent({ scene, handleLaunch, soundRef, isPlaying, setIsPlaying }
         <Suspense fallback={null}>
           <Stars radius={150} count={1000} factor={2} fade speed={0.2} />
           <FireworkManager />
+          {/* Autoplay được kích hoạt qua useEffect ở trên, PositionalAudio chỉ cần mount */}
           <PositionalAudio ref={soundRef} url="/happy-new-year-2026/sounds/celebration.mp3" distance={50} loop />
           <ambientLight intensity={0.1} color="#000022" />
         </Suspense>
@@ -481,7 +458,7 @@ function SceneContent({ scene, handleLaunch, soundRef, isPlaying, setIsPlaying }
   )
 }
 
-// --- 5. MAIN APP (UI & CANVAS SONG SONG - GIỮ NGUYÊN LOGIC) ---
+// --- 5. MAIN APP (ĐÃ SỬA: BỎ BUTTON NHẠC) ---
 export default function App() {
   const soundRef = useRef()
   const [scene, setScene] = useState('countdown')
@@ -491,6 +468,11 @@ export default function App() {
   const [volume, setVolume] = useState(2.0)
 
   const handleLaunch = () => {
+    // Kích hoạt AudioContext ngay khi bấm nút Countdown
+    if (soundRef.current && soundRef.current.context.state === 'suspended') {
+        soundRef.current.context.resume();
+    }
+
     setUiVisible(false)
     setFlash(1)
     setTimeout(() => {
@@ -504,21 +486,18 @@ export default function App() {
   return (
     <div style={{ width: '100vw', height: '100vh', position: 'relative', background: '#000', overflow: 'hidden' }}>
       
-      {/* UI LAYER - LUÔN NẰM TRÊN CÙNG */}
+      {/* UI LAYER */}
       {isUiVisible && (
-        <>
-          <CinematicVolume soundRef={soundRef} />
-          <CinematicPlayButton soundRef={soundRef} />
-        </>
+        <CinematicVolume soundRef={soundRef} />
+        /* Đã xóa nút CinematicPlayButton ở đây */
       )}
 
       {scene === 'fireworks' && (
         <>
-          {/* Controls */}
-          <MusicToggleButton soundRef={soundRef} isPlaying={isPlaying} setIsPlaying={setIsPlaying} />
+          {/* Controls - CHỈ GIỮ VOLUME, BỎ BUTTON PHÁT NHẠC */}
           <VolumeControl soundRef={soundRef} volume={volume} setVolume={setVolume} />
           
-          {/* Overlay Features - Đã nâng cấp Design */}
+          {/* Overlay Features */}
           <CinematicTitle2D />
           <LuckyMoneyFeature />
         </>
@@ -545,7 +524,7 @@ export default function App() {
   )
 }
 
-// --- UTILS COMPONENTS (Dust, Countdown... GIỮ NGUYÊN) ---
+// --- UTILS COMPONENTS (GIỮ NGUYÊN) ---
 function InteractiveDust({ count = 4000 }) {
   const mesh = useRef(); const { raycaster, camera } = useThree(); const shockwaveRef = useRef(0)
   const starTexture = useMemo(() => getParticleTexture(), [])
@@ -579,6 +558,7 @@ function CountdownDisplay({ onFinishTransition }) {
     const [timeLeft, setTimeLeft] = useState({ d: 0, h: 0, m: 0, s: 0, total: 999 })
     const fontUrl = '/happy-new-year-2026/fonts/Orbitron_Regular.json'
     useEffect(() => {
+      // Chế độ test: 15s đếm ngược. Chế độ thật: Đếm đến 2026
       const targetTime = isTesting ? new Date().getTime() + 15000 : new Date("Jan 1, 2026 00:00:00").getTime();
       const timer = setInterval(() => {
         const dist = targetTime - new Date().getTime()
