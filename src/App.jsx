@@ -4,16 +4,15 @@ import { OrbitControls, Text3D, Center, Float, Stars, Environment, PositionalAud
 import { EffectComposer, Bloom } from '@react-three/postprocessing'
 import * as THREE from 'three'
 
-// --- CÁC COMPONENT CON (Giữ nguyên import nếu bạn đã có file, hoặc comment lại nếu chưa dùng) ---
+// --- IMPORT COMPONENT CON (Đã khôi phục CinematicPlayButton) ---
 import CinematicVolume from './CinematicVolume'
-// Đã bỏ import CinematicPlayButton vì không dùng nữa
+import CinematicPlayButton from './CinematicPlayButton' // <-- KHÔI PHỤC LẠI
 import CircularAudioVisualizer from './CircularAudioVisualizer'
-// Đã bỏ import MusicToggleButton vì không dùng nữa
 import VolumeControl from './VolumeControl'
 
-const isTesting = true; // Chuyển thành false khi chạy thật
+const isTesting = true; // Sửa thành false khi chạy thật
 
-// --- 1. UTILS & AUDIO (GIỮ NGUYÊN) ---
+// --- 1. UTILS (GIỮ NGUYÊN) ---
 const getParticleTexture = () => {
   const canvas = document.createElement('canvas');
   canvas.width = 32; canvas.height = 32;
@@ -119,80 +118,22 @@ function FireworkManager() {
   return <>{fireworks.map(f => <OptimizedFirework key={f.id} position={f.pos} color={f.color} texture={texture} />)}</>
 }
 
-// --- 3. UI COMPONENTS (GIỮ NGUYÊN) ---
-
-// 3.1 Cinematic Title 2D
+// --- 3. UI COMPONENTS (TITLE & LIXI) ---
 function CinematicTitle2D() {
   return (
     <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 10, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
       <style>
         {`
           @import url('https://fonts.googleapis.com/css2?family=Great+Vibes&family=Cinzel:wght@400;700&family=Montserrat:wght@300;600&display=swap');
-          
-          .cinematic-wrapper {
-            display: flex; flex-direction: column; justify-content: center; align-items: center;
-            width: 100%; height: 100%; text-align: center;
-            perspective: 1000px;
-          }
-          
-          .text-glow {
-            text-shadow: 0 0 10px rgba(255, 215, 0, 0.3), 0 0 20px rgba(255, 215, 0, 0.2);
-          }
-
-          .line-happy { 
-            font-family: 'Great Vibes', cursive; 
-            font-size: 3.5rem; 
-            color: #ffecd2; 
-            opacity: 0;
-            transform: translateY(20px);
-            animation: elegantFadeUp 2s cubic-bezier(0.2, 0.8, 0.2, 1) forwards 0.5s;
-          }
-          
-          .line-year { 
-            font-family: 'Cinzel', serif; 
-            font-size: 8rem; 
-            font-weight: 800; 
-            line-height: 1;
-            margin: 10px 0;
-            background: linear-gradient(to bottom, #cfc09f 22%, #634f2c 24%, #cfc09f 26%, #cfc09f 27%, #ffecb3 40%, #3a2c0f 78%); 
-            -webkit-background-clip: text; 
-            -webkit-text-fill-color: transparent; 
-            opacity: 0;
-            transform: scale(0.9);
-            filter: drop-shadow(0 0 15px rgba(255, 215, 0, 0.4));
-            animation: zoomInGold 2.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards 1s;
-          }
-          
-          .line-sub { 
-            font-family: 'Montserrat', sans-serif; 
-            margin-top: 15px; 
-            font-size: 1rem; 
-            letter-spacing: 0.8rem; 
-            text-transform: uppercase;
-            color: #ffffff; 
-            opacity: 0;
-            animation: fadeInSub 3s ease forwards 3s; 
-            border-top: 1px solid rgba(255,255,255,0.3);
-            border-bottom: 1px solid rgba(255,255,255,0.3);
-            padding: 10px 20px;
-          }
-
-          @keyframes elegantFadeUp { 
-            to { opacity: 1; transform: translateY(0); } 
-          }
-          @keyframes zoomInGold { 
-            0% { opacity: 0; transform: scale(0.8); }
-            100% { opacity: 1; transform: scale(1); } 
-          }
-          @keyframes fadeInSub { 
-            to { opacity: 0.9; letter-spacing: 1rem; } 
-          }
-          
-          @media (max-width: 768px) { 
-            .line-happy { font-size: 2.5rem; } 
-            .line-year { font-size: 4rem; } 
-            .line-sub { font-size: 0.7rem; letter-spacing: 0.3rem; }
-          }
+          .cinematic-wrapper { width: 100%; height: 100%; text-align: center; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+          .text-glow { text-shadow: 0 0 10px rgba(255, 215, 0, 0.3), 0 0 20px rgba(255, 215, 0, 0.2); }
+          .line-happy { font-family: 'Great Vibes', cursive; font-size: 3.5rem; color: #ffecd2; opacity: 0; transform: translateY(20px); animation: elegantFadeUp 2s cubic-bezier(0.2, 0.8, 0.2, 1) forwards 0.5s; }
+          .line-year { font-family: 'Cinzel', serif; font-size: 8rem; font-weight: 800; line-height: 1; margin: 10px 0; background: linear-gradient(to bottom, #cfc09f 22%, #634f2c 24%, #cfc09f 26%, #cfc09f 27%, #ffecb3 40%, #3a2c0f 78%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; opacity: 0; transform: scale(0.9); filter: drop-shadow(0 0 15px rgba(255, 215, 0, 0.4)); animation: zoomInGold 2.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards 1s; }
+          .line-sub { font-family: 'Montserrat', sans-serif; margin-top: 15px; font-size: 1rem; letter-spacing: 0.8rem; text-transform: uppercase; color: #ffffff; opacity: 0; animation: fadeInSub 3s ease forwards 3s; border-top: 1px solid rgba(255,255,255,0.3); border-bottom: 1px solid rgba(255,255,255,0.3); padding: 10px 20px; }
+          @keyframes elegantFadeUp { to { opacity: 1; transform: translateY(0); } }
+          @keyframes zoomInGold { 0% { opacity: 0; transform: scale(0.8); } 100% { opacity: 1; transform: scale(1); } }
+          @keyframes fadeInSub { to { opacity: 0.9; letter-spacing: 1rem; } }
+          @media (max-width: 768px) { .line-happy { font-size: 2.5rem; } .line-year { font-size: 4rem; } .line-sub { font-size: 0.7rem; letter-spacing: 0.3rem; } }
         `}
       </style>
       <div className="cinematic-wrapper">
@@ -204,7 +145,6 @@ function CinematicTitle2D() {
   )
 }
 
-// 3.2 Lucky Money Feature
 const DENOMINATIONS = [
     { value: "50.000", color: "#e492b2", bg: "linear-gradient(135deg, #fce4ec, #e91e63)", text: "Năm mới nhẹ nhàng, tình cảm đong đầy" },
     { value: "100.000", color: "#7da36d", bg: "linear-gradient(135deg, #e8f5e9, #4caf50)", text: "Lộc biếc mai vàng, khởi đầu suôn sẻ" },
@@ -225,139 +165,47 @@ function LuckyMoneyFeature() {
       if (rand < 0.9) return DENOMINATIONS[2];
       return DENOMINATIONS[3];
     };
-  
     const handleOpenDeck = () => { playCustomClick(); setStep(1); };
-    
     const handlePickEnvelope = () => { 
       playCustomClick(); 
       const money = pickRandomMoney(); 
       setSelectedMoney(money); 
       setStep(2); 
-      setTimeout(() => {
-          setFlapOpen(true);
-          setTimeout(() => {
-              setMoneyRise(true);
-          }, 600); 
-      }, 300);
+      setTimeout(() => { setFlapOpen(true); setTimeout(() => { setMoneyRise(true); }, 600); }, 300);
     };
-    
-    const handleClose = () => { 
-        setStep(0); setSelectedMoney(null); 
-        setFlapOpen(false); setMoneyRise(false); 
-    };
+    const handleClose = () => { setStep(0); setSelectedMoney(null); setFlapOpen(false); setMoneyRise(false); };
   
     return (
       <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 100 }}>
         <style>
           {`
-            .lucky-btn-container {
-              position: absolute; bottom: 40px; left: 40px;
-              pointer-events: auto; cursor: pointer;
-              animation: floatBtn 3s ease-in-out infinite; 
-              display: flex; flex-direction: column; align-items: center;
-              transition: transform 0.2s;
-            }
+            .lucky-btn-container { position: absolute; bottom: 40px; left: 40px; pointer-events: auto; cursor: pointer; animation: floatBtn 3s ease-in-out infinite; display: flex; flex-direction: column; align-items: center; transition: transform 0.2s; }
             .lucky-btn-container:hover { transform: scale(1.1); }
-            .icon-lixi {
-              width: 50px; height: 80px; 
-              background: #d00000; border: 2px solid #ffdb4d;
-              border-radius: 6px; display: flex; justify-content: center; align-items: center;
-              box-shadow: 0 5px 15px rgba(0,0,0,0.5);
-            }
+            .icon-lixi { width: 50px; height: 80px; background: #d00000; border: 2px solid #ffdb4d; border-radius: 6px; display: flex; justify-content: center; align-items: center; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
             .icon-lixi::after { content: '福'; color: #ffdb4d; font-family: serif; font-size: 24px; }
-            .overlay-backdrop {
-              position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-              background: rgba(0,0,0,0.85); backdrop-filter: blur(12px);
-              display: flex; flex-direction: column; justify-content: center; align-items: center;
-              pointer-events: auto; animation: fadeInOverlay 0.4s ease;
-            }
+            .overlay-backdrop { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.85); backdrop-filter: blur(12px); display: flex; flex-direction: column; justify-content: center; align-items: center; pointer-events: auto; animation: fadeInOverlay 0.4s ease; }
             .deck-grid { display: flex; gap: 30px; perspective: 1000px; }
-            .lixi-card {
-              width: 100px; height: 160px;
-              background: linear-gradient(135deg, #b30000, #e60000);
-              border: 2px solid #ffdb4d; border-radius: 8px;
-              cursor: pointer; display: flex; justify-content: center; align-items: center;
-              box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-              transition: transform 0.3s;
-            }
+            .lixi-card { width: 100px; height: 160px; background: linear-gradient(135deg, #b30000, #e60000); border: 2px solid #ffdb4d; border-radius: 8px; cursor: pointer; display: flex; justify-content: center; align-items: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); transition: transform 0.3s; }
             .lixi-card:hover { transform: translateY(-20px); }
             .lixi-card span { font-size: 40px; color: #ffdb4d; }
-            .envelope-container {
-                position: relative; width: 260px; height: 360px;
-                margin-top: 20px;
-            }
-            .env-back {
-                position: absolute; bottom: 0; width: 100%; height: 100%;
-                background: #8e0000; border-radius: 10px;
-                box-shadow: 0 15px 35px rgba(0,0,0,0.6);
-                z-index: 1;
-            }
-            .env-money {
-                position: absolute; left: 50%; bottom: 10px;
-                width: 90%; height: 55%; 
-                transform: translateX(-50%);
-                z-index: 5; 
-                transition: transform 1s cubic-bezier(0.34, 1.56, 0.64, 1), bottom 1s ease;
-                border-radius: 4px; overflow: hidden;
-                box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-                display: flex; flex-direction: column;
-            }
-            .env-money.rise {
-                bottom: 120px; 
-                transform: translateX(-50%) scale(1.1) rotate(-2deg);
-                z-index: 25; 
-            }
-            .env-pocket {
-                position: absolute; bottom: 0; left: 0; width: 100%; height: 75%; 
-                background: #c62828; 
-                border-radius: 0 0 10px 10px;
-                border: 2px solid #ffdb4d; border-top: none;
-                z-index: 10; 
-                display: flex; justify-content: center; align-items: center;
-                box-shadow: inset 0 10px 20px rgba(0,0,0,0.2); 
-            }
+            .envelope-container { position: relative; width: 260px; height: 360px; margin-top: 20px; }
+            .env-back { position: absolute; bottom: 0; width: 100%; height: 100%; background: #8e0000; border-radius: 10px; box-shadow: 0 15px 35px rgba(0,0,0,0.6); z-index: 1; }
+            .env-money { position: absolute; left: 50%; bottom: 10px; width: 90%; height: 55%; transform: translateX(-50%); z-index: 5; transition: transform 1s cubic-bezier(0.34, 1.56, 0.64, 1), bottom 1s ease; border-radius: 4px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.2); display: flex; flex-direction: column; }
+            .env-money.rise { bottom: 120px; transform: translateX(-50%) scale(1.1) rotate(-2deg); z-index: 25; }
+            .env-pocket { position: absolute; bottom: 0; left: 0; width: 100%; height: 75%; background: #c62828; border-radius: 0 0 10px 10px; border: 2px solid #ffdb4d; border-top: none; z-index: 10; display: flex; justify-content: center; align-items: center; box-shadow: inset 0 10px 20px rgba(0,0,0,0.2); }
             .env-pocket-text { font-family: 'Cinzel', serif; color: #ffdb4d; font-size: 60px; margin-top: 30px; text-shadow: 0 2px 4px rgba(0,0,0,0.3); }
-            .env-flap {
-                position: absolute; top: 0; left: 0; width: 100%; height: 25%;
-                background: #b71c1c;
-                border-radius: 10px 10px 0 0;
-                border: 2px solid #ffdb4d; border-bottom: none;
-                transform-origin: bottom; 
-                z-index: 15; 
-                transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1), z-index 0.2s 0.3s;
-                clip-path: polygon(0 0, 100% 0, 100% 60%, 50% 100%, 0 60%);
-                height: 40%; 
-            }
-            .env-flap.open {
-                transform: rotateX(180deg);
-                z-index: 0; 
-                opacity: 0.8;
-            }
+            .env-flap { position: absolute; top: 0; left: 0; width: 100%; height: 25%; background: #b71c1c; border-radius: 10px 10px 0 0; border: 2px solid #ffdb4d; border-bottom: none; transform-origin: bottom; z-index: 15; transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1), z-index 0.2s 0.3s; clip-path: polygon(0 0, 100% 0, 100% 60%, 50% 100%, 0 60%); height: 40%; }
+            .env-flap.open { transform: rotateX(180deg); z-index: 0; opacity: 0.8; }
             .bill-layout { flex: 1; padding: 15px; display: flex; flex-direction: column; justify-content: space-between; position: relative; }
             .bill-val { font-weight: 900; font-size: 28px; color: #fff; text-align: right; text-shadow: 1px 1px 2px rgba(0,0,0,0.3); }
             .bill-center { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); border: 2px solid rgba(255,255,255,0.5); padding: 5px 20px; color: white; font-weight: bold; border-radius: 20px; }
-            .wish-box {
-               margin-top: 30px; color: #ffdb4d; font-family: 'Montserrat', sans-serif;
-               font-size: 1.4rem; font-weight: 600; text-align: center; max-width: 90%;
-               opacity: 0; transform: translateY(20px);
-               animation: fadeInMsg 1s forwards 1s;
-               text-shadow: 0 2px 4px rgba(0,0,0,0.8);
-            }
-            .btn-nhan-loc {
-                margin-top: 25px; padding: 12px 40px; border-radius: 30px;
-                border: none; background: #ffdb4d; color: #b71c1c; font-weight: bold; font-size: 1.2rem;
-                cursor: pointer; box-shadow: 0 0 15px #ffdb4d;
-                transition: transform 0.2s;
-            }
+            .wish-box { margin-top: 30px; color: #ffdb4d; font-family: 'Montserrat', sans-serif; font-size: 1.4rem; font-weight: 600; text-align: center; max-width: 90%; opacity: 0; transform: translateY(20px); animation: fadeInMsg 1s forwards 1s; text-shadow: 0 2px 4px rgba(0,0,0,0.8); }
+            .btn-nhan-loc { margin-top: 25px; padding: 12px 40px; border-radius: 30px; border: none; background: #ffdb4d; color: #b71c1c; font-weight: bold; font-size: 1.2rem; cursor: pointer; box-shadow: 0 0 15px #ffdb4d; transition: transform 0.2s; }
             .btn-nhan-loc:hover { transform: scale(1.1); }
-
             @keyframes floatBtn { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
             @keyframes fadeInOverlay { from { opacity: 0; } to { opacity: 1; } }
             @keyframes fadeInMsg { to { opacity: 1; transform: translateY(0); } }
-            @media (max-width: 600px) {
-               .deck-grid { gap: 10px; transform: scale(0.9); }
-               .envelope-container { transform: scale(0.85); margin-top: 10px; }
-            }
+            @media (max-width: 600px) { .deck-grid { gap: 10px; transform: scale(0.9); } .envelope-container { transform: scale(0.85); margin-top: 10px; } }
           `}
         </style>
         {step === 0 && (
@@ -392,22 +240,17 @@ function LuckyMoneyFeature() {
                 </div>
                 <div className="env-back"></div>
             </div>
-            <div className="wish-box">
-                "{selectedMoney.text}"
-            </div>
-            {moneyRise && (
-                <button className="btn-nhan-loc" onClick={handleClose}>Nhận Lộc</button>
-            )}
+            <div className="wish-box">"{selectedMoney.text}"</div>
+            {moneyRise && (<button className="btn-nhan-loc" onClick={handleClose}>Nhận Lộc</button>)}
           </div>
         )}
       </div>
     );
 }
 
-// --- 4. SCENE CONTENT (ĐÃ SỬA: AUTOPLAY LOGIC) ---
+// --- 4. SCENE CONTENT (ĐÃ SỬA: FIX AUTOPLAY MUSIC) ---
 function SceneContent({ scene, handleLaunch, soundRef, isPlaying, setIsPlaying }) {
   const { camera } = useThree()
-  const hasAutoPlayed = useRef(false)
   
   useEffect(() => { 
     if (scene === 'fireworks') { 
@@ -416,21 +259,15 @@ function SceneContent({ scene, handleLaunch, soundRef, isPlaying, setIsPlaying }
     } 
   }, [scene, camera])
 
-  // Logic Autoplay khi chuyển sang scene fireworks
+  // --- Logic Fix Autoplay cho scene fireworks ---
   useEffect(() => {
-    if (scene === 'fireworks' && !hasAutoPlayed.current && soundRef.current) {
-        // Đảm bảo context đã chạy (do click nút countdown trước đó)
+    if (scene === 'fireworks' && soundRef.current) {
+        // Đảm bảo AudioContext đã resume
         if (soundRef.current.context.state === 'suspended') {
             soundRef.current.context.resume();
         }
-
-        // Tự động phát sau 200ms
-        setTimeout(() => { 
-            soundRef.current.play(); 
-            soundRef.current.setVolume(2.0); // Set volume mặc định
-            setIsPlaying(true); 
-            hasAutoPlayed.current = true;
-        }, 200);
+        setIsPlaying(true);
+        // Lưu ý: PositionalAudio sẽ tự autoplay nhờ prop 'autoplay' bên dưới
     }
   }, [scene, soundRef, setIsPlaying])
 
@@ -443,14 +280,21 @@ function SceneContent({ scene, handleLaunch, soundRef, isPlaying, setIsPlaying }
           <ambientLight intensity={0.5} />
           <CountdownDisplay onFinishTransition={handleLaunch} />
           <CircularAudioVisualizer soundRef={soundRef} radius={18} count={150} />
-          <PositionalAudio ref={soundRef} url="/happy-new-year-2026/sounds/lofi.mp3" distance={30} loop />
+          {/* Nhạc Countdown: Lofi */}
+          <PositionalAudio ref={soundRef} url="/happy-new-year-2026/sounds/lofi.mp3" distance={30} loop autoplay />
         </Suspense>
       ) : (
         <Suspense fallback={null}>
           <Stars radius={150} count={1000} factor={2} fade speed={0.2} />
           <FireworkManager />
-          {/* Autoplay được kích hoạt qua useEffect ở trên, PositionalAudio chỉ cần mount */}
-          <PositionalAudio ref={soundRef} url="/happy-new-year-2026/sounds/celebration.mp3" distance={50} loop />
+          {/* Nhạc Fireworks: Celebration - THÊM AUTOPLAY VÀ TĂNG VOLUME */}
+          <PositionalAudio 
+            ref={soundRef} 
+            url="/happy-new-year-2026/sounds/celebration.mp3" 
+            distance={50} 
+            loop 
+            autoplay={true} // <-- QUAN TRỌNG: Tự phát khi mount
+          />
           <ambientLight intensity={0.1} color="#000022" />
         </Suspense>
       )}
@@ -458,7 +302,7 @@ function SceneContent({ scene, handleLaunch, soundRef, isPlaying, setIsPlaying }
   )
 }
 
-// --- 5. MAIN APP (ĐÃ SỬA: BỎ BUTTON NHẠC) ---
+// --- 5. MAIN APP ---
 export default function App() {
   const soundRef = useRef()
   const [scene, setScene] = useState('countdown')
@@ -467,16 +311,19 @@ export default function App() {
   const [isPlaying, setIsPlaying] = useState(false)
   const [volume, setVolume] = useState(2.0)
 
+  // Hàm xử lý khi bấm nút LAUNCH
   const handleLaunch = () => {
-    // Kích hoạt AudioContext ngay khi bấm nút Countdown
-    if (soundRef.current && soundRef.current.context.state === 'suspended') {
-        soundRef.current.context.resume();
+    // 1. KÍCH HOẠT AUDIO CONTEXT NGAY LẬP TỨC (QUAN TRỌNG ĐỂ AUTO PLAY HOẠT ĐỘNG SAU ĐÓ)
+    if (soundRef.current && soundRef.current.context) {
+        soundRef.current.context.resume().then(() => {
+            console.log("Audio Context Resumed via User Interaction");
+        });
     }
 
     setUiVisible(false)
     setFlash(1)
     setTimeout(() => {
-      setScene('fireworks')
+      setScene('fireworks') // Chuyển cảnh --> PositionalAudio mới sẽ mount và autoplay
       const fade = setInterval(() => {
         setFlash(prev => { if (prev <= 0) { clearInterval(fade); return 0; } return prev - 0.05 })
       }, 30)
@@ -486,15 +333,18 @@ export default function App() {
   return (
     <div style={{ width: '100vw', height: '100vh', position: 'relative', background: '#000', overflow: 'hidden' }}>
       
-      {/* UI LAYER */}
-      {isUiVisible && (
-        <CinematicVolume soundRef={soundRef} />
-        /* Đã xóa nút CinematicPlayButton ở đây */
+      {/* UI LAYER: CHỈ HIỆN BUTTON Ở SCENE COUNTDOWN */}
+      {scene === 'countdown' && (
+        <>
+            <CinematicVolume soundRef={soundRef} />
+            {/* KHÔI PHỤC BUTTON PHÁT NHẠC TẠI ĐÂY */}
+            <CinematicPlayButton soundRef={soundRef} isPlaying={isPlaying} setIsPlaying={setIsPlaying} />
+        </>
       )}
 
       {scene === 'fireworks' && (
         <>
-          {/* Controls - CHỈ GIỮ VOLUME, BỎ BUTTON PHÁT NHẠC */}
+          {/* Chỉ hiển thị Volume, KHÔNG hiển thị nút Play/Pause nữa */}
           <VolumeControl soundRef={soundRef} volume={volume} setVolume={setVolume} />
           
           {/* Overlay Features */}
@@ -558,7 +408,6 @@ function CountdownDisplay({ onFinishTransition }) {
     const [timeLeft, setTimeLeft] = useState({ d: 0, h: 0, m: 0, s: 0, total: 999 })
     const fontUrl = '/happy-new-year-2026/fonts/Orbitron_Regular.json'
     useEffect(() => {
-      // Chế độ test: 15s đếm ngược. Chế độ thật: Đếm đến 2026
       const targetTime = isTesting ? new Date().getTime() + 15000 : new Date("Jan 1, 2026 00:00:00").getTime();
       const timer = setInterval(() => {
         const dist = targetTime - new Date().getTime()
