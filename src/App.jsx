@@ -1,17 +1,17 @@
 import { useState, useEffect, useRef, useMemo, Suspense } from 'react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
+// Đã bỏ 'Text' khỏi import dưới đây
 import { OrbitControls, Text3D, Center, Float, Stars, Environment, PositionalAudio, Cylinder } from '@react-three/drei'
 import { EffectComposer, Bloom } from '@react-three/postprocessing'
 import * as THREE from 'three'
 
 // --- CÁC COMPONENT CON ---
-import CinematicVolume from './CinematicVolume'
-// ĐÃ XÓA DÒNG IMPORT CinematicPlayButton ĐỂ TRÁNH LỖI DUPLICATE
 import CircularAudioVisualizer from './CircularAudioVisualizer'
 
-const isTesting = false; // Đã set false để chạy thật cho năm mới
+// Set false để chạy đúng giờ thực tế
+const isTesting = false; 
 
-// --- 1. UTILS (GIỮ NGUYÊN) ---
+// --- 1. UTILS & AUDIO ---
 const getParticleTexture = () => {
   const canvas = document.createElement('canvas');
   canvas.width = 32; canvas.height = 32;
@@ -48,23 +48,106 @@ const playCustomClick = () => {
   playPulse(now + 0.05, 900, 0.06);
 };
 
-// --- 2. HỆ THỐNG PHÁO HOA NÂNG CẤP (ROCKET + EXPLOSION) ---
-
-// 2.1 Component Tên Lửa (Bay từ dưới lên)
-function Rocket({ position, targetHeight, color, onExplode }) {
+// --- TÍNH NĂNG MỚI 1: HỆ THỐNG ĐÈN TRỜI (KHÔNG HIỂN THỊ TEXT 3D) ---
+function Lantern({ position, onRemove }) {
     const ref = useRef()
-    const speed = 25 + Math.random() * 10
+    const [wobbleOffset] = useState(() => Math.random() * Math.PI * 2)
     
     useFrame((state, delta) => {
         if (!ref.current) return
-        ref.current.position.y += speed * delta
+        // Bay lên
+        ref.current.position.y += delta * (0.8 + Math.random() * 0.5)
+        // Đung đưa nhẹ
+        ref.current.position.x += Math.sin(state.clock.elapsedTime + wobbleOffset) * 0.005
+        ref.current.position.z += Math.cos(state.clock.elapsedTime + wobbleOffset) * 0.005
         
-        // Tạo hiệu ứng lắc lư nhẹ khi bay
+        // Xoay nhẹ
+        ref.current.rotation.y += delta * 0.2
+
+        // Xóa khi bay quá cao
+        if (ref.current.position.y > 60) {
+            onRemove()
+        }
+    })
+
+    return (
+        <group ref={ref} position={position}>
+            {/* Thân đèn */}
+            <mesh>
+                <cylinderGeometry args={[0.3, 0.2, 0.6, 16, 1, true]} />
+                <meshBasicMaterial color="#ffaa00" side={THREE.DoubleSide} transparent opacity={0.8} />
+            </mesh>
+            {/* Đáy đèn */}
+            <mesh position={[0, -0.3, 0]}>
+                <ringGeometry args={[0.1, 0.2, 16]} />
+                <meshBasicMaterial color="#cc8800" side={THREE.DoubleSide} />
+            </mesh>
+            {/* Ánh sáng bên trong */}
+            <pointLight distance={5} intensity={1.5} color="#ffaa00" decay={2} />
+        </group>
+    )
+}
+
+function LanternManager() {
+    const [lanterns, setLanterns] = useState([])
+
+    // Tự động thả vài đèn nền
+    useFrame((state) => {
+        if (Math.random() < 0.005) { 
+            spawnLantern(false)
+        }
+    })
+
+    // Lắng nghe sự kiện thả đèn từ UI
+    useEffect(() => {
+        const handleSpawn = (e) => {
+            // Nhận message nhưng không hiển thị lên đèn nữa (chỉ mang tính tượng trưng)
+            spawnLantern(true);
+        };
+        window.addEventListener('spawn-lantern', handleSpawn);
+        return () => window.removeEventListener('spawn-lantern', handleSpawn);
+    }, []);
+
+    const spawnLantern = (fromBottom = false) => {
+        const x = (Math.random() - 0.5) * 60
+        const z = (Math.random() - 0.5) * 40
+        const y = fromBottom ? -10 : -10 + Math.random() * 20 
+        const id = Math.random()
+        setLanterns(prev => [...prev, { id, position: [x, y, z] }])
+    }
+
+    const removeLantern = (id) => {
+        setLanterns(prev => prev.filter(l => l.id !== id))
+    }
+
+    return (
+        <group>
+             {lanterns.map(l => (
+                 <Lantern key={l.id} position={l.position} onRemove={() => removeLantern(l.id)} />
+             ))}
+        </group>
+    )
+}
+
+
+// --- 2. HỆ THỐNG PHÁO HOA (VISUALS) ---
+
+// 2.1 Component Tên Lửa
+function Rocket({ position, targetHeight, color, onExplode }) {
+    const ref = useRef()
+    const exploded = useRef(false) 
+    const speed = 20 + Math.random() * 10
+    
+    useFrame((state, delta) => {
+        if (!ref.current || exploded.current) return 
+        
+        ref.current.position.y += speed * delta
         ref.current.position.x += Math.sin(state.clock.elapsedTime * 10) * 0.02
         
-        // Khi đạt độ cao mục tiêu
         if (ref.current.position.y >= targetHeight) {
-            onExplode(ref.current.position.clone())
+            exploded.current = true 
+            ref.current.visible = false 
+            onExplode(ref.current.position.clone()) 
         }
     })
 
@@ -72,7 +155,6 @@ function Rocket({ position, targetHeight, color, onExplode }) {
         <mesh ref={ref} position={position}>
             <sphereGeometry args={[0.2, 8, 8]} />
             <meshBasicMaterial color={color} toneMapped={false} />
-            {/* Trail effect giả lập bằng Cylinder kéo dài phía sau */}
             <mesh position={[0, -0.6, 0]}>
                  <cylinderGeometry args={[0.05, 0, 1.2, 8]} />
                  <meshBasicMaterial color={color} transparent opacity={0.5} toneMapped={false} />
@@ -81,37 +163,45 @@ function Rocket({ position, targetHeight, color, onExplode }) {
     )
 }
 
-// 2.2 Helper tạo hình dáng pháo hoa
+// 2.2 Helper tạo hình dáng (Trái tim, Sao, Liễu...)
 const createFireworkParticles = (count, type, color) => {
     const data = []
-    const baseSpeed = type === 'willow' ? 0.3 : (0.5 + Math.random() * 0.8)
+    const baseSpeed = type === 'willow' ? 0.3 : (0.6 + Math.random() * 0.5)
 
     for (let i = 0; i < count; i++) {
         let velocity = new THREE.Vector3()
         
         if (type === 'heart') {
-            // Công thức hình trái tim 3D
-            const t = Math.random() * Math.PI * 2
+            const t = (i / count) * Math.PI * 2 
             const x = 16 * Math.pow(Math.sin(t), 3)
             const y = 13 * Math.cos(t) - 5 * Math.cos(2*t) - 2 * Math.cos(3*t) - Math.cos(4*t)
-            const z = (Math.random() - 0.5) * 2 
-            velocity.set(x, y, z).normalize().multiplyScalar(baseSpeed * 0.8)
-            const euler = new THREE.Euler(Math.random()*0.5, Math.random()*Math.PI, 0)
+            const z = (Math.random() - 0.5) * 4 
+            velocity.set(x, y, z).multiplyScalar(0.04) 
+            const euler = new THREE.Euler(0, Math.random() * Math.PI, 0) 
             velocity.applyEuler(euler)
 
         } else if (type === 'star') {
-            // Hình ngôi sao 5 cánh
-            const angle = (i / count) * Math.PI * 2 * 5 
-            const radius = (i % 2 === 0) ? 1 : 0.4 
+            const points = 5
+            const angle = (i / count) * Math.PI * 2 * points 
+            const isTip = Math.floor(i / (count / (points * 2))) % 2 === 0
+            const radius = isTip ? 1.2 : 0.5 
             const x = Math.cos(angle) * radius
             const y = Math.sin(angle) * radius
             const z = (Math.random() - 0.5) * 0.5
-            velocity.set(x, y, z).normalize().multiplyScalar(baseSpeed)
-             const euler = new THREE.Euler(Math.random()*Math.PI, Math.random()*Math.PI, 0)
-             velocity.applyEuler(euler)
+            velocity.set(x, y, z).multiplyScalar(baseSpeed)
+            const euler = new THREE.Euler(Math.random(), Math.random(), 0)
+            velocity.applyEuler(euler)
+
+        } else if (type === 'sphere_small') {
+            const theta = Math.random() * Math.PI * 2
+            const phi = Math.acos(2 * Math.random() - 1)
+            velocity.set(
+                Math.sin(phi) * Math.cos(theta),
+                Math.sin(phi) * Math.sin(theta),
+                Math.cos(phi)
+            ).normalize().multiplyScalar(baseSpeed * 0.5)
 
         } else {
-            // Sphere & Willow & Multi
             const theta = Math.random() * Math.PI * 2
             const phi = Math.acos(2 * Math.random() - 1)
             velocity.set(
@@ -133,8 +223,7 @@ const createFireworkParticles = (count, type, color) => {
 // 2.3 Component Vụ Nổ
 function Explosion({ position, color, type, texture, onFinish }) {
     const pointsRef = useRef()
-    const count = type === 'willow' ? 60 : (type === 'heart' || type === 'star' ? 100 : 120)
-    
+    const count = type === 'willow' ? 80 : (type === 'heart' || type === 'star' ? 150 : 100)
     const [particles] = useState(() => createFireworkParticles(count, type, color))
 
     const bufferGeo = useMemo(() => {
@@ -146,7 +235,6 @@ function Explosion({ position, color, type, texture, onFinish }) {
 
     useFrame((state, delta) => {
         if (!pointsRef.current) return
-        
         const positions = pointsRef.current.geometry.attributes.position.array
         let aliveCount = 0
 
@@ -171,7 +259,6 @@ function Explosion({ position, color, type, texture, onFinish }) {
                 positions[i*3] = 99999 
             }
         }
-        
         pointsRef.current.geometry.attributes.position.needsUpdate = true
         
         if (type === 'willow') {
@@ -179,29 +266,19 @@ function Explosion({ position, color, type, texture, onFinish }) {
         } else {
              pointsRef.current.material.opacity = Math.max(0, pointsRef.current.material.opacity - delta * 0.5)
         }
-
-        if (aliveCount === 0) {
-            onFinish()
-        }
+        
+        if (aliveCount === 0) onFinish()
     })
 
     return (
         <points ref={pointsRef} position={position}>
             <primitive object={bufferGeo} />
-            <pointsMaterial 
-                size={type === 'willow' ? 0.8 : 1.2} 
-                map={texture} 
-                color={color} 
-                transparent 
-                opacity={1} 
-                depthWrite={false} 
-                blending={THREE.AdditiveBlending} 
-            />
+            <pointsMaterial size={type === 'willow' ? 0.8 : 1.2} map={texture} color={color} transparent opacity={1} depthWrite={false} blending={THREE.AdditiveBlending} />
         </points>
     )
 }
 
-// 2.4 Quản lý chung (Spawner)
+// 2.4 Quản lý chung - Logic né cửa sổ
 function FireworkManager() {
     const [rockets, setRockets] = useState([])
     const [explosions, setExplosions] = useState([])
@@ -210,32 +287,36 @@ function FireworkManager() {
 
     useFrame((state, delta) => {
         timerRef.current += delta
-        // Tần suất bắn: 0.8s - 1.5s một quả
-        if (timerRef.current > 0.8 + Math.random() * 0.7) {
+        if (timerRef.current > 0.6 + Math.random() * 0.6) {
             timerRef.current = 0
             
             const rand = Math.random()
             let type = 'sphere'
-            if (rand > 0.85) type = 'heart'
-            else if (rand > 0.7) type = 'star'
-            else if (rand > 0.55) type = 'willow'
-            else if (rand > 0.4) type = 'multi'
+            if (rand > 0.80) type = 'heart'      
+            else if (rand > 0.60) type = 'star'  
+            else if (rand > 0.45) type = 'willow'
+            else if (rand > 0.30) type = 'multi' 
 
             const colors = ['#ff0000', '#ffa500', '#ffd700', '#00ffcc', '#ff00ff', '#ffffff']
             const color = colors[Math.floor(Math.random() * colors.length)]
-
             const id = Math.random()
-            const x = (Math.random() - 0.5) * 50
-            const z = (Math.random() - 0.5) * 30
-            const targetH = 15 + Math.random() * 15
 
-            setRockets(prev => [...prev, { id, position: [x, -10, z], targetHeight: targetH, color, type }])
+            // Toạ độ spawn
+            let x = (Math.random() - 0.5) * 50; 
+            let targetH;
+            if (Math.abs(x) < 12) {
+                targetH = 8 + Math.random() * 12; // Ở giữa thì bắn cao
+            } else {
+                targetH = -5 + Math.random() * 15; // Ở 2 bên thì bắn thấp
+            }
+            const z = (Math.random() - 0.5) * 20; 
+            
+            setRockets(prev => [...prev, { id, position: [x, -15, z], targetHeight: targetH, color, type }])
         }
     })
 
     const handleExplode = (rocketId, pos, color, type) => {
         setRockets(prev => prev.filter(r => r.id !== rocketId))
-
         if (type === 'multi') {
             const color2 = '#ffffff' 
             setExplosions(prev => [
@@ -277,18 +358,26 @@ function FireworkManager() {
     )
 }
 
-// --- 3. UI COMPONENTS ---
+// --- 3. UI COMPONENTS (CONTROLS TÍCH HỢP) ---
 
-// 3.1 Nút Play/Pause (Được định nghĩa trực tiếp ở đây)
-function CinematicPlayButton({ soundRef, isPlaying, setIsPlaying }) {
-  const toggleMusic = () => {
-    if (!soundRef.current) return;
-    
-    // Đảm bảo Context luôn Resume trước
-    if (soundRef.current.context.state === 'suspended') {
-      soundRef.current.context.resume();
+function CinematicIntegratedControls({ soundRef, isPlaying, setIsPlaying }) {
+  const [volume, setVolume] = useState(1);
+  const [isMuted, setIsMuted] = useState(false);
+  const [showSlider, setShowSlider] = useState(false);
+  const previousVolume = useRef(1);
+
+  // Đồng bộ volume khi mount
+  useEffect(() => {
+    if (soundRef.current) {
+      setVolume(soundRef.current.getVolume());
     }
+  }, [soundRef]);
 
+  const togglePlay = (e) => {
+    e.stopPropagation();
+    if (!soundRef.current) return;
+    if (soundRef.current.context.state === 'suspended') soundRef.current.context.resume();
+    
     if (isPlaying) {
       soundRef.current.pause();
       setIsPlaying(false);
@@ -298,59 +387,304 @@ function CinematicPlayButton({ soundRef, isPlaying, setIsPlaying }) {
     }
   };
 
+  const toggleMute = (e) => {
+    e.stopPropagation();
+    if (!soundRef.current) return;
+    
+    if (isMuted) {
+      soundRef.current.setVolume(previousVolume.current);
+      setVolume(previousVolume.current);
+      setIsMuted(false);
+    } else {
+      previousVolume.current = volume;
+      soundRef.current.setVolume(0);
+      setVolume(0);
+      setIsMuted(true);
+    }
+  };
+
+  const handleVolumeChange = (e) => {
+    const newVol = parseFloat(e.target.value);
+    setVolume(newVol);
+    if (soundRef.current) soundRef.current.setVolume(newVol);
+    setIsMuted(newVol === 0);
+  };
+
   return (
     <div 
-      onClick={toggleMusic}
-      style={{
-        position: 'absolute', bottom: '50px', right: '50px', zIndex: 100,
-        width: '60px', height: '60px', borderRadius: '50%',
-        background: 'rgba(255, 255, 255, 0.1)', backdropFilter: 'blur(10px)',
-        border: '1px solid rgba(255, 255, 255, 0.3)',
-        display: 'flex', justifyContent: 'center', alignItems: 'center',
-        cursor: 'pointer', transition: 'all 0.3s ease',
-        boxShadow: '0 0 20px rgba(0, 0, 0, 0.3)'
-      }}
-      onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.1)'; e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)'; }}
-      onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)'; }}
+      style={{ position: 'absolute', bottom: '80px', right: '50px', zIndex: 100, display: 'flex', flexDirection: 'column', alignItems: 'center' }}
+      onMouseEnter={() => setShowSlider(true)}
+      onMouseLeave={() => setShowSlider(false)}
     >
-      {isPlaying ? (
-        <div style={{ display: 'flex', gap: '6px' }}>
-          <div style={{ width: '4px', height: '20px', background: '#fff', borderRadius: '2px' }}></div>
-          <div style={{ width: '4px', height: '20px', background: '#fff', borderRadius: '2px' }}></div>
+      <style>
+        {`
+          .control-group {
+            display: flex; align-items: center; gap: 15px;
+            padding: 12px 20px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 40px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            transition: all 0.3s ease;
+          }
+          .control-group:hover { background: rgba(255, 255, 255, 0.15); transform: scale(1.05); }
+          .icon-btn { cursor: pointer; display: flex; align-items: center; justify-content: center; opacity: 0.8; transition: 0.2s; }
+          .icon-btn:hover { opacity: 1; transform: scale(1.1); }
+          .slider-container {
+            width: 36px; height: 120px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            display: flex; justify-content: center; align-items: center;
+            margin-bottom: 10px;
+            opacity: 0; transform: translateY(20px) scale(0.9);
+            pointer-events: none;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: absolute; bottom: 100%; left: 12px;
+          }
+          .slider-container.show { opacity: 1; transform: translateY(0) scale(1); pointer-events: auto; }
+          .vol-range { -webkit-appearance: none; width: 100px; height: 4px; background: rgba(255,255,255,0.3); border-radius: 2px; outline: none; transform: rotate(-90deg); }
+          .vol-range::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%; background: #fff; cursor: pointer; box-shadow: 0 0 10px rgba(255,255,255,0.5); }
+        `}
+      </style>
+
+      {/* Slider trượt lên */}
+      <div className={`slider-container ${showSlider ? 'show' : ''}`}>
+        <input type="range" min="0" max="2" step="0.05" value={volume} onChange={handleVolumeChange} className="vol-range" />
+      </div>
+
+      {/* Thanh điều khiển chính */}
+      <div className="control-group">
+        <div className="icon-btn" onClick={toggleMute}>
+           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+            {isMuted || volume === 0 ? (<><line x1="23" y1="9" x2="17" y2="15"></line><line x1="17" y1="9" x2="23" y2="15"></line></>) : (<path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>)}
+          </svg>
         </div>
-      ) : (
-        <div style={{ width: '0', height: '0', borderTop: '10px solid transparent', borderBottom: '10px solid transparent', borderLeft: '16px solid #fff', marginLeft: '4px' }}></div>
-      )}
+        <div style={{ width: 1, height: 20, background: 'rgba(255,255,255,0.3)' }}></div>
+        <div className="icon-btn" onClick={togglePlay}>
+          {isPlaying ? (
+             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
+          ) : (
+             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+          )}
+        </div>
+      </div>
     </div>
-  )
+  );
 }
 
-// 3.2 Title & Lì Xì (Giữ nguyên)
+// 3.3 Title 2D - Code Window Style
 function CinematicTitle2D() {
   return (
     <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 10, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
       <style>
         {`
           @import url('https://fonts.googleapis.com/css2?family=Great+Vibes&family=Cinzel:wght@400;700&family=Montserrat:wght@300;600&display=swap');
-          .cinematic-wrapper { width: 100%; height: 100%; text-align: center; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+          .cinematic-wrapper { display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; perspective: 1000px; }
+          .code-window { background: rgba(15, 15, 25, 0.65); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 16px; padding: 40px 60px; box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6); position: relative; min-width: 600px; animation: floatWindow 6s ease-in-out infinite; transform-style: preserve-3d; }
+          .window-header { position: absolute; top: 20px; left: 24px; display: flex; gap: 8px; }
+          .dot { width: 12px; height: 12px; border-radius: 50%; }
+          .dot.red { background: #ff5f56; } .dot.yellow { background: #ffbd2e; } .dot.green { background: #27c93f; }
+          .window-label { position: absolute; top: 18px; right: 24px; font-family: 'Montserrat', monospace; font-size: 0.8rem; color: rgba(255,255,255,0.4); font-weight: 600; }
           .text-glow { text-shadow: 0 0 10px rgba(255, 215, 0, 0.3), 0 0 20px rgba(255, 215, 0, 0.2); }
           .line-happy { font-family: 'Great Vibes', cursive; font-size: 3.5rem; color: #ffecd2; opacity: 0; transform: translateY(20px); animation: elegantFadeUp 2s cubic-bezier(0.2, 0.8, 0.2, 1) forwards 0.5s; }
           .line-year { font-family: 'Cinzel', serif; font-size: 8rem; font-weight: 800; line-height: 1; margin: 10px 0; background: linear-gradient(to bottom, #cfc09f 22%, #634f2c 24%, #cfc09f 26%, #cfc09f 27%, #ffecb3 40%, #3a2c0f 78%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; opacity: 0; transform: scale(0.9); filter: drop-shadow(0 0 15px rgba(255, 215, 0, 0.4)); animation: zoomInGold 2.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards 1s; }
           .line-sub { font-family: 'Montserrat', sans-serif; margin-top: 15px; font-size: 1rem; letter-spacing: 0.8rem; text-transform: uppercase; color: #ffffff; opacity: 0; animation: fadeInSub 3s ease forwards 3s; border-top: 1px solid rgba(255,255,255,0.3); border-bottom: 1px solid rgba(255,255,255,0.3); padding: 10px 20px; }
+          @keyframes floatWindow { 0%, 100% { transform: translateY(0px) rotateX(0deg); } 50% { transform: translateY(-20px) rotateX(2deg); } }
           @keyframes elegantFadeUp { to { opacity: 1; transform: translateY(0); } }
           @keyframes zoomInGold { 0% { opacity: 0; transform: scale(0.8); } 100% { opacity: 1; transform: scale(1); } }
           @keyframes fadeInSub { to { opacity: 0.9; letter-spacing: 1rem; } }
-          @media (max-width: 768px) { .line-happy { font-size: 2.5rem; } .line-year { font-size: 4rem; } .line-sub { font-size: 0.7rem; letter-spacing: 0.3rem; } }
+          @media (max-width: 768px) { .code-window { min-width: 90%; padding: 30px 20px; } .line-happy { font-size: 2.5rem; } .line-year { font-size: 4rem; } .line-sub { font-size: 0.7rem; letter-spacing: 0.3rem; } }
         `}
       </style>
       <div className="cinematic-wrapper">
-        <div className="line-happy text-glow">Happy New Year</div>
-        <div className="line-year">2026</div>
-        <div className="line-sub">Vạn Sự Như Ý - Tỷ Sự Như Mơ</div>
+        <div className="code-window">
+          <div className="window-header">
+            <div className="dot red"></div><div className="dot yellow"></div><div className="dot green"></div>
+          </div>
+          <div className="window-label">TaiNguyen0405.jsx</div>
+          <div className="line-happy text-glow">Happy New Year</div>
+          <div className="line-year">2026</div>
+          <div className="line-sub">Vạn Sự Như Ý - Tỷ Sự Như Mơ</div>
+        </div>
       </div>
     </div>
   )
 }
+
+// --- TÍNH NĂNG MỚI 2: GIEO QUẺ & THẢ ĐÈN UI ---
+const FORTUNES = [
+    { name: "Đại Cát", poem: "Năm mới lộc đến đầy nhà\nCông danh tấn tới vinh hoa rạng ngời." },
+    { name: "Trung Cát", poem: "Bình an, sức khỏe dồi dào\nGia đạo êm ấm, ngọt ngào yêu thương." },
+    { name: "Tiểu Cát", poem: "Khó khăn rồi sẽ qua mau\nKiên trì nhẫn nại, về sau an nhàn." },
+    { name: "Thượng Thượng", poem: "Cầu gì được nấy hanh thông\nTiền tài sự nghiệp như rồng bay cao." },
+    { name: "Quý Nhân", poem: "Ra đường gặp được quý nhân\nViệc làm suôn sẻ, muôn phần mắn may." }
+];
+
+function FeatureButtons() {
+    const [fortuneStep, setFortuneStep] = useState(0); // 0: closed, 1: shaking, 2: result
+    const [currentFortune, setCurrentFortune] = useState(null);
+    const [lanternStep, setLanternStep] = useState(0); // 0: closed, 1: input
+    const [wishMessage, setWishMessage] = useState("");
+
+    // Gieo quẻ logic
+    const handleGieoQue = () => {
+        playCustomClick();
+        setFortuneStep(1); 
+        setTimeout(() => {
+            const randomFortune = FORTUNES[Math.floor(Math.random() * FORTUNES.length)];
+            setCurrentFortune(randomFortune);
+            setFortuneStep(2); 
+        }, 2000);
+    };
+
+    const closeFortune = () => {
+        setFortuneStep(0);
+        setCurrentFortune(null);
+    };
+
+    // Thả đèn logic (Mở popup nhập liệu)
+    const handleOpenLanternInput = () => {
+        playCustomClick();
+        setWishMessage(""); // Reset message
+        setLanternStep(1);
+    };
+
+    const handleReleaseLantern = () => {
+        playCustomClick();
+        // Bắn sự kiện kèm message (tuy nhiên 3D không hiển thị nữa)
+        window.dispatchEvent(new CustomEvent('spawn-lantern', { detail: { message: wishMessage } }));
+        setLanternStep(0);
+    };
+
+    return (
+        <>
+            <style>
+                {`
+                    .feature-dock {
+                        position: absolute; bottom: 70px; left: 120px;
+                        display: flex; gap: 20px;
+                        pointer-events: auto; z-index: 100;
+                    }
+                    .feature-btn {
+                        display: flex; flex-direction: column; align-items: center;
+                        cursor: pointer; transition: transform 0.2s;
+                    }
+                    .feature-btn:hover { transform: scale(1.1); }
+                    .btn-icon {
+                        width: 50px; height: 50px; border-radius: 50%;
+                        background: rgba(0,0,0,0.5); border: 2px solid #ffdb4d;
+                        display: flex; justify-content: center; align-items: center;
+                        font-size: 24px; box-shadow: 0 0 10px rgba(255, 219, 77, 0.3);
+                    }
+                    .btn-label {
+                        color: #ffdb4d; margin-top: 5px; font-size: 12px; font-weight: bold;
+                        background: rgba(0,0,0,0.6); padding: 2px 6px; border-radius: 4px;
+                    }
+                    /* Overlay chung */
+                    .feature-overlay {
+                        position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+                        background: rgba(0,0,0,0.85); backdrop-filter: blur(10px);
+                        display: flex; justify-content: center; align-items: center;
+                        z-index: 200; pointer-events: auto;
+                    }
+                    .feature-card {
+                        width: 320px; padding: 40px 20px;
+                        background: #fff8e1; border: 4px solid #b71c1c; border-radius: 8px;
+                        text-align: center; position: relative;
+                        animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+                    }
+                    .fortune-title { font-family: 'Cinzel', serif; font-size: 2rem; color: #b71c1c; margin-bottom: 20px; }
+                    .fortune-text { font-family: 'Montserrat', sans-serif; font-size: 1.2rem; color: #333; line-height: 1.6; white-space: pre-line; }
+                    .action-btn { margin-top: 20px; padding: 10px 30px; background: #b71c1c; color: #ffdb4d; border: none; font-weight: bold; cursor: pointer; border-radius: 20px; font-size: 1rem; }
+                    .action-btn:hover { background: #d32f2f; }
+                    
+                    /* Input Style */
+                    .wish-input {
+                        width: 100%; height: 100px; padding: 10px;
+                        background: rgba(255,255,255,0.9);
+                        border: 2px solid #b71c1c; border-radius: 4px;
+                        font-family: 'Montserrat', sans-serif; font-size: 1rem;
+                        color: #b71c1c; resize: none; outline: none;
+                        margin-bottom: 15px;
+                    }
+                    .wish-input::placeholder { color: rgba(183, 28, 28, 0.5); }
+
+                    /* Shaking Animation */
+                    .shaking-tube {
+                        font-size: 100px;
+                        animation: shake 0.5s infinite;
+                    }
+                    @keyframes shake {
+                        0% { transform: rotate(0deg); }
+                        25% { transform: rotate(10deg); }
+                        50% { transform: rotate(0deg); }
+                        75% { transform: rotate(-10deg); }
+                        100% { transform: rotate(0deg); }
+                    }
+                    @keyframes popIn { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+                `}
+            </style>
+
+            <div className="feature-dock">
+                {/* Nút Gieo Quẻ */}
+                <div className="feature-btn" onClick={handleGieoQue}>
+                    <div className="btn-icon">📜</div>
+                    <div className="btn-label">GIEO QUẺ</div>
+                </div>
+
+                {/* Nút Thả Đèn */}
+                <div className="feature-btn" onClick={handleOpenLanternInput}>
+                    <div className="btn-icon">🏮</div>
+                    <div className="btn-label">THẢ ĐÈN</div>
+                </div>
+            </div>
+
+            {/* UI Gieo Quẻ */}
+            {fortuneStep === 1 && (
+                <div className="feature-overlay">
+                    <div className="shaking-tube">🎋</div>
+                    <div style={{color: 'white', marginTop: 20, fontFamily: 'Montserrat'}}>Đang xin keo...</div>
+                </div>
+            )}
+
+            {fortuneStep === 2 && currentFortune && (
+                <div className="feature-overlay">
+                    <div className="feature-card">
+                        <div className="fortune-title">{currentFortune.name}</div>
+                        <div className="fortune-text">{currentFortune.poem}</div>
+                        <button className="action-btn" onClick={closeFortune}>Nhận Lời Chúc</button>
+                    </div>
+                </div>
+            )}
+
+            {/* UI Thả Đèn (Nhập lời chúc) */}
+            {lanternStep === 1 && (
+                <div className="feature-overlay">
+                    <div className="feature-card" style={{ background: '#212121', border: '2px solid #ffaa00' }}>
+                         <h2 style={{ color: '#ffaa00', fontFamily: 'Cinzel', marginBottom: 15 }}>Gửi Ước Nguyện</h2>
+                         <textarea 
+                            className="wish-input" 
+                            placeholder="Nhập điều ước của bạn..." 
+                            value={wishMessage}
+                            onChange={(e) => setWishMessage(e.target.value)}
+                            maxLength={30}
+                            style={{ background: '#333', color: '#fff', border: '1px solid #555' }}
+                         />
+                         <div style={{ display: 'flex', gap: 10, justifyContent: 'center' }}>
+                            <button className="action-btn" onClick={() => setLanternStep(0)} style={{ background: '#555', color: '#ccc' }}>Hủy</button>
+                            <button className="action-btn" onClick={handleReleaseLantern} style={{ background: '#ffaa00', color: '#000' }}>Thả Đèn</button>
+                         </div>
+                    </div>
+                </div>
+            )}
+        </>
+    );
+}
+
 
 const DENOMINATIONS = [
     { value: "50.000", color: "#e492b2", bg: "linear-gradient(135deg, #fce4ec, #e91e63)", text: "Năm mới nhẹ nhàng, tình cảm đong đầy" },
@@ -384,7 +718,7 @@ function LuckyMoneyFeature() {
       <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 100 }}>
         <style>
           {`
-            .lucky-btn-container { position: absolute; bottom: 40px; left: 40px; pointer-events: auto; cursor: pointer; animation: floatBtn 3s ease-in-out infinite; display: flex; flex-direction: column; align-items: center; transition: transform 0.2s; }
+            .lucky-btn-container { position: absolute; bottom: 70px; left: 40px; pointer-events: auto; cursor: pointer; animation: floatBtn 3s ease-in-out infinite; display: flex; flex-direction: column; align-items: center; transition: transform 0.2s; }
             .lucky-btn-container:hover { transform: scale(1.1); }
             .icon-lixi { width: 50px; height: 80px; background: #d00000; border: 2px solid #ffdb4d; border-radius: 6px; display: flex; justify-content: center; align-items: center; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
             .icon-lixi::after { content: '福'; color: #ffdb4d; font-family: serif; font-size: 24px; }
@@ -453,7 +787,7 @@ function LuckyMoneyFeature() {
     );
 }
 
-// --- 5. SCENE CONTENT (Sử dụng FireworkManager mới) ---
+// --- 5. SCENE CONTENT ---
 function SceneContent({ scene, handleLaunch, soundRef, isPlaying, setIsPlaying }) {
   const { camera } = useThree()
   
@@ -487,8 +821,8 @@ function SceneContent({ scene, handleLaunch, soundRef, isPlaying, setIsPlaying }
       ) : (
         <Suspense fallback={null}>
           <Stars radius={150} count={1000} factor={2} fade speed={0.2} />
-          {/* SỬ DỤNG HỆ THỐNG PHÁO HOA MỚI */}
           <FireworkManager />
+          <LanternManager /> {/* TÍNH NĂNG MỚI: Lanterns 3D */}
           <PositionalAudio ref={soundRef} url="/happy-new-year-2026/sounds/celebration.mp3" distance={50} loop autoplay={true} />
           <ambientLight intensity={0.1} color="#000022" />
         </Suspense>
@@ -522,24 +856,31 @@ export default function App() {
   return (
     <div style={{ width: '100vw', height: '100vh', position: 'relative', background: '#000', overflow: 'hidden' }}>
       
-      {scene === 'countdown' && (
-        <>
-            <CinematicVolume soundRef={soundRef} />
-            <CinematicPlayButton soundRef={soundRef} isPlaying={isPlaying} setIsPlaying={setIsPlaying} />
-        </>
-      )}
+      {/* 1. Integrated Controls (Hiển thị ở cả 2 scene) */}
+      <CinematicIntegratedControls soundRef={soundRef} isPlaying={isPlaying} setIsPlaying={setIsPlaying} />
 
+      {/* 2. UI riêng cho Fireworks */}
       {scene === 'fireworks' && (
         <>
-          <CinematicTitle2D />
+          <div style={{ zIndex: 10, position: 'absolute', inset: 0 }}>
+             <CinematicTitle2D />
+          </div>
           <LuckyMoneyFeature />
+          <FeatureButtons /> {/* TÍNH NĂNG MỚI: Nút Gieo Quẻ và Thả Đèn */}
         </>
       )}
       
       <div style={{ position: 'absolute', inset: 0, backgroundColor: 'white', opacity: flash, zIndex: 50, pointerEvents: 'none' }} />
 
-      <Canvas camera={{ position: [0, 8, 35], fov: 50 }} dpr={[1, 1.5]}>
-        <color attach="background" args={['#050505']} />
+      {/* 3. Canvas (Z-index 20 để pháo hoa nổ đè lên UI) */}
+      {/* Logic click: Countdown = auto (để bấm nút Launch), Fireworks = none (để bấm Lì xì) */}
+      <Canvas 
+         className="canvas-overlay"
+         style={{ position: 'absolute', inset: 0, zIndex: 20, pointerEvents: scene === 'countdown' ? 'auto' : 'none' }} 
+         camera={{ position: [0, 8, 35], fov: 50 }} 
+         dpr={[1, 1.5]}
+         gl={{ alpha: true }} 
+      >
         <Environment preset="city" />
         <SceneContent scene={scene} handleLaunch={handleLaunch} soundRef={soundRef} isPlaying={isPlaying} setIsPlaying={setIsPlaying} />
         <EffectComposer disableNormalPass>
@@ -642,7 +983,7 @@ function MechanicalButton({ onActivate }) {
       <group onPointerOver={() => setHover(true)} onPointerOut={() => (setHover(false), setPressed(false))} onPointerDown={() => { setPressed(true); playCustomClick(); }} onPointerUp={() => { setPressed(false); onActivate() }} ref={buttonCoreRef}>
         <Cylinder args={[2, 2.1, 0.8, 64]} rotation={[Math.PI / 2, 0, 0]}><meshStandardMaterial color={hovered ? "#ff0033" : "#220000"} metalness={1} emissive="#ff0000" emissiveIntensity={hovered ? 1.2 : 0.1}/></Cylinder>
       </group>
-      <Center position={[0, -4.8, 0]}><Text3D font="/happy-new-year-2026/fonts/Orbitron_Regular.json" size={0.5} height={0.1}>LAUNCH 2026<meshStandardMaterial color="white" /></Text3D></Center>
+      <Center position={[0, -4.8, 0]}><Text3D font="/happy-new-year-2026/fonts/Orbitron_Regular.json" size={0.5} height={0.1}>START<meshStandardMaterial color="white" /></Text3D></Center>
     </group>
   )
 }
