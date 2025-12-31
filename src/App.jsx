@@ -7,10 +7,9 @@ import * as THREE from 'three'
 // --- CÁC COMPONENT CON ---
 import CinematicVolume from './CinematicVolume'
 import CircularAudioVisualizer from './CircularAudioVisualizer'
-import VolumeControl from './VolumeControl'
-// Chúng ta sẽ viết lại CinematicPlayButton ngay trong file này để fix lỗi logic
+// Đã xóa VolumeControl
 
-const isTesting = true; // Sửa thành false khi chạy thật (đếm đúng ngày)
+const isTesting = true; // Sửa thành false khi chạy thật
 
 // --- 1. UTILS (GIỮ NGUYÊN) ---
 const getParticleTexture = () => {
@@ -49,17 +48,16 @@ const playCustomClick = () => {
   playPulse(now + 0.05, 900, 0.06);
 };
 
-// --- 2. LOGIC NÚT PLAY ĐÃ SỬA (FIX LỖI 2 CLICK) ---
+// --- 2. LOGIC NÚT PLAY (GIỮ NGUYÊN ĐỂ FIX LỖI 2 CLICK) ---
 function CinematicPlayButton({ soundRef, isPlaying, setIsPlaying }) {
   const toggleMusic = () => {
     if (!soundRef.current) return;
     
-    // 1. Luôn đảm bảo AudioContext được kích hoạt (Resume) trước tiên
+    // Luôn đảm bảo AudioContext được kích hoạt
     if (soundRef.current.context.state === 'suspended') {
       soundRef.current.context.resume();
     }
 
-    // 2. Kiểm tra trạng thái thực tế của bài nhạc
     if (isPlaying) {
       soundRef.current.pause();
       setIsPlaying(false);
@@ -85,13 +83,11 @@ function CinematicPlayButton({ soundRef, isPlaying, setIsPlaying }) {
       onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)'; }}
     >
       {isPlaying ? (
-        // Icon Pause
         <div style={{ display: 'flex', gap: '6px' }}>
           <div style={{ width: '4px', height: '20px', background: '#fff', borderRadius: '2px' }}></div>
           <div style={{ width: '4px', height: '20px', background: '#fff', borderRadius: '2px' }}></div>
         </div>
       ) : (
-        // Icon Play
         <div style={{ 
           width: '0', height: '0', 
           borderTop: '10px solid transparent', borderBottom: '10px solid transparent', 
@@ -329,14 +325,14 @@ function SceneContent({ scene, handleLaunch, soundRef, isPlaying, setIsPlaying }
           <ambientLight intensity={0.5} />
           <CountdownDisplay onFinishTransition={handleLaunch} />
           <CircularAudioVisualizer soundRef={soundRef} radius={18} count={150} />
-          {/* QUAN TRỌNG: ĐÃ XÓA AUTOPLAY ĐỂ NÚT BẤM HOẠT ĐỘNG CHUẨN (1 CLICK) */}
+          {/* KHÔNG AUTOPLAY Ở ĐÂY ĐỂ BUTTON HOẠT ĐỘNG CHUẨN */}
           <PositionalAudio ref={soundRef} url="/happy-new-year-2026/sounds/lofi.mp3" distance={30} loop />
         </Suspense>
       ) : (
         <Suspense fallback={null}>
           <Stars radius={150} count={1000} factor={2} fade speed={0.2} />
           <FireworkManager />
-          {/* Phần Fireworks thì cần Autoplay */}
+          {/* AUTOPLAY Ở ĐÂY */}
           <PositionalAudio ref={soundRef} url="/happy-new-year-2026/sounds/celebration.mp3" distance={50} loop autoplay={true} />
           <ambientLight intensity={0.1} color="#000022" />
         </Suspense>
@@ -352,7 +348,7 @@ export default function App() {
   const [flash, setFlash] = useState(0)
   const [isUiVisible, setUiVisible] = useState(true)
   const [isPlaying, setIsPlaying] = useState(false)
-  const [volume, setVolume] = useState(2.0)
+  // Đã xóa state volume
 
   const handleLaunch = () => {
     if (soundRef.current && soundRef.current.context) {
@@ -380,7 +376,7 @@ export default function App() {
 
       {scene === 'fireworks' && (
         <>
-          <VolumeControl soundRef={soundRef} volume={volume} setVolume={setVolume} />
+          {/* Đã xóa VolumeControl ở đây */}
           <CinematicTitle2D />
           <LuckyMoneyFeature />
         </>
