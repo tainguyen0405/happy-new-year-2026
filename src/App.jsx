@@ -9,7 +9,7 @@ import * as THREE from 'three'
 import CircularAudioVisualizer from './CircularAudioVisualizer'
 
 // Set false để chạy đúng giờ thực tế
-const isTesting = false; 
+const isTesting = true; 
 
 // --- 1. UTILS & AUDIO ---
 const getParticleTexture = () => {
